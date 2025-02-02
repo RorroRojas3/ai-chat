@@ -10,7 +10,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+/// AI Chat clients
 builder.Services.AddChatClient(new OllamaChatClient(new Uri("http://localhost:11434/"), "llama3.2"));
+
+// AI Embedding Generators
+IEmbeddingGenerator<string, Embedding<float>> ollamaGenerator =
+    new OllamaEmbeddingGenerator(new Uri("http://localhost:11434/"), "llama3.2");
+builder.Services.AddEmbeddingGenerator(ollamaGenerator);
 
 builder.Services.AddTransient<IChatService, ChatService>();
 

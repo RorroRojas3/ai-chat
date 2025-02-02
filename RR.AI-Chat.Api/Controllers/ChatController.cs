@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RR.AI_Chat.Service;
-using System.Text.Json;
 
 namespace RR.AI_Chat.Api.Controllers
 {
