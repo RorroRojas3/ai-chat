@@ -19,6 +19,7 @@ IEmbeddingGenerator<string, Embedding<float>> ollamaGenerator =
 builder.Services.AddEmbeddingGenerator(ollamaGenerator);
 
 builder.Services.AddTransient<IChatService, ChatService>();
+builder.Services.AddSingleton<ChatStore>();
 
 var app = builder.Build();
 

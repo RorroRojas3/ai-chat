@@ -35,5 +35,32 @@ namespace RR.AI_Chat.Api.Controllers
             }
         }
 
+        [HttpPost("session")]
+        public IActionResult CreateChatSessionAsync()
+        {
+            var sessionId = _chatService.CreateChatSessionAsync();
+            return Ok(sessionId);
+        }
+
+        [HttpPost("session/{sessionId}")]
+        public async Task GetChatStreamingAsync(CancellationToken cancellationToken, Guid sessionId, string prompt)
+        {
+            Response.Headers.Append("Content-Type", "text/event-stream");
+            Response.Headers.Append("Cache-Control", "no-cache");
+            Response.Headers.Append("Connection", "keep-alive");
+
+            await foreach (var message in _chatService.GetChatStreamingAsync(cancellationToken, sessionId, prompt))
+            {
+                await Response.WriteAsync($"data: {message}\n\n", cancellationToken);
+                await Response.Body.FlushAsync(cancellationToken);
+            }
+        }
+
+        [HttpPost("session/{sessionId}/completion")]
+        public async Task<IActionResult> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, string prompt)
+        {
+            var response = await _chatService.GetChatCompletionAsync(cancellationToken, sessionId, prompt);
+            return Ok(response);
+        }
     }
 }
