@@ -22,6 +22,7 @@ export class PromptBoxComponent {
       this.storeService.disablePromptButton.set(true);
       this.chatService.createSession().subscribe((session) => {
         this.storeService.sessionId.set(session.sessionId);
+        this.prompt = '';
       });
     }
   }
