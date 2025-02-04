@@ -10,6 +10,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add CORS
+var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>();
+corsOrigins = corsOrigins ?? [];
+builder.Services.AddCors(builder => builder.AddPolicy("AllowSpecificOrigins", policy =>
+{
+    policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod();
+}));
+
 /// AI Chat clients
 builder.Services.AddChatClient(new OllamaChatClient(new Uri("http://localhost:11434/"), "llama3.2"));
 
@@ -31,6 +39,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowSpecificOrigins");
 
 app.UseAuthorization();
 
