@@ -8,4 +8,5 @@ export class StoreService {
 
   sessionId = signal<string>('');
   disablePromptButton = signal<boolean>(false);
+  stream = signal<string>('');
 }

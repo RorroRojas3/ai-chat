@@ -1,8 +1,8 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, Output } from '@angular/core';
 import { StoreService } from '../../../store/store.service';
 import { ChatService } from '../../../services/chat.service';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject, Subscription, takeUntil } from 'rxjs';
 import markdownit from 'markdown-it';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -12,7 +12,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   templateUrl: './prompt-box.component.html',
   styleUrl: './prompt-box.component.scss',
 })
-export class PromptBoxComponent {
+export class PromptBoxComponent implements OnDestroy {
   constructor(
     public storeService: StoreService,
     private chatService: ChatService,
@@ -28,6 +28,8 @@ export class PromptBoxComponent {
   prompt: string = '';
   message?: string = '';
   md: markdownit;
+  sseSubscription: Subscription | undefined;
+  private destroy$ = new Subject<void>();
   @Output() markdown = new EventEmitter<SafeHtml>();
 
   async onClickCreateSession(): Promise<void> {
@@ -36,6 +38,7 @@ export class PromptBoxComponent {
     }
 
     try {
+      this.storeService.stream.set('');
       this.storeService.disablePromptButton.set(true);
 
       if (this.storeService.sessionId() === '') {
@@ -43,13 +46,41 @@ export class PromptBoxComponent {
         this.storeService.sessionId.set(session.id);
       }
 
-      const response = await firstValueFrom(
-        this.chatService.createCompleteMessage(this.prompt)
-      );
-      this.message = response.message;
-      const html = this.md.render(this.message ?? '');
-      const sanitzeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
-      this.markdown.emit(sanitzeHtml);
+      // this.sseSubscription = this.chatService
+      //   .getServerSentEvent(this.prompt)
+      //   .subscribe((message) => {
+      //     this.storeService.stream.update((stream) => stream + message);
+      //   });
+
+      this.sseSubscription = this.chatService
+        .getServerSentEvent(this.prompt)
+        .subscribe((message) => {
+          this.storeService.stream.update((stream) => stream + message);
+          const html = this.md.render(this.storeService.stream());
+          const sanitzeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
+          this.markdown.emit(sanitzeHtml);
+        });
+
+      // this.chatService
+      //   .createStreamMessage(this.prompt)
+      //   .pipe(takeUntil(this.destroy$))
+      //   .subscribe({
+      //     next: (data) => {
+      //       this.storeService.stream.set(this.storeService.stream() + data);
+      //     },
+      //     error: (error) => {
+      //       console.error('Stream error:', error);
+      //     },
+      //   });
+
+      // const response = await firstValueFrom(
+      //   this.chatService.createCompleteMessage(this.prompt)
+      // );
+      // this.message = response.message;
+      // const html = this.md.render(this.message ?? '');
+      // const sanitzeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
+      // this.markdown.emit(sanitzeHtml);
+
       this.prompt = '';
     } catch (error) {
       // Handle errors appropriately
@@ -58,6 +89,12 @@ export class PromptBoxComponent {
     } finally {
       // Re-enable the button regardless of success/failure
       this.storeService.disablePromptButton.set(false);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.sseSubscription) {
+      this.sseSubscription.unsubscribe();
     }
   }
 }
