@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RR.AI_Chat.Dto;
 using RR.AI_Chat.Service;
 
 namespace RR.AI_Chat.Api.Controllers
@@ -38,8 +39,8 @@ namespace RR.AI_Chat.Api.Controllers
         [HttpPost("session")]
         public IActionResult CreateChatSessionAsync()
         {
-            var sessionId = _chatService.CreateChatSessionAsync();
-            return Ok(sessionId);
+            var dto = _chatService.CreateChatSessionAsync();
+            return Ok(dto);
         }
 
         [HttpPost("session/{sessionId}")]
@@ -57,7 +58,7 @@ namespace RR.AI_Chat.Api.Controllers
         }
 
         [HttpPost("session/{sessionId}/completion")]
-        public async Task<IActionResult> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, string prompt)
+        public async Task<IActionResult> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, ChatCompletionRequestDto prompt)
         {
             var response = await _chatService.GetChatCompletionAsync(cancellationToken, sessionId, prompt);
             return Ok(response);

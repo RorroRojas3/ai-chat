@@ -1,3 +1,3 @@
 export class SessionDto {
-  sessionId!: string;
+  id!: string;
 }

@@ -1,3 +1,4 @@
 <div class="container py-4">
-  <app-prompt-box></app-prompt-box>
+  <app-markdown-viewer [markdown]="markdown"></app-markdown-viewer>
+  <app-prompt-box (markdown)="onMarkdownChange($event)"></app-prompt-box>
 </div>

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using RR.AI_Chat.Dto;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -11,11 +12,11 @@ namespace RR.AI_Chat.Service
 
         IAsyncEnumerable<string?> GetChatStreamingAsync(CancellationToken cancellationToken, string prompt);
 
-        Guid CreateChatSessionAsync();
+        SessionDto CreateChatSessionAsync();
 
         IAsyncEnumerable<string?> GetChatStreamingAsync(CancellationToken cancellationToken, Guid sessionId, string prompt);
 
-        Task<string> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, string prompt);
+        Task<ChatCompletionDto> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, ChatCompletionRequestDto prompt);
     }
 
     public class ChatService : IChatService
@@ -63,7 +64,7 @@ namespace RR.AI_Chat.Service
             }
         }
 
-        public Guid CreateChatSessionAsync()
+        public SessionDto CreateChatSessionAsync()
         {
             var guid = Guid.NewGuid();
             _chatStore.Sessions.Add(new()
@@ -72,7 +73,7 @@ namespace RR.AI_Chat.Service
                 Messages = new()
             });
 
-            return guid;
+            return new() { Id = guid };
         }
 
         public async IAsyncEnumerable<string?> GetChatStreamingAsync([EnumeratorCancellation] CancellationToken cancellationToken, Guid sessionId, string prompt)
@@ -91,16 +92,23 @@ namespace RR.AI_Chat.Service
             _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.System, sb.ToString()));
         }
 
-        public async Task<string> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, string prompt)
+        public async Task<ChatCompletionDto> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, ChatCompletionRequestDto prompt)
         {
-            _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.User, prompt));
+            _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.User, prompt.Prompt));
             
             var messages = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages;
             var response = await _chatClient.CompleteAsync(messages, null,cancellationToken);
 
             _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.System, response.Message.Text));
             
-            return response.Message.Text;
+            return new() 
+            { 
+                SessionId = sessionId, 
+                Message = response.Message.Text, 
+                InputTokenCount = response?.Usage?.InputTokenCount,
+                OutputTokenCount = response?.Usage?.OutputTokenCount,
+                TotalTokenCount = response?.Usage?.TotalTokenCount
+            };
         }
     }
 }
