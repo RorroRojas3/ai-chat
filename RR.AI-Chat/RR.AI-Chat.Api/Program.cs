@@ -19,7 +19,8 @@ builder.Services.AddCors(builder => builder.AddPolicy("AllowSpecificOrigins", po
 }));
 
 /// AI Chat clients
-builder.Services.AddChatClient(new OllamaChatClient(new Uri("http://localhost:11434/"), "llama3.2"));
+var ollamaUrl = builder.Configuration.GetValue<string>("OllamaUrl");
+builder.Services.AddChatClient(new OllamaChatClient(new Uri(ollamaUrl ?? "http://localhost:11434/"), "llama3.2"));
 
 // AI Embedding Generators
 IEmbeddingGenerator<string, Embedding<float>> ollamaGenerator =
