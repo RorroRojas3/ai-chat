@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom, Subject, Subscription, takeUntil } from 'rxjs';
 import markdownit from 'markdown-it';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { MessageDto } from '../../../dtos/MessageDto';
 
 @Component({
   selector: 'app-prompt-box',
@@ -31,6 +32,7 @@ export class PromptBoxComponent implements OnDestroy {
   sseSubscription: Subscription | undefined;
   private destroy$ = new Subject<void>();
   @Output() markdown = new EventEmitter<SafeHtml>();
+  sanitizeHtml!: SafeHtml;
 
   async onClickCreateSession(): Promise<void> {
     if (!this.prompt.trim()) {
@@ -46,49 +48,48 @@ export class PromptBoxComponent implements OnDestroy {
         this.storeService.sessionId.set(session.id);
       }
 
-      // this.sseSubscription = this.chatService
-      //   .getServerSentEvent(this.prompt)
-      //   .subscribe((message) => {
-      //     this.storeService.stream.update((stream) => stream + message);
-      //   });
+      this.storeService.messages.update((messages) => [
+        ...messages,
+        new MessageDto(this.prompt, true, undefined),
+      ]);
 
+      this.storeService.isStreaming.set(true);
       this.sseSubscription = this.chatService
         .getServerSentEvent(this.prompt)
-        .subscribe((message) => {
-          this.storeService.stream.update((stream) => stream + message);
-          const html = this.md.render(this.storeService.stream());
-          const sanitzeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
-          this.markdown.emit(sanitzeHtml);
+        .subscribe({
+          next: (message) => {
+            this.storeService.stream.update((stream) => stream + message);
+            const html = this.md.render(this.storeService.stream());
+            this.sanitizeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
+            this.markdown.emit(this.sanitizeHtml);
+          },
+          complete: () => {
+            this.storeService.stream.set('');
+            this.storeService.messages.update((messages) => [
+              ...messages,
+              new MessageDto('', false, this.sanitizeHtml),
+            ]);
+            this.storeService.disablePromptButton.set(false);
+            this.storeService.isStreaming.set(false);
+            this.storeService.streamMessage.set(
+              new MessageDto('', false, undefined)
+            );
+          },
+          error: (error) => {
+            this.storeService.stream.set('');
+            this.storeService.disablePromptButton.set(false);
+            this.storeService.isStreaming.set(false);
+            this.storeService.streamMessage.set(
+              new MessageDto('', false, undefined)
+            );
+          },
         });
-
-      // this.chatService
-      //   .createStreamMessage(this.prompt)
-      //   .pipe(takeUntil(this.destroy$))
-      //   .subscribe({
-      //     next: (data) => {
-      //       this.storeService.stream.set(this.storeService.stream() + data);
-      //     },
-      //     error: (error) => {
-      //       console.error('Stream error:', error);
-      //     },
-      //   });
-
-      // const response = await firstValueFrom(
-      //   this.chatService.createCompleteMessage(this.prompt)
-      // );
-      // this.message = response.message;
-      // const html = this.md.render(this.message ?? '');
-      // const sanitzeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
-      // this.markdown.emit(sanitzeHtml);
 
       this.prompt = '';
     } catch (error) {
       // Handle errors appropriately
       console.error('Error in session creation:', error);
       // You might want to show an error message to the user
-    } finally {
-      // Re-enable the button regardless of success/failure
-      this.storeService.disablePromptButton.set(false);
     }
   }
 
