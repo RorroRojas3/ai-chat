@@ -1,10 +1,13 @@
-.message-bubble {
-  max-width: 75%;
-  position: relative;
-  margin: 4px 0;
+.outgoing-message {
+  background-color: #f8c8dc; /* Soft rose pink for outgoing messages */
+  color: #2c0516 !important; /* Dark burgundy text for high contrast */
+}
+
+.incoming-message {
+  background-color: #9e1b32; /* Deep rose red for incoming messages */
+  color: #ffffff !important; /* White text for optimal readability */
 }
 
 .message-content {
-  margin-bottom: 4px;
-  word-wrap: break-word;
+  color: inherit;
 }

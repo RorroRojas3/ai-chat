@@ -1,0 +1,35 @@
+.valentine-send-btn {
+  background-color: #9e1b32; /* Deep rose red matching incoming messages */
+  border-color: #9e1b32;
+  color: #ffffff;
+  transition: all 0.2s ease-in-out;
+}
+
+.valentine-send-btn:hover:not(:disabled) {
+  background-color: #7d152a; /* Darker shade for hover */
+  border-color: #7d152a;
+  transform: scale(1.05);
+}
+
+.valentine-send-btn:active:not(:disabled) {
+  background-color: #6a1123 !important; /* Even darker for click state */
+  border-color: #6a1123 !important;
+  transform: scale(0.98);
+}
+
+.valentine-send-btn:disabled {
+  background-color: #d4a1ab; /* Muted pink for disabled state */
+  border-color: #d4a1ab;
+  opacity: 0.7;
+}
+
+.valentine-textarea {
+  border: 1px solid #d4a1ab; /* Light rose border by default */
+  transition: all 0.2s ease-in-out;
+}
+
+.valentine-textarea:focus {
+  border-color: #9e1b32; /* Deep rose red border on focus */
+  box-shadow: 0 0 0 0.25rem rgba(158, 27, 50, 0.25); /* Soft rose glow */
+  outline: 0;
+}

@@ -1,4 +1,11 @@
-import { Component, OnInit, signal } from '@angular/core';
+import {
+  AfterViewChecked,
+  Component,
+  ElementRef,
+  OnInit,
+  signal,
+  ViewChild,
+} from '@angular/core';
 import { PromptBoxComponent } from '../../components/home/prompt-box/prompt-box.component';
 import { MarkdownViewerComponent } from '../../components/markdown-viewer/markdown-viewer.component';
 import { StoreService } from '../../store/store.service';
@@ -19,11 +26,13 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, AfterViewChecked {
   markdown?: SafeHtml;
   stream?: string;
   messages = signal<MessageDto[]>([]);
   md: markdownit;
+  @ViewChild('scrollContainer') private scrollContainer?: ElementRef;
+  private lastMessageCount = 0;
 
   constructor(
     public storeService: StoreService,
@@ -37,12 +46,32 @@ export class HomeComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const html = this.md.render('Nelly, would you be my valentine?');
+    const html = this.md.render('Nelly, would you be my valentine? 🧸💙');
     const sanitzeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
     this.storeService.messages.update((messages) => [
       ...messages,
       new MessageDto('', false, sanitzeHtml),
     ]);
+  }
+
+  ngAfterViewChecked() {
+    const currentMessageCount = this.storeService.messages().length;
+    if (
+      currentMessageCount > this.lastMessageCount ||
+      this.storeService.isStreaming()
+    ) {
+      this.scrollToBottom();
+      this.lastMessageCount = currentMessageCount;
+    }
+  }
+
+  scrollToBottom(): void {
+    try {
+      const container = this.scrollContainer?.nativeElement;
+      container.scrollTop = container.scrollHeight;
+    } catch (err) {
+      console.error('Error scrolling to bottom:', err);
+    }
   }
 
   onMarkdownChange(markdown: SafeHtml): void {
