@@ -1,4 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://localhost:7045/api/',
+  apiUrl:
+    'https://valentine-ai-chat-api-guf9c9eeecfabwbm.eastus-01.azurewebsites.net/api/',
 };
