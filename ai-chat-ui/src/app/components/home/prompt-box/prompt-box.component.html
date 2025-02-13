@@ -1,4 +1,4 @@
-<div class="card shadow-sm">
+<div class="card s</div>hadow-sm">
   <div class="card-body">
     <div class="d-flex align-items-center mb-3">
       <i class="bi bi-chat-square-text fs-4 text-primary me-2"></i>
@@ -26,8 +26,25 @@
         </button>
       </div>
 
-      <div class="text-muted small">
-        <span id="charCount">0</span> / 2000 characters
+      <div class="dropdown">
+        <button
+          class="btn btn-secondary dropdown-toggle"
+          type="button"
+          id="dropdownMenuButton"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
+          {{ this.storeService.selectedModelId() || "Select an option" }}
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+          @for (model of this.storeService.models(); track model) {
+          <li>
+            <a class="dropdown-item" (click)="onModelChange(model.name)">{{
+              model.name
+            }}</a>
+          </li>
+          }
+        </ul>
       </div>
     </form>
   </div>

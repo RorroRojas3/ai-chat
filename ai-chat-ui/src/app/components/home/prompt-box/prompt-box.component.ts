@@ -95,6 +95,10 @@ export class PromptBoxComponent implements OnDestroy {
     }
   }
 
+  onModelChange(event: string): void {
+    this.storeService.selectedModelId.set(event);
+  }
+
   ngOnDestroy(): void {
     if (this.sseSubscription) {
       this.sseSubscription.unsubscribe();
