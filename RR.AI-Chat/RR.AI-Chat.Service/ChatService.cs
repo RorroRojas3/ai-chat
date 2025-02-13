@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
 using System.Runtime.CompilerServices;
@@ -17,18 +18,22 @@ namespace RR.AI_Chat.Service
         IAsyncEnumerable<string?> GetChatStreamingAsync(CancellationToken cancellationToken, Guid sessionId, ChatStreamRequestdto request);
 
         Task<ChatCompletionDto> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, ChatCompletionRequestDto request);
+
+        Task<List<ModelDto>> GetModelsAsync();
     }
 
     public class ChatService : IChatService
     {
-        private ILogger _logger;
-        private IChatClient _chatClient;
-        private ChatStore _chatStore;
+        private readonly ILogger _logger;
+        private readonly IChatClient _chatClient;
+        private readonly IConfiguration _configuration;
+        private readonly ChatStore _chatStore;
 
-        public ChatService(ILogger<ChatService> logger, IChatClient chatClient, ChatStore chatStore)
+        public ChatService(ILogger<ChatService> logger, IChatClient chatClient, IConfiguration configuration, ChatStore chatStore)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
+            _configuration = configuration;
             _chatStore = chatStore;
         }
 
@@ -114,6 +119,18 @@ namespace RR.AI_Chat.Service
                 OutputTokenCount = response?.Usage?.OutputTokenCount,
                 TotalTokenCount = response?.Usage?.TotalTokenCount
             };
+        }
+
+        public async Task<List<ModelDto>> GetModelsAsync()
+        {
+            var models = _configuration.GetValue<List<string>>("Models");
+            if (models == null)
+            {
+                return [];
+            }
+
+            await Task.CompletedTask;
+            return models.Select(m => new ModelDto { Name = m }).ToList();
         }
     }
 }

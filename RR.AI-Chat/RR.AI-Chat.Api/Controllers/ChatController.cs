@@ -63,5 +63,12 @@ namespace RR.AI_Chat.Api.Controllers
             var response = await _chatService.GetChatCompletionAsync(cancellationToken, sessionId, request);
             return Ok(response);
         }
+
+        [HttpGet("models")]
+        public async Task<IActionResult> GetModelsAsync()
+        {
+            var response = await _chatService.GetModelsAsync();
+            return Ok(response);
+        }
     }
 }

@@ -7,6 +7,7 @@ import { ChatCompletionDto } from '../dtos/ChatCompletionDto';
 import { StoreService } from '../store/store.service';
 import { ChatCompletionRequestDto } from '../dtos/ChatCompletionRequestDto';
 import { ChatStreamRequestDto } from '../dtos/ChatStreamRequestDto';
+import { ModelDto } from '../dtos/ModelDto';
 
 @Injectable({
   providedIn: 'root',
@@ -101,5 +102,14 @@ export class ChatService {
         reader?.cancel();
       };
     });
+  }
+
+  /**
+   * Retrieves the list of available models from the API.
+   *
+   * @returns {Observable<ModelDto[]>} An observable that emits an array of ModelDto objects.
+   */
+  getModels(): Observable<ModelDto[]> {
+    return this.http.get<ModelDto[]>(`${environment.apiUrl}chat/models`);
   }
 }
