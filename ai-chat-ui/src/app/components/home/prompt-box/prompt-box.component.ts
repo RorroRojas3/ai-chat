@@ -6,6 +6,8 @@ import { firstValueFrom, Subject, Subscription, takeUntil } from 'rxjs';
 import markdownit from 'markdown-it';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MessageDto } from '../../../dtos/MessageDto';
+import hljs from 'highlight.js';
+import markdown_it_highlightjs from 'markdown-it-highlightjs';
 
 @Component({
   selector: 'app-prompt-box',
@@ -23,7 +25,7 @@ export class PromptBoxComponent implements OnDestroy {
       html: true,
       linkify: true,
       typographer: true,
-    });
+    }).use(markdown_it_highlightjs, { hljs });
   }
 
   prompt: string = '';

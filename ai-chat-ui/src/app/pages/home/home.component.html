@@ -1,12 +1,17 @@
-<div class="container py-4">
-  @for (message of this.storeService.messages(); track message) {
-  <app-message-bubble [message]="message"></app-message-bubble>
-  }
-  <div *ngIf="this.storeService.isStreaming()">
-    <app-message-bubble
-      [message]="this.storeService.streamMessage()"
-    ></app-message-bubble>
+<div class="d-flex flex-column h-100">
+  <div class="d-flex flex-column container flex-grow-1 overflow-hidden">
+    <div #scrollContainer class="flex-grow-1 overflow-y-auto">
+      @for (message of this.storeService.messages(); track message) {
+      <app-message-bubble [message]="message"></app-message-bubble>
+      }
+      <div *ngIf="this.storeService.isStreaming()">
+        <app-message-bubble
+          [message]="this.storeService.streamMessage()"
+        ></app-message-bubble>
+      </div>
+    </div>
+    <div class="py-4">
+      <app-prompt-box (markdown)="onMarkdownChange($event)"></app-prompt-box>
+    </div>
   </div>
-  <!-- <app-markdown-viewer [markdown]="markdown"></app-markdown-viewer> -->
-  <app-prompt-box (markdown)="onMarkdownChange($event)"></app-prompt-box>
 </div>
