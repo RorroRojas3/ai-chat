@@ -37,7 +37,7 @@ export class ChatService {
       `${
         environment.apiUrl
       }chat/session/${this.storeService.sessionId()}/stream`,
-      new ChatStreamRequestDto(prompt),
+      new ChatStreamRequestDto(prompt, this.storeService.selectedModelId()),
       {
         responseType: 'text',
         observe: 'body',
@@ -81,7 +81,12 @@ export class ChatService {
             'Content-Type': 'application/json',
             Accept: 'text/event-stream',
           },
-          body: JSON.stringify(new ChatStreamRequestDto(prompt)),
+          body: JSON.stringify(
+            new ChatStreamRequestDto(
+              prompt,
+              this.storeService.selectedModelId()
+            )
+          ),
         }
       )
         .then((response) => {

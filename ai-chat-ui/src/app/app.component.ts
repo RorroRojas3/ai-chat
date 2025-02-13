@@ -19,7 +19,7 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.chatService.getModels().subscribe((models) => {
       this.storeService.models.set(models);
-      this.storeService.selectedModel.set(models[0].name);
+      this.storeService.selectedModelId.set(models[0].name);
     });
   }
 }

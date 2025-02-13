@@ -92,7 +92,7 @@ namespace RR.AI_Chat.Service
             var messages = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages;
 
             StringBuilder sb = new();
-            await foreach (var message in _chatClient.CompleteStreamingAsync(messages))
+            await foreach (var message in _chatClient.CompleteStreamingAsync(messages ?? [], new ChatOptions() { ModelId = request.ModelId}))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 sb.Append(message.Text);

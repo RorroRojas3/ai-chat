@@ -34,7 +34,7 @@
           data-bs-toggle="dropdown"
           aria-expanded="false"
         >
-          {{ this.storeService.selectedModel() || "Select an option" }}
+          {{ this.storeService.selectedModelId() || "Select an option" }}
         </button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
           @for (model of this.storeService.models(); track model) {

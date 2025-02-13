@@ -15,5 +15,5 @@ export class StoreService {
   messages = signal<MessageDto[]>([]);
   streamMessage = signal<MessageDto>(new MessageDto('', false, undefined));
   models = signal<ModelDto[]>([]);
-  selectedModel = signal<string>('');
+  selectedModelId = signal<string>('');
 }
