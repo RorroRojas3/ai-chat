@@ -123,14 +123,14 @@ namespace RR.AI_Chat.Service
 
         public async Task<List<ModelDto>> GetModelsAsync()
         {
-            var models = _configuration.GetValue<List<string>>("Models");
+            var models = _configuration.GetSection("Models").Get<string[]>();
             if (models == null)
             {
                 return [];
             }
 
             await Task.CompletedTask;
-            return models.Select(m => new ModelDto { Name = m }).ToList();
+            return [.. models.Select(m => new ModelDto { Name = m })];
         }
     }
 }
