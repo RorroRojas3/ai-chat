@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { MarkdownViewerComponent } from './markdown-viewer.component';
+import { MenuOffcanvasComponent } from './menu-offcanvas.component';
 
-describe('MarkdownViewerComponent', () => {
-  let component: MarkdownViewerComponent;
-  let fixture: ComponentFixture<MarkdownViewerComponent>;
+describe('MenuOffcanvasComponent', () => {
+  let component: MenuOffcanvasComponent;
+  let fixture: ComponentFixture<MenuOffcanvasComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MarkdownViewerComponent]
+      imports: [MenuOffcanvasComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(MarkdownViewerComponent);
+    fixture = TestBed.createComponent(MenuOffcanvasComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

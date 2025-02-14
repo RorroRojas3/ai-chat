@@ -117,4 +117,13 @@ export class ChatService {
   getModels(): Observable<ModelDto[]> {
     return this.http.get<ModelDto[]>(`${environment.apiUrl}chat/models`);
   }
+
+  /**
+   * Retrieves an array of chat sessions from the API.
+   *
+   * @returns An Observable that emits an array of SessionDto objects representing chat sessions.
+   */
+  getSessions(): Observable<SessionDto[]> {
+    return this.http.get<SessionDto[]>(`${environment.apiUrl}chat/sessions`);
+  }
 }

@@ -20,6 +20,8 @@ namespace RR.AI_Chat.Service
         Task<ChatCompletionDto> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, ChatCompletionRequestDto request);
 
         Task<List<ModelDto>> GetModelsAsync();
+
+        Task<List<SessionDto>> GetSessionsAsync();
     }
 
     public class ChatService : IChatService
@@ -50,7 +52,7 @@ namespace RR.AI_Chat.Service
                 new ChatMessage(ChatRole.User, question),
             ], null, cancellationToken);
 
-            return response.Message.Text;
+            return response.Message.Text ?? string.Empty;
         }
 
         /// <summary>
@@ -131,6 +133,13 @@ namespace RR.AI_Chat.Service
 
             await Task.CompletedTask;
             return [.. models.Select(m => new ModelDto { Name = m })];
+        }
+
+        public async Task<List<SessionDto>> GetSessionsAsync()
+        {
+            var sessions = _chatStore.Sessions.Take(10).Select(s => new SessionDto { Id = s.SessionId }).ToList();
+            await Task.CompletedTask;
+            return sessions;
         }
     }
 }
