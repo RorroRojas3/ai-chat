@@ -16,7 +16,13 @@
   </div>
   <div class="offcanvas-body">
     @for (session of this.storeService.sessions(); track session) {
-    <span>{{ session.id }}</span>
+    <span>{{
+      session.name.length > 40
+        ? session.name.slice(0, 40) + "..."
+        : session.name
+    }}</span>
+    <br />
+    <br />
     }
   </div>
 </div>

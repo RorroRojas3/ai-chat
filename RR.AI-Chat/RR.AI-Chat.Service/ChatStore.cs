@@ -11,6 +11,8 @@ namespace RR.AI_Chat.Service
     {
         public Guid SessionId { get; set; }
 
-        public List<ChatMessage> Messages { get; set; } = null!;
+        public string Name { get; set; } = null!;
+
+        public List<ChatMessage> Messages { get; set; } = [];
     }
 }

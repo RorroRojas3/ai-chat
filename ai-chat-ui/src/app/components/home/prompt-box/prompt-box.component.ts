@@ -76,6 +76,9 @@ export class PromptBoxComponent implements OnDestroy {
             this.storeService.streamMessage.set(
               new MessageDto('', false, undefined)
             );
+            this.chatService.getSessions().subscribe((sessions) => {
+              this.storeService.sessions.set(sessions);
+            });
           },
           error: (error) => {
             this.storeService.stream.set('');
