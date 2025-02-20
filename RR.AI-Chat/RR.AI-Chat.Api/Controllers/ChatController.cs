@@ -8,7 +8,7 @@ namespace RR.AI_Chat.Api.Controllers
     [ApiController]
     public class ChatController : ControllerBase
     {
-        private IChatService _chatService;
+        private readonly IChatService _chatService;
 
         public ChatController(IChatService chatService) 
         {
@@ -68,6 +68,13 @@ namespace RR.AI_Chat.Api.Controllers
         public async Task<IActionResult> GetModelsAsync()
         {
             var response = await _chatService.GetModelsAsync();
+            return Ok(response);
+        }
+
+        [HttpGet("sessions")]
+        public async Task<IActionResult> GetSessionsAsync()
+        {
+            var response = await _chatService.GetSessionsAsync();
             return Ok(response);
         }
     }

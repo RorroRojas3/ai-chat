@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { MessageDto } from '../dtos/MessageDto';
 import { ModelDto } from '../dtos/ModelDto';
+import { SessionDto } from '../dtos/SessionDto';
 
 @Injectable({
   providedIn: 'root',
@@ -16,4 +17,5 @@ export class StoreService {
   streamMessage = signal<MessageDto>(new MessageDto('', false, undefined));
   models = signal<ModelDto[]>([]);
   selectedModelId = signal<string>('');
+  sessions = signal<SessionDto[]>([]);
 }

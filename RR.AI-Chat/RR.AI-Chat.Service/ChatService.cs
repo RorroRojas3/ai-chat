@@ -20,6 +20,8 @@ namespace RR.AI_Chat.Service
         Task<ChatCompletionDto> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, ChatCompletionRequestDto request);
 
         Task<List<ModelDto>> GetModelsAsync();
+
+        Task<List<SessionDto>> GetSessionsAsync();
     }
 
     public class ChatService : IChatService
@@ -50,7 +52,7 @@ namespace RR.AI_Chat.Service
                 new ChatMessage(ChatRole.User, question),
             ], null, cancellationToken);
 
-            return response.Message.Text;
+            return response.Message.Text ?? string.Empty;
         }
 
         /// <summary>
@@ -88,18 +90,30 @@ namespace RR.AI_Chat.Service
 
         public async IAsyncEnumerable<string?> GetChatStreamingAsync([EnumeratorCancellation] CancellationToken cancellationToken, Guid sessionId, ChatStreamRequestdto request)
         {
-            _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.User, request.Prompt));
-            var messages = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages;
+            var session = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId);
+            if (session == null)
+            {
+                throw new InvalidOperationException($"Session with id {sessionId} not found.");
+            }
+
+            if (session.Messages.Count == 1)
+            {
+                var sessionName = await CreateSessionNameAsync(sessionId, request);
+                session.Name = sessionName;
+            }
+
+            session.Messages.Add(new ChatMessage(ChatRole.User, request.Prompt));
+
 
             StringBuilder sb = new();
-            await foreach (var message in _chatClient.CompleteStreamingAsync(messages ?? [], new ChatOptions() { ModelId = request.ModelId}))
+            await foreach (var message in _chatClient.CompleteStreamingAsync(session.Messages ?? [], new ChatOptions() { ModelId = request.ModelId}))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 sb.Append(message.Text);
                 yield return message.Text;
             }
 
-            _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.System, sb.ToString()));
+            session.Messages?.Add(new ChatMessage(ChatRole.System, sb.ToString()));
         }
 
         public async Task<ChatCompletionDto> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, ChatCompletionRequestDto prompt)
@@ -131,6 +145,39 @@ namespace RR.AI_Chat.Service
 
             await Task.CompletedTask;
             return [.. models.Select(m => new ModelDto { Name = m })];
+        }
+
+        public async Task<List<SessionDto>> GetSessionsAsync()
+        {
+            var sessions = _chatStore.Sessions.Take(10).Select(s => new SessionDto { Id = s.SessionId, Name = s.Name }).ToList();
+            await Task.CompletedTask;
+            return sessions;
+        }
+
+        /// <summary>
+        /// Creates a session name asynchronously based on the provided request.
+        /// </summary>
+        /// <param name="sessionId">The unique identifier of the session.</param>
+        /// <param name="request">The request containing the prompt and model ID.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the generated session name.</returns>
+        /// <exception cref="ArgumentException">Thrown when the request is null or empty.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the session name creation fails.</exception>
+        private async Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(nameof(request));
+            ArgumentException.ThrowIfNullOrWhiteSpace(nameof(request));
+
+            var response = await _chatClient.CompleteAsync([
+                                 new ChatMessage(ChatRole.System, "You are a helpful AI assistant."),
+                                 new ChatMessage(ChatRole.User, $"Create a session name based on the following prompt, please make it 50 characters or less and make it a string, not markdown. Prompt: {request.Prompt}")
+                             ], new() { ModelId = request.ModelId }, CancellationToken.None);
+            if (response == null)
+            {
+                _logger.LogError("Failed to create session name for session id {id}", sessionId);
+                throw new InvalidOperationException($"Failed to create session name for id {sessionId}");
+            }
+
+            return response.Message.Text ?? string.Empty;
         }
     }
 }
