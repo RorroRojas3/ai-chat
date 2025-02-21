@@ -15,14 +15,19 @@
     ></button>
   </div>
   <div class="offcanvas-body">
-    @for (session of this.storeService.sessions(); track session) {
-    <span>{{
-      session.name.length > 40
-        ? session.name.slice(0, 40) + "..."
-        : session.name
-    }}</span>
-    <br />
-    <br />
-    }
+    <ul class="list-group">
+      @for (session of this.storeService.sessions(); track session) {
+      <a
+        href="#"
+        class="list-group-item list-group-item-action"
+        (click)="onClickSession(session.id)"
+        >{{
+          session.name.length > 40
+            ? session.name.slice(0, 40) + "..."
+            : session.name
+        }}</a
+      >
+      }
+    </ul>
   </div>
 </div>

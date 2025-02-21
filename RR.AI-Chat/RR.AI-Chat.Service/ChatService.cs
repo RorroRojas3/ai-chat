@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
+using RR.AI_Chat.Dto.Enums;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -22,6 +23,8 @@ namespace RR.AI_Chat.Service
         Task<List<ModelDto>> GetModelsAsync();
 
         Task<List<SessionDto>> GetSessionsAsync();
+
+        Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId);
     }
 
     public class ChatService : IChatService
@@ -113,7 +116,7 @@ namespace RR.AI_Chat.Service
                 yield return message.Text;
             }
 
-            session.Messages?.Add(new ChatMessage(ChatRole.System, sb.ToString()));
+            session.Messages?.Add(new ChatMessage(ChatRole.Assistant, sb.ToString()));
         }
 
         public async Task<ChatCompletionDto> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, ChatCompletionRequestDto prompt)
@@ -152,6 +155,41 @@ namespace RR.AI_Chat.Service
             var sessions = _chatStore.Sessions.Take(10).Select(s => new SessionDto { Id = s.SessionId, Name = s.Name }).ToList();
             await Task.CompletedTask;
             return sessions;
+        }
+
+        /// <summary>
+        /// Retrieves the conversation of a specific chat session asynchronously.
+        /// </summary>
+        /// <param name="sessionId">The unique identifier of the chat session.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the session conversation details.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the session with the specified ID is not found or does not contain any messages.
+        /// </exception>
+        public async Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId)
+        {
+            var session = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId);
+            if (session == null)
+            {
+                _logger.LogError("Session with id {id} not found.", sessionId);
+                throw new InvalidOperationException($"Session with id {sessionId} not found.");
+            }
+
+            var messages = session.Messages
+                            .Where(x => x.Role != ChatRole.System)
+                            .Select(x => new SessionMessageDto() 
+                            { 
+                                Text = x.Text ?? string.Empty,
+                                Role = x.Role == ChatRole.User ? ChatRoleType.User : ChatRoleType.System
+                            })
+                            .ToList();
+            if (messages == null || messages.Count == 0)
+            {
+                _logger.LogError("Session with id {id} does not contain any messages.", sessionId);
+                throw new InvalidOperationException($"Session with id {sessionId} does not contain any messages.");
+            }
+
+            await Task.CompletedTask;
+            return new() { Id = sessionId, Name = session.Name, Messages = messages };
         }
 
         /// <summary>

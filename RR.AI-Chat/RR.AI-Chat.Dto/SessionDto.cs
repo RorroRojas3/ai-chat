@@ -6,4 +6,9 @@
 
         public string Name { get; set; } = null!;
     }
+
+    public class SessionConversationDto : SessionDto
+    {
+        public List<SessionMessageDto> Messages { get; set; } = [];
+    }
 }

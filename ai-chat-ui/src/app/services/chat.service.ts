@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, NgZone } from '@angular/core';
 import { Observable } from 'rxjs';
-import { SessionDto } from '../dtos/SessionDto';
+import { SessionCoversationDto, SessionDto } from '../dtos/SessionDto';
 import { environment } from '../../environments/environment';
 import { ChatCompletionDto } from '../dtos/ChatCompletionDto';
 import { StoreService } from '../store/store.service';
@@ -125,5 +125,19 @@ export class ChatService {
    */
   getSessions(): Observable<SessionDto[]> {
     return this.http.get<SessionDto[]>(`${environment.apiUrl}chat/sessions`);
+  }
+
+  /**
+   * Retrieves the conversation associated with the current session.
+   *
+   * @returns An Observable that emits a SessionConversationDto containing the conversation data
+   * @throws HttpErrorResponse if the request fails or session is invalid
+   */
+  getSessionConversation(): Observable<SessionCoversationDto> {
+    return this.http.get<SessionCoversationDto>(
+      `${
+        environment.apiUrl
+      }chat/sessions/${this.storeService.sessionId()}/conversations`
+    );
   }
 }
