@@ -19,6 +19,20 @@ export class StoreService {
   selectedModelId = signal<string>('');
   sessions = signal<SessionDto[]>([]);
 
+  /**
+   * Resets all store states to their initial values, preparing for a new chat session.
+   * This includes clearing the session ID, message history, prompt button state,
+   * streaming flags and current stream content.
+   *
+   * @remarks
+   * This method performs a complete reset of the store by:
+   * - Clearing the session identifier
+   * - Emptying the messages array
+   * - Enabling the prompt button
+   * - Resetting streaming states
+   * - Clearing stream content
+   * - Initializing a new empty stream message
+   */
   clearForNewSession(): void {
     this.sessionId.set('');
     this.messages.set([]);
