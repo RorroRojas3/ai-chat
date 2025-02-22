@@ -52,4 +52,8 @@ export class MenuOffcanvasComponent {
       this.storeService.disablePromptButton.set(false);
     });
   }
+
+  onClickCreateNewSession(): void {
+    this.storeService.clearForNewSession();
+  }
 }

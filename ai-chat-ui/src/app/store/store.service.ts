@@ -18,4 +18,13 @@ export class StoreService {
   models = signal<ModelDto[]>([]);
   selectedModelId = signal<string>('');
   sessions = signal<SessionDto[]>([]);
+
+  clearForNewSession(): void {
+    this.sessionId.set('');
+    this.messages.set([]);
+    this.disablePromptButton.set(false);
+    this.isStreaming.set(false);
+    this.stream.set('');
+    this.streamMessage.set(new MessageDto('', false, undefined));
+  }
 }
