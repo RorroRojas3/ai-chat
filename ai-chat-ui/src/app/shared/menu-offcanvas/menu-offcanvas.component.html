@@ -6,7 +6,7 @@
   aria-labelledby="offcanvasWithBothOptionsLabel"
 >
   <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="offcanvasWithBothOptionsLabel">Sessions</h5>
+    <h5 class="offcanvas-title" id="offcanvasWithBothOptionsLabel">AI Chat</h5>
     <button
       type="button"
       class="btn-close"
@@ -15,6 +15,17 @@
     ></button>
   </div>
   <div class="offcanvas-body">
+    <ul class="list-group">
+      <a
+        href="javascript:void(0);"
+        class="list-group-item list-group-item-action"
+        (click)="onClickCreateNewSession()"
+        ><i class="bi bi-chat-text"></i>&nbsp;Create a new chat</a
+      >
+    </ul>
+    <br />
+    <br />
+    <h6 class="offcanvas-title">Sessions</h6>
     <ul class="list-group">
       @for (session of this.storeService.sessions(); track session) {
       <a

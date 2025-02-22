@@ -52,4 +52,14 @@ export class MenuOffcanvasComponent {
       this.storeService.disablePromptButton.set(false);
     });
   }
+
+  /**
+   * Handles the click event for creating a new session.
+   * Clears the current session data using the store service.
+   *
+   * @returns void
+   */
+  onClickCreateNewSession(): void {
+    this.storeService.clearForNewSession();
+  }
 }
