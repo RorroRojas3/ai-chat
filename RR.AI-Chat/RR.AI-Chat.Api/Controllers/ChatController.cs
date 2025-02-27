@@ -6,14 +6,9 @@ namespace RR.AI_Chat.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ChatController : ControllerBase
+    public class ChatController(IChatService chatService) : ControllerBase
     {
-        private readonly IChatService _chatService;
-
-        public ChatController(IChatService chatService) 
-        {
-            _chatService = chatService; 
-        }
+        private readonly IChatService _chatService = chatService;
 
         [HttpPost("completion")]
         public async Task<IActionResult> GetChatCompletionAsync(CancellationToken cancellationToken, string question)

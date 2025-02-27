@@ -27,20 +27,12 @@ namespace RR.AI_Chat.Service
         Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId);
     }
 
-    public class ChatService : IChatService
+    public class ChatService(ILogger<ChatService> logger, IChatClient chatClient, IConfiguration configuration, ChatStore chatStore) : IChatService
     {
-        private readonly ILogger _logger;
-        private readonly IChatClient _chatClient;
-        private readonly IConfiguration _configuration;
-        private readonly ChatStore _chatStore;
-
-        public ChatService(ILogger<ChatService> logger, IChatClient chatClient, IConfiguration configuration, ChatStore chatStore)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
-            _configuration = configuration;
-            _chatStore = chatStore;
-        }
+        private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly IChatClient _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
+        private readonly IConfiguration _configuration = configuration;
+        private readonly ChatStore _chatStore = chatStore;
 
         /// <summary>
         /// Gets the chat completion asynchronously based on the provided question.
@@ -93,12 +85,7 @@ namespace RR.AI_Chat.Service
 
         public async IAsyncEnumerable<string?> GetChatStreamingAsync([EnumeratorCancellation] CancellationToken cancellationToken, Guid sessionId, ChatStreamRequestdto request)
         {
-            var session = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId);
-            if (session == null)
-            {
-                throw new InvalidOperationException($"Session with id {sessionId} not found.");
-            }
-
+            var session = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId) ?? throw new InvalidOperationException($"Session with id {sessionId} not found.");
             if (session.Messages.Count == 1)
             {
                 var sessionName = await CreateSessionNameAsync(sessionId, request);

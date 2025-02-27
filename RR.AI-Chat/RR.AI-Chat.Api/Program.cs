@@ -24,11 +24,13 @@ builder.Services.AddChatClient(new OllamaChatClient(new Uri(ollamaUrl ?? "http:/
 
 // AI Embedding Generators
 IEmbeddingGenerator<string, Embedding<float>> ollamaGenerator =
-    new OllamaEmbeddingGenerator(new Uri("http://localhost:11434/"), "llama3.2");
+    new OllamaEmbeddingGenerator(new Uri("http://localhost:11434/"), "nomic-embed-text");
 builder.Services.AddEmbeddingGenerator(ollamaGenerator);
 
 builder.Services.AddTransient<IChatService, ChatService>();
 builder.Services.AddSingleton<ChatStore>();
+builder.Services.AddSingleton<DocumentStore>();
+builder.Services.AddTransient<IDocumentService, DocumentService>();
 
 var app = builder.Build();
 
