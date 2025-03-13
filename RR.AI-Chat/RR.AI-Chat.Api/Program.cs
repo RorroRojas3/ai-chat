@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
+using RR.AI_Chat.Repository;
 using RR.AI_Chat.Service;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,13 +8,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+builder.Services.AddDbContext<AIChatDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Add CORS
 var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>();
-corsOrigins = corsOrigins ?? [];
+corsOrigins ??= [];
 builder.Services.AddCors(builder => builder.AddPolicy("AllowSpecificOrigins", policy =>
 {
     policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod();

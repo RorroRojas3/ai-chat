@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RR.AI-Chat.Service", "RR.AI
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RR.AI-Chat.Dto", "RR.AI-Chat.Dto\RR.AI-Chat.Dto.csproj", "{1CDB7D56-1728-4D1B-88E3-D53F6A3C2737}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RR.AI-Chat.Repository", "RR.AI-Chat.Repository\RR.AI-Chat.Repository.csproj", "{11BEAA6F-847D-40EC-BDF2-1F6F5C142AEB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RR.AI-Chat.Entity", "RR.AI-Chat.Entity\RR.AI-Chat.Entity.csproj", "{55BC6F7C-CF72-4A8C-93A7-29653D984DBB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,8 +31,19 @@ Global
 		{1CDB7D56-1728-4D1B-88E3-D53F6A3C2737}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1CDB7D56-1728-4D1B-88E3-D53F6A3C2737}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1CDB7D56-1728-4D1B-88E3-D53F6A3C2737}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11BEAA6F-847D-40EC-BDF2-1F6F5C142AEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11BEAA6F-847D-40EC-BDF2-1F6F5C142AEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11BEAA6F-847D-40EC-BDF2-1F6F5C142AEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11BEAA6F-847D-40EC-BDF2-1F6F5C142AEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55BC6F7C-CF72-4A8C-93A7-29653D984DBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55BC6F7C-CF72-4A8C-93A7-29653D984DBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55BC6F7C-CF72-4A8C-93A7-29653D984DBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55BC6F7C-CF72-4A8C-93A7-29653D984DBB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BA9EBF49-6F1F-4A2A-9500-AD852F4A257B}
 	EndGlobalSection
 EndGlobal

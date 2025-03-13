@@ -32,7 +32,6 @@ namespace RR.AI_Chat.Service
                 Name = formFile.FileName,
                 Bytes = bytes,
                 Extension = GetFileExtension(formFile.FileName),
-                Vector = embeddings.Vector.ToArray()
             };
 
             return document;
