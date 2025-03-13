@@ -13,7 +13,7 @@ namespace RR.AI_Chat.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateDocumentAsync(IFormFile formFile)
         {
-            var document = await _service.CreateDocumentAsync(formFile);
+            var document = await _service.CreateDocumentAsync(formFile, Guid.Parse(Request.Headers["sessionId"].ToString()));
             return Created($"api/documents/{document.Id}", document);
         }
     }

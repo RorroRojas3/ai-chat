@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using RR.AI_Chat.Entity;
+using RR.AI_Chat.Repository;
 using System.Text;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
@@ -9,30 +11,45 @@ namespace RR.AI_Chat.Service
 {
     public interface IDocumentService 
     {
-        Task<Document> CreateDocumentAsync(IFormFile formFile);
+        Task<Document> CreateDocumentAsync(IFormFile formFile, Guid sessionId);
     }
 
-    public class DocumentService(ILogger<DocumentService> logger, IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator) : IDocumentService
+    public class DocumentService(ILogger<DocumentService> logger, 
+        IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
+        AIChatDbContext ctx) : IDocumentService
     {
         private readonly ILogger _logger = logger;
         private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator = embeddingGenerator;
+        private readonly AIChatDbContext _ctx = ctx;
 
 
-        public async Task<Document> CreateDocumentAsync(IFormFile formFile)
+        public async Task<Document> CreateDocumentAsync(IFormFile formFile, Guid sessionId)
         {
             ArgumentNullException.ThrowIfNull(formFile, nameof(formFile));
 
             var bytes = await ReadAllBytesAsync(formFile.OpenReadStream());
-            var fileText = ExtractTextFromPdfFileAsync(bytes);
-            var embeddings = await _embeddingGenerator.GenerateEmbeddingAsync(fileText);
+            var pageTexts = ExtractTextFromPdfFileAsync(bytes);
+            List<DocumentPage> documentPages = [];
+            int pageNumber = 1;
+            var date = DateTime.UtcNow;
+            foreach (var pageText in pageTexts)
+            {
+                var embedding = await _embeddingGenerator.GenerateEmbeddingVectorAsync(pageText);
+                documentPages.Add(new DocumentPage { Number = pageNumber, Vector = embedding.ToArray(), Text = pageText, DateCreated = date });
+            }
 
             var document = new Document
             {
                 Id = Guid.NewGuid(),
+                SessionId = sessionId,
                 Name = formFile.FileName,
-                Bytes = bytes,
                 Extension = GetFileExtension(formFile.FileName),
+                Pages = documentPages,
+                DateCreated = date
             };
+
+            await _ctx.AddAsync(document);
+            await _ctx.SaveChangesAsync();
 
             return document;
         }
@@ -71,7 +88,7 @@ namespace RR.AI_Chat.Service
         /// <param name="bytes">The byte array representing the PDF file.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the extracted text from the PDF file.</returns>
         /// <exception cref="ArgumentNullException">Thrown when the byte array is null.</exception>
-        public static string ExtractTextFromPdfFileAsync(byte[] bytes)
+        public static List<string> ExtractTextFromPdfFileAsync(byte[] bytes)
         {
             ArgumentNullException.ThrowIfNull(bytes, nameof(bytes));
 
@@ -79,6 +96,8 @@ namespace RR.AI_Chat.Service
 
             // Load PDF from byte array
             using MemoryStream stream = new(bytes);
+
+            var texts = new List<string>();
 
             // Open the PDF document
             using PdfDocument document = PdfDocument.Open(stream);
@@ -92,10 +111,10 @@ namespace RR.AI_Chat.Service
                 string pageText = page.Text;
 
                 // Add the text to our StringBuilder
-                text.AppendLine(pageText);
+                texts.Add(pageText);
             }
 
-            return text.ToString();
+            return texts;
         }
     }
 }
