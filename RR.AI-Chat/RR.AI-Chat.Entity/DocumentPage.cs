@@ -3,7 +3,7 @@
 namespace RR.AI_Chat.Entity
 {
     [Table(nameof(DocumentPage))]
-    public class DocumentPage
+    public class DocumentPage : BaseEntity
     {
         [ForeignKey(nameof(Document))]
         public Guid DocumentId { get; set; }
