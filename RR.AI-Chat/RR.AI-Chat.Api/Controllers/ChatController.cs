@@ -11,20 +11,20 @@ namespace RR.AI_Chat.Api.Controllers
         private readonly IChatService _chatService = chatService;
 
         [HttpPost("completion")]
-        public async Task<IActionResult> GetChatCompletionAsync(CancellationToken cancellationToken, string question)
+        public async Task<IActionResult> GetChatCompletionAsync(string question, CancellationToken cancellationToken)
         {
-            var response = await _chatService.GetChatCompletionAsync(cancellationToken, question);
+            var response = await _chatService.GetChatCompletionAsync(question, cancellationToken);
             return Ok(response);   
         }
 
         [HttpPost("streaming")]
-        public async Task GetChatStreamingAsync(CancellationToken cancellationToken, string prompt)
+        public async Task GetChatStreamingAsync(string prompt, CancellationToken cancellationToken)
         {
             Response.Headers.Append("Content-Type", "text/event-stream");
             Response.Headers.Append("Cache-Control", "no-cache");
             Response.Headers.Append("Connection", "keep-alive");
 
-            await foreach (var message in _chatService.GetChatStreamingAsync(cancellationToken, prompt))
+            await foreach (var message in _chatService.GetChatStreamingAsync(prompt, cancellationToken))
             {
                 await Response.WriteAsync($"data: {message}\n\n", cancellationToken);
                 await Response.Body.FlushAsync(cancellationToken);
@@ -32,20 +32,20 @@ namespace RR.AI_Chat.Api.Controllers
         }
 
         [HttpPost("session")]
-        public IActionResult CreateChatSessionAsync()
+        public async Task<IActionResult> CreateChatSessionAsync()
         {
-            var dto = _chatService.CreateChatSessionAsync();
+            var dto = await _chatService.CreateChatSessionAsync();
             return Ok(dto);
         }
 
         [HttpPost("session/{sessionId}/stream")]
-        public async Task GetChatStreamingAsync(CancellationToken cancellationToken, Guid sessionId, ChatStreamRequestdto request)
+        public async Task GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken)
         {
             Response.Headers.Append("Content-Type", "text/event-stream");
             Response.Headers.Append("Cache-Control", "no-cache");
             Response.Headers.Append("Connection", "keep-alive");
 
-            await foreach (var message in _chatService.GetChatStreamingAsync(cancellationToken, sessionId, request))
+            await foreach (var message in _chatService.GetChatStreamingAsync(sessionId, request, cancellationToken))
             {
                 await Response.WriteAsync($"{message}", cancellationToken);
                 await Response.Body.FlushAsync(cancellationToken);
@@ -53,9 +53,9 @@ namespace RR.AI_Chat.Api.Controllers
         }
 
         [HttpPost("session/{sessionId}/completion")]
-        public async Task<IActionResult> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, ChatCompletionRequestDto request)
+        public async Task<IActionResult> GetChatCompletionAsync(Guid sessionId, ChatCompletionRequestDto request, CancellationToken cancellationToken)
         {
-            var response = await _chatService.GetChatCompletionAsync(cancellationToken, sessionId, request);
+            var response = await _chatService.GetChatCompletionAsync(sessionId, request, cancellationToken);
             return Ok(response);
         }
 

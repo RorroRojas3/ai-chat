@@ -2,7 +2,7 @@
 
 namespace RR.AI_Chat.Entity
 {
-    [Table(nameof(Document))]
+    [Table(nameof(Document), Schema = "AI")]
     public class Document : BaseEntity
     {
         [ForeignKey(nameof(Session))]

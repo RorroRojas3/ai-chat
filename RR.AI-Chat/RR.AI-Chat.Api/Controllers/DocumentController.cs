@@ -11,9 +11,9 @@ namespace RR.AI_Chat.Api.Controllers
         private readonly IDocumentService _service = service;
 
         [HttpPost]
-        public async Task<IActionResult> CreateDocumentAsync(IFormFile formFile)
+        public async Task<IActionResult> CreateDocumentAsync(IFormFile file)
         {
-            var document = await _service.CreateDocumentAsync(formFile, Guid.Parse(Request.Headers["sessionId"].ToString()));
+            var document = await _service.CreateDocumentAsync(file, Guid.Parse(Request.Headers["sessionId"].ToString()));
             return Created($"api/documents/{document.Id}", document);
         }
     }

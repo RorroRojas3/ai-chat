@@ -46,7 +46,7 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.HasIndex("SessionId");
 
-                    b.ToTable("Document");
+                    b.ToTable("Document", "AI");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.DocumentPage", b =>
@@ -70,13 +70,13 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.PrimitiveCollection<float[]>("Vector")
                         .IsRequired()
-                        .HasColumnType("real[]");
+                        .HasColumnType("float[]");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DocumentId");
 
-                    b.ToTable("DocumentPage");
+                    b.ToTable("DocumentPage", "AI");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.Session", b =>
@@ -88,9 +88,13 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
-                    b.ToTable("Session");
+                    b.ToTable("Session", "AI");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.Document", b =>

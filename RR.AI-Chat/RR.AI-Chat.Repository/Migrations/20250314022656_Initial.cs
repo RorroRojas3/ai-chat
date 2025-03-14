@@ -11,11 +11,16 @@ namespace RR.AI_Chat.Repository.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.EnsureSchema(
+                name: "AI");
+
             migrationBuilder.CreateTable(
                 name: "Session",
+                schema: "AI",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -25,6 +30,7 @@ namespace RR.AI_Chat.Repository.Migrations
 
             migrationBuilder.CreateTable(
                 name: "Document",
+                schema: "AI",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -39,6 +45,7 @@ namespace RR.AI_Chat.Repository.Migrations
                     table.ForeignKey(
                         name: "FK_Document_Session_SessionId",
                         column: x => x.SessionId,
+                        principalSchema: "AI",
                         principalTable: "Session",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -46,13 +53,14 @@ namespace RR.AI_Chat.Repository.Migrations
 
             migrationBuilder.CreateTable(
                 name: "DocumentPage",
+                schema: "AI",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     DocumentId = table.Column<Guid>(type: "uuid", nullable: false),
                     Number = table.Column<int>(type: "integer", nullable: false),
                     Text = table.Column<string>(type: "text", nullable: false),
-                    Vector = table.Column<float[]>(type: "real[]", nullable: false),
+                    Vector = table.Column<float[]>(type: "float[]", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -61,6 +69,7 @@ namespace RR.AI_Chat.Repository.Migrations
                     table.ForeignKey(
                         name: "FK_DocumentPage_Document_DocumentId",
                         column: x => x.DocumentId,
+                        principalSchema: "AI",
                         principalTable: "Document",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -68,11 +77,13 @@ namespace RR.AI_Chat.Repository.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_Document_SessionId",
+                schema: "AI",
                 table: "Document",
                 column: "SessionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DocumentPage_DocumentId",
+                schema: "AI",
                 table: "DocumentPage",
                 column: "DocumentId");
         }
@@ -81,13 +92,16 @@ namespace RR.AI_Chat.Repository.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "DocumentPage");
+                name: "DocumentPage",
+                schema: "AI");
 
             migrationBuilder.DropTable(
-                name: "Document");
+                name: "Document",
+                schema: "AI");
 
             migrationBuilder.DropTable(
-                name: "Session");
+                name: "Session",
+                schema: "AI");
         }
     }
 }

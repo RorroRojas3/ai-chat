@@ -2,8 +2,15 @@
 
 namespace RR.AI_Chat.Entity
 {
-    [Table(nameof(Session))]    
+    [Table(nameof(Session), Schema = "AI")]    
     public class Session : BaseEntity
     {
+        public Session(string name)
+        {
+            Name = name;
+            DateCreated = DateTime.UtcNow;
+        }
+
+        public string Name { get; set; } = "New Chat";
     }
 }

@@ -3,6 +3,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
+using RR.AI_Chat.Entity;
+using RR.AI_Chat.Repository;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -10,15 +12,15 @@ namespace RR.AI_Chat.Service
 {
     public interface IChatService 
     {
-        Task<string> GetChatCompletionAsync(CancellationToken cancellationToken, string question);
+        Task<string> GetChatCompletionAsync(string question, CancellationToken cancellationToken);
 
-        IAsyncEnumerable<string?> GetChatStreamingAsync(CancellationToken cancellationToken, string prompt);
+        IAsyncEnumerable<string?> GetChatStreamingAsync(string prompt, CancellationToken cancellationToken);
 
-        SessionDto CreateChatSessionAsync();
+        Task<SessionDto> CreateChatSessionAsync();
 
-        IAsyncEnumerable<string?> GetChatStreamingAsync(CancellationToken cancellationToken, Guid sessionId, ChatStreamRequestdto request);
+        IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken);
 
-        Task<ChatCompletionDto> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, ChatCompletionRequestDto request);
+        Task<ChatCompletionDto> GetChatCompletionAsync(Guid sessionId, ChatCompletionRequestDto request, CancellationToken cancellationToken);
 
         Task<List<ModelDto>> GetModelsAsync();
 
@@ -27,12 +29,15 @@ namespace RR.AI_Chat.Service
         Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId);
     }
 
-    public class ChatService(ILogger<ChatService> logger, IChatClient chatClient, IConfiguration configuration, ChatStore chatStore) : IChatService
+    public class ChatService(ILogger<ChatService> logger, 
+        IChatClient chatClient, IConfiguration configuration, 
+        ChatStore chatStore, AIChatDbContext ctx) : IChatService
     {
         private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         private readonly IChatClient _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
         private readonly IConfiguration _configuration = configuration;
         private readonly ChatStore _chatStore = chatStore;
+        private readonly AIChatDbContext _ctx = ctx;
 
         /// <summary>
         /// Gets the chat completion asynchronously based on the provided question.
@@ -40,7 +45,7 @@ namespace RR.AI_Chat.Service
         /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
         /// <param name="question">The question to send to the chat client.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the chat response message.</returns>
-        public async Task<string> GetChatCompletionAsync(CancellationToken cancellationToken, string question)
+        public async Task<string> GetChatCompletionAsync(string question, CancellationToken cancellationToken)
         {
             var response = await _chatClient.CompleteAsync([
                 new ChatMessage(ChatRole.System, "You are a helpful AI assistant"),
@@ -56,9 +61,9 @@ namespace RR.AI_Chat.Service
         /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
         /// <param name="prompt">The prompt to send to the chat client.</param>
         /// <returns>An asynchronous stream of chat response messages.</returns>
-        public async IAsyncEnumerable<string?> GetChatStreamingAsync([EnumeratorCancellation] CancellationToken cancellationToken, string prompt)
+        public async IAsyncEnumerable<string?> GetChatStreamingAsync(string prompt, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            await foreach (var message in _chatClient.CompleteStreamingAsync(prompt))
+            await foreach (var message in _chatClient.CompleteStreamingAsync(prompt, cancellationToken: cancellationToken))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -66,13 +71,15 @@ namespace RR.AI_Chat.Service
             }
         }
 
-        public SessionDto CreateChatSessionAsync()
+        public async Task<SessionDto> CreateChatSessionAsync()
         {
-            var guid = Guid.NewGuid();
+            var newSession = new Session("New Session");    
+            await _ctx.AddAsync(newSession);
+            await _ctx.SaveChangesAsync();
 
             var chatSession = new ChatSesion
             {
-                SessionId = guid,
+                SessionId = newSession.Id,
                 Messages =
                 [
                     new ChatMessage(ChatRole.System, "You are a helpful AI assistant.")
@@ -80,10 +87,10 @@ namespace RR.AI_Chat.Service
             };
             _chatStore.Sessions.Add(chatSession);
 
-            return new() { Id = guid };
+            return new() { Id = newSession.Id, Name = newSession.Name };
         }
 
-        public async IAsyncEnumerable<string?> GetChatStreamingAsync([EnumeratorCancellation] CancellationToken cancellationToken, Guid sessionId, ChatStreamRequestdto request)
+        public async IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             var session = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId) ?? throw new InvalidOperationException($"Session with id {sessionId} not found.");
             if (session.Messages.Count == 1)
@@ -96,7 +103,7 @@ namespace RR.AI_Chat.Service
 
 
             StringBuilder sb = new();
-            await foreach (var message in _chatClient.CompleteStreamingAsync(session.Messages ?? [], new ChatOptions() { ModelId = request.ModelId}))
+            await foreach (var message in _chatClient.CompleteStreamingAsync(session.Messages ?? [], new ChatOptions() { ModelId = request.ModelId}, cancellationToken))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 sb.Append(message.Text);
@@ -106,7 +113,7 @@ namespace RR.AI_Chat.Service
             session.Messages?.Add(new ChatMessage(ChatRole.Assistant, sb.ToString()));
         }
 
-        public async Task<ChatCompletionDto> GetChatCompletionAsync(CancellationToken cancellationToken, Guid sessionId, ChatCompletionRequestDto prompt)
+        public async Task<ChatCompletionDto> GetChatCompletionAsync(Guid sessionId, ChatCompletionRequestDto prompt, CancellationToken cancellationToken)
         {
             _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.User, prompt.Prompt));
             
