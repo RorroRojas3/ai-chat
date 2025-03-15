@@ -8,5 +8,7 @@ namespace RR.AI_Chat.Entity
         public Guid Id { get; set; }
 
         public DateTime DateCreated { get; set; }
+
+        public DateTime? DateDeactivated { get; set; }
     }
 }

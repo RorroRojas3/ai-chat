@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RR.AI-Chat.Dto\RR.AI-Chat.Dto.csproj" />
     <ProjectReference Include="..\RR.AI-Chat.Entity\RR.AI-Chat.Entity.csproj" />
   </ItemGroup>
 
