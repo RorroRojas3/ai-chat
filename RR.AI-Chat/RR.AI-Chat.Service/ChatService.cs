@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.AI;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
@@ -47,12 +48,12 @@ namespace RR.AI_Chat.Service
         /// <returns>A task that represents the asynchronous operation. The task result contains the chat response message.</returns>
         public async Task<string> GetChatCompletionAsync(string question, CancellationToken cancellationToken)
         {
-            var response = await _chatClient.CompleteAsync([
+            var response = await _chatClient.GetResponseAsync([
                 new ChatMessage(ChatRole.System, "You are a helpful AI assistant"),
                 new ChatMessage(ChatRole.User, question),
             ], null, cancellationToken);
 
-            return response.Message.Text ?? string.Empty;
+            return response.Messages[0].Text ?? string.Empty;
         }
 
         /// <summary>
@@ -63,7 +64,7 @@ namespace RR.AI_Chat.Service
         /// <returns>An asynchronous stream of chat response messages.</returns>
         public async IAsyncEnumerable<string?> GetChatStreamingAsync(string prompt, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            await foreach (var message in _chatClient.CompleteStreamingAsync(prompt, cancellationToken: cancellationToken))
+            await foreach (var message in _chatClient.GetStreamingResponseAsync(prompt, cancellationToken: cancellationToken))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -73,7 +74,7 @@ namespace RR.AI_Chat.Service
 
         public async Task<SessionDto> CreateChatSessionAsync()
         {
-            var newSession = new Session("New Session");    
+            var newSession = new Session();    
             await _ctx.AddAsync(newSession);
             await _ctx.SaveChangesAsync();
 
@@ -87,7 +88,7 @@ namespace RR.AI_Chat.Service
             };
             _chatStore.Sessions.Add(chatSession);
 
-            return new() { Id = newSession.Id, Name = newSession.Name };
+            return new() { Id = newSession.Id };
         }
 
         public async IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -103,7 +104,7 @@ namespace RR.AI_Chat.Service
 
 
             StringBuilder sb = new();
-            await foreach (var message in _chatClient.CompleteStreamingAsync(session.Messages ?? [], new ChatOptions() { ModelId = request.ModelId}, cancellationToken))
+            await foreach (var message in _chatClient.GetStreamingResponseAsync(session.Messages ?? [], new ChatOptions() { ModelId = request.ModelId}, cancellationToken))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 sb.Append(message.Text);
@@ -118,30 +119,36 @@ namespace RR.AI_Chat.Service
             _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.User, prompt.Prompt));
             
             var messages = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages;
-            var response = await _chatClient.CompleteAsync(messages ?? [], null,cancellationToken);
+            var response = await _chatClient.GetResponseAsync(messages ?? [], null,cancellationToken);
 
-            _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.System, response.Message.Text));
+            _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.System, response.Messages[0].Text));
             
             return new() 
             { 
                 SessionId = sessionId, 
-                Message = response.Message.Text, 
+                Message = response.Messages[0].Text, 
                 InputTokenCount = response?.Usage?.InputTokenCount,
                 OutputTokenCount = response?.Usage?.OutputTokenCount,
                 TotalTokenCount = response?.Usage?.TotalTokenCount
             };
         }
 
+        /// <summary>
+        /// Retrieves a list of available models asynchronously.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a list of ModelDto objects.</returns>
         public async Task<List<ModelDto>> GetModelsAsync()
         {
-            var models = _configuration.GetSection("Models").Get<string[]>();
-            if (models == null)
-            {
-                return [];
-            }
+            var models = await _ctx.Models
+                            .AsNoTracking()
+                            .Select(x => new ModelDto
+                            {
+                                Id = x.Id,
+                                Name = x.Name
+                            })
+                            .ToListAsync();
 
-            await Task.CompletedTask;
-            return [.. models.Select(m => new ModelDto { Name = m })];
+            return models;
         }
 
         public async Task<List<SessionDto>> GetSessionsAsync()
@@ -199,7 +206,7 @@ namespace RR.AI_Chat.Service
             ArgumentException.ThrowIfNullOrEmpty(nameof(request));
             ArgumentException.ThrowIfNullOrWhiteSpace(nameof(request));
 
-            var response = await _chatClient.CompleteAsync([
+            var response = await _chatClient.GetResponseAsync([
                                  new ChatMessage(ChatRole.System, "You are a helpful AI assistant."),
                                  new ChatMessage(ChatRole.User, $"Create a session name based on the following prompt, please make it 50 characters or less and make it a string, not markdown. Prompt: {request.Prompt}")
                              ], new() { ModelId = request.ModelId }, CancellationToken.None);
@@ -209,7 +216,7 @@ namespace RR.AI_Chat.Service
                 throw new InvalidOperationException($"Failed to create session name for id {sessionId}");
             }
 
-            return response.Message.Text ?? string.Empty;
+            return response.Messages[0].Text ?? string.Empty;
         }
     }
 }

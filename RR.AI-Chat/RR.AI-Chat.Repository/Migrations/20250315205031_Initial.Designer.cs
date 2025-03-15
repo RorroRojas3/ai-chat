@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RR.AI_Chat.Repository;
@@ -11,9 +12,11 @@ using RR.AI_Chat.Repository;
 namespace RR.AI_Chat.Repository.Migrations
 {
     [DbContext(typeof(AIChatDbContext))]
-    partial class AIChatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250315205031_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
