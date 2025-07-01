@@ -35,7 +35,7 @@ namespace RR.AI_Chat.Service
 
             foreach (var documentExtractor in documentExtractors)
             {
-                var embedding = await _embeddingGenerator.GenerateEmbeddingVectorAsync(documentExtractor.PageText);
+                var embedding = await _embeddingGenerator.GenerateVectorAsync(documentExtractor.PageText);
                 documentPages.Add(new DocumentPage 
                 { 
                     Number = documentExtractor.PageNumber,
