@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RR.AI_Chat.Dto;
 using RR.AI_Chat.Service;
 
 namespace RR.AI_Chat.Api.Controllers
@@ -14,6 +15,13 @@ namespace RR.AI_Chat.Api.Controllers
         {
             var document = await _service.CreateDocumentAsync(file, Guid.Parse(Request.Headers["sessionId"].ToString()));
             return Created($"api/documents/{document.Id}", document);
+        }
+
+        [HttpPost("search")]
+        public async Task<IActionResult> SearchDocumentsAsync(SearchDocumentRequestDto request)
+        {
+            var documents = await _service.SearchDocumentsAsync(request.SessionId, request);
+            return Ok(documents);
         }
     }
 }

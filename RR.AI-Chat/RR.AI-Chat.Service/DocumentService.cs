@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Pgvector;
+using Pgvector.EntityFrameworkCore;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
@@ -13,6 +15,8 @@ namespace RR.AI_Chat.Service
     public interface IDocumentService 
     {
         Task<DocumentDto> CreateDocumentAsync(IFormFile formFile, Guid sessionId);
+
+        Task<List<Document>> SearchDocumentsAsync(Guid sessionId, SearchDocumentRequestDto request);
     }
 
     public class DocumentService(ILogger<DocumentService> logger, 
@@ -22,6 +26,7 @@ namespace RR.AI_Chat.Service
         private readonly ILogger _logger = logger;
         private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator = embeddingGenerator;
         private readonly AIChatDbContext _ctx = ctx;
+        private const double _cosineDistanceThreshold = 0.3;
 
 
         public async Task<DocumentDto> CreateDocumentAsync(IFormFile formFile, Guid sessionId)
@@ -62,6 +67,38 @@ namespace RR.AI_Chat.Service
                 Id = document.Id,
                 Name = document.Name
             };
+        }
+
+        public async Task<List<Document>> SearchDocumentsAsync(Guid sessionId, SearchDocumentRequestDto request)
+        {
+            ArgumentNullException.ThrowIfNull(request, nameof(request));
+
+            var embedding = await _embeddingGenerator.GenerateVectorAsync(request.Prompt);
+            var vector = new Vector(embedding);
+
+            return await _ctx.DocumentPages
+                .AsNoTracking()
+                .Include(p => p.Document)
+                .Where(p => p.Document.SessionId == sessionId)
+                .Where(p => p.Embedding.CosineDistance(vector) <= _cosineDistanceThreshold)
+                .OrderBy(p => p.Embedding.CosineDistance(vector))
+                .Take(10)
+                .GroupBy(p => p.Document)
+                .Select(g => new Document
+                {
+                    Id = g.Key.Id,
+                    Name = g.Key.Name,
+                    Extension = g.Key.Extension,
+                    DateCreated = g.Key.DateCreated,
+                    Pages = g.OrderBy(p => p.Embedding.CosineDistance(vector))
+                           .Select(p => new DocumentPage
+                           {
+                               Id = p.Id,
+                               Number = p.Number,
+                               Text = p.Text,
+                           }).ToList()
+                })
+                .ToListAsync();
         }
 
         /// <summary>
