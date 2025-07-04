@@ -74,7 +74,7 @@ namespace RR.AI_Chat.Service
 
         public async Task<SessionDto> CreateChatSessionAsync()
         {
-            var newSession = new Session();    
+            var newSession = new Session() { DateCreated = DateTime.UtcNow };    
             await _ctx.AddAsync(newSession);
             await _ctx.SaveChangesAsync();
 

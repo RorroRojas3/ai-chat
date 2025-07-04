@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository.Configurations;
-using System.Reflection;
 
 namespace RR.AI_Chat.Repository
 {
@@ -23,6 +22,16 @@ namespace RR.AI_Chat.Repository
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Enable vector extension for PostgreSQL
+            modelBuilder.HasPostgresExtension("vector");
+
+            modelBuilder.Entity<DocumentPage>()
+               .HasIndex(i => i.Embedding)
+               .HasMethod("hnsw")
+               .HasOperators("vector_cosine_ops")
+               .HasStorageParameter("m", 16)
+               .HasStorageParameter("ef_construction", 64);
+
             modelBuilder.ApplyConfiguration(new AIServiceConfiguration());
             modelBuilder.ApplyConfiguration(new ModelConfiguration());
         }

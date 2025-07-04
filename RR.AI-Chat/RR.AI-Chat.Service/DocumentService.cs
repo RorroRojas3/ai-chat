@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Pgvector;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
-using System.Text;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 
@@ -39,7 +39,7 @@ namespace RR.AI_Chat.Service
                 documentPages.Add(new DocumentPage 
                 { 
                     Number = documentExtractor.PageNumber,
-                    Vector = embedding.ToArray(), 
+                    Embedding = new Vector(embedding), 
                     Text = documentExtractor.PageText, 
                     DateCreated = date 
                 });

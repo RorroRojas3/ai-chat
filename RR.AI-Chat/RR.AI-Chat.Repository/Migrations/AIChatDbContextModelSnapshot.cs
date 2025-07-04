@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using Pgvector;
 using RR.AI_Chat.Repository;
 
 #nullable disable
@@ -17,9 +18,10 @@ namespace RR.AI_Chat.Repository.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.3")
+                .HasAnnotation("ProductVersion", "9.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("RR.AI_Chat.Entity.AIService", b =>
@@ -97,6 +99,10 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<Guid>("DocumentId")
                         .HasColumnType("uuid");
 
+                    b.Property<Vector>("Embedding")
+                        .IsRequired()
+                        .HasColumnType("vector(768)");
+
                     b.Property<int>("Number")
                         .HasColumnType("integer");
 
@@ -104,13 +110,16 @@ namespace RR.AI_Chat.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.PrimitiveCollection<float[]>("Vector")
-                        .IsRequired()
-                        .HasColumnType("float[]");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DocumentId");
+
+                    b.HasIndex("Embedding")
+                        .HasAnnotation("Npgsql:StorageParameter:ef_construction", 64)
+                        .HasAnnotation("Npgsql:StorageParameter:m", 16);
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Embedding"), "hnsw");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Embedding"), new[] { "vector_cosine_ops" });
 
                     b.ToTable("DocumentPage", "AI");
                 });
@@ -146,21 +155,21 @@ namespace RR.AI_Chat.Repository.Migrations
                         {
                             Id = new Guid("157b91cf-1880-4977-9b7a-7f80f548df04"),
                             AIServiceId = new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"),
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "llama3.2"
                         },
                         new
                         {
                             Id = new Guid("9910ba5f-faca-4790-88a4-352e71e14724"),
                             AIServiceId = new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"),
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "mistral"
                         },
                         new
                         {
                             Id = new Guid("1fe5381b-0262-469a-b63e-f4d0c4807a98"),
                             AIServiceId = new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"),
-                            DateCreated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "gemma3"
                         });
                 });

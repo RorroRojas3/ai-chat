@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Pgvector;
 
 #nullable disable
 
@@ -18,6 +19,9 @@ namespace RR.AI_Chat.Repository.Migrations
 
             migrationBuilder.EnsureSchema(
                 name: "AI");
+
+            migrationBuilder.AlterDatabase()
+                .Annotation("Npgsql:PostgresExtension:vector", ",,");
 
             migrationBuilder.CreateTable(
                 name: "AIService",
@@ -135,7 +139,7 @@ namespace RR.AI_Chat.Repository.Migrations
                     DocumentId = table.Column<Guid>(type: "uuid", nullable: false),
                     Number = table.Column<int>(type: "integer", nullable: false),
                     Text = table.Column<string>(type: "text", nullable: false),
-                    Vector = table.Column<float[]>(type: "float[]", nullable: false),
+                    Embedding = table.Column<Vector>(type: "vector(768)", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     DateDeactivated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
@@ -163,9 +167,9 @@ namespace RR.AI_Chat.Repository.Migrations
                 columns: new[] { "Id", "AIServiceId", "DateCreated", "DateDeactivated", "Name" },
                 values: new object[,]
                 {
-                    { new Guid("157b91cf-1880-4977-9b7a-7f80f548df04"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "llama3.2" },
-                    { new Guid("1fe5381b-0262-469a-b63e-f4d0c4807a98"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "gemma3" },
-                    { new Guid("9910ba5f-faca-4790-88a4-352e71e14724"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, "mistral" }
+                    { new Guid("157b91cf-1880-4977-9b7a-7f80f548df04"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "llama3.2" },
+                    { new Guid("1fe5381b-0262-469a-b63e-f4d0c4807a98"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "gemma3" },
+                    { new Guid("9910ba5f-faca-4790-88a4-352e71e14724"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "mistral" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -179,6 +183,16 @@ namespace RR.AI_Chat.Repository.Migrations
                 schema: "AI",
                 table: "DocumentPage",
                 column: "DocumentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DocumentPage_Embedding",
+                schema: "AI",
+                table: "DocumentPage",
+                column: "Embedding")
+                .Annotation("Npgsql:IndexMethod", "hnsw")
+                .Annotation("Npgsql:IndexOperators", new[] { "vector_cosine_ops" })
+                .Annotation("Npgsql:StorageParameter:ef_construction", 64)
+                .Annotation("Npgsql:StorageParameter:m", 16);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Model_AIServiceId",
