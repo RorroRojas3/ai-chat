@@ -13,7 +13,7 @@ namespace RR.AI_Chat.Api.Controllers
         [HttpPost("completion")]
         public async Task<IActionResult> GetChatCompletionAsync(string question, CancellationToken cancellationToken)
         {
-            var response = await _chatService.GetChatCompletionAsync(question, cancellationToken);
+            var response = await _chatService.GetChatCompletionAsync("You are an AI helpful assistant.", question, cancellationToken);
             return Ok(response);   
         }
 

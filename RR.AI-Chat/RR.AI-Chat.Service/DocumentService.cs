@@ -16,17 +16,21 @@ namespace RR.AI_Chat.Service
     {
         Task<DocumentDto> CreateDocumentAsync(IFormFile formFile, Guid sessionId);
 
-        Task<List<Document>> SearchDocumentsAsync(Guid sessionId, SearchDocumentRequestDto request);
+        Task<List<Document>> SearchDocumentsAsync(Guid sessionId, SearchDocumentRequestDto request, CancellationToken cancellation);
     }
 
     public class DocumentService(ILogger<DocumentService> logger, 
         IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
+        IChatService chatService,
         AIChatDbContext ctx) : IDocumentService
     {
         private readonly ILogger _logger = logger;
         private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator = embeddingGenerator;
+        private readonly IChatService _chatService = chatService;
         private readonly AIChatDbContext _ctx = ctx;
-        private const double _cosineDistanceThreshold = 0.3;
+        private const double _cosineDistanceThreshold = 0.5;
+        private const string _documentAgentPrompt = "You are a System Prompt Optimizer specialized in document-related inquiries. When given a user prompt asking about document(s), analyze its intent and generate the single most effective system prompt that instructs an AI assistant to internally interrogate the document—examining its metadata, section headings, and content structure—to resolve any ambiguities and extract the precise information requested, without asking the user any clarifying questions. Respond with only the system prompt text.";
+
 
 
         public async Task<DocumentDto> CreateDocumentAsync(IFormFile formFile, Guid sessionId)
@@ -69,14 +73,16 @@ namespace RR.AI_Chat.Service
             };
         }
 
-        public async Task<List<Document>> SearchDocumentsAsync(Guid sessionId, SearchDocumentRequestDto request)
+        public async Task<List<Document>> SearchDocumentsAsync(Guid sessionId, SearchDocumentRequestDto request, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(request, nameof(request));
+
+           // var documentAgentPrompt = await _chatService.GetChatCompletionAsync(_documentAgentPrompt, request.Prompt, cancellationToken);
 
             var embedding = await _embeddingGenerator.GenerateVectorAsync(request.Prompt);
             var vector = new Vector(embedding);
 
-            return await _ctx.DocumentPages
+            var docPages =  await _ctx.DocumentPages
                 .AsNoTracking()
                 .Include(p => p.Document)
                 .Where(p => p.Document.SessionId == sessionId)
@@ -99,6 +105,16 @@ namespace RR.AI_Chat.Service
                            }).ToList()
                 })
                 .ToListAsync();
+
+            var userPrompt = "Context: I searched for text in a document based on a user's request. Here's what I found:\n\n" +
+                $"{string.Join(" ", docPages.SelectMany(x => x.Pages).Select(p => p.Text))} " +
+                $"\n\nUser's original prompt: `{request.Prompt}`. " +
+                $"\n\nPlease analyze this information and provide a comprehensive answer to the user's question.";
+
+            var test = await _chatService.GetChatCompletionAsync("You are an AI helpful assistant.", userPrompt, cancellationToken);
+
+
+            return docPages;
         }
 
         /// <summary>

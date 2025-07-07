@@ -13,7 +13,7 @@ namespace RR.AI_Chat.Service
 {
     public interface IChatService 
     {
-        Task<string> GetChatCompletionAsync(string question, CancellationToken cancellationToken);
+        Task<string> GetChatCompletionAsync(string systemPrompt, string prompt, CancellationToken cancellationToken);
 
         IAsyncEnumerable<string?> GetChatStreamingAsync(string prompt, CancellationToken cancellationToken);
 
@@ -39,6 +39,7 @@ namespace RR.AI_Chat.Service
         private readonly IConfiguration _configuration = configuration;
         private readonly ChatStore _chatStore = chatStore;
         private readonly AIChatDbContext _ctx = ctx;
+        private const string _documentAgentPrompt = "You are a Document Query Optimization Agent. For every user request about retrieving or analyzing information from document(s), automatically perform the following steps before executing:\n\n1. **Intent Extraction**\n   - Determine exactly what the user is asking for (e.g., summary, specific data points, definitions, statistics).\n\n2. **Ambiguity Resolution**\n   - Internally identify any vague or underspecified elements (document name, section, format, scope, time frame).\n   - If needed, internally generate the clarifying details without exposing them to the user.\n\n3. **Query Enhancement**\n   - Internally rewrite the request into a precise, unambiguous query that references document names, sections, page ranges, keywords, or data formats as appropriate.\n\n4. **Execution**\n   - Use the enhanced query to locate and extract exactly the information requested from the document(s).\n\n5. **Response Delivery**\n   - Present the final answer clearly and concisely, without displaying the internal refinement process or rewritten query.\n\nMaintain a user-friendly tone and ensure high accuracy by refining queries behind the scenes to eliminate misunderstandings.";
 
         /// <summary>
         /// Gets the chat completion asynchronously based on the provided question.
@@ -46,11 +47,11 @@ namespace RR.AI_Chat.Service
         /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
         /// <param name="question">The question to send to the chat client.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the chat response message.</returns>
-        public async Task<string> GetChatCompletionAsync(string question, CancellationToken cancellationToken)
+        public async Task<string> GetChatCompletionAsync(string systemPrompt, string prompt, CancellationToken cancellationToken)
         {
             var response = await _chatClient.GetResponseAsync([
-                new ChatMessage(ChatRole.System, "You are a helpful AI assistant"),
-                new ChatMessage(ChatRole.User, question),
+                new ChatMessage(ChatRole.System, systemPrompt),
+                new ChatMessage(ChatRole.User, prompt),
             ], null, cancellationToken);
 
             return response.Messages[0].Text ?? string.Empty;
