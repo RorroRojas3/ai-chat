@@ -11,9 +11,9 @@ namespace RR.AI_Chat.Api.Controllers
         private readonly IChatService _chatService = chatService;
 
         [HttpPost("completion")]
-        public async Task<IActionResult> GetChatCompletionAsync(string question, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetChatCompletionAsync(SearchDocumentRequestDto request, CancellationToken cancellationToken)
         {
-            var response = await _chatService.GetChatCompletionAsync("You are an AI helpful assistant.", question, cancellationToken);
+            var response = await _chatService.GetChatCompletionAsync("You are an AI helpful assistant.", request.Prompt, cancellationToken);
             return Ok(response);   
         }
 

@@ -9,6 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddDbContext<AIChatDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"), x => x.UseVector()));
@@ -27,7 +29,9 @@ builder.Services.AddCors(builder => builder.AddPolicy("AllowSpecificOrigins", po
 
 /// AI Chat clients
 var ollamaUrl = builder.Configuration.GetValue<string>("OllamaUrl");
-builder.Services.AddChatClient(new OllamaChatClient(new Uri(ollamaUrl ?? "http://localhost:11434/"), "llama3.2"));
+builder.Services
+        .AddChatClient(new OllamaChatClient(new Uri(ollamaUrl ?? "http://localhost:11434/"), "llama3.2"))
+        .UseFunctionInvocation();
 
 // AI Embedding Generators
 IEmbeddingGenerator<string, Embedding<float>> ollamaGenerator =
@@ -38,6 +42,7 @@ builder.Services.AddTransient<IChatService, ChatService>();
 builder.Services.AddSingleton<ChatStore>();
 builder.Services.AddSingleton<DocumentStore>();
 builder.Services.AddTransient<IDocumentService, DocumentService>();
+builder.Services.AddTransient<IDocumentFunctionService, DocumentFunctionService>();
 
 var app = builder.Build();
 
