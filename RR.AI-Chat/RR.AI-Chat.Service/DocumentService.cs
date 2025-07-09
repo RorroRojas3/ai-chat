@@ -17,16 +17,18 @@ namespace RR.AI_Chat.Service
         Task<DocumentDto> CreateDocumentAsync(IFormFile formFile, Guid sessionId);
 
         Task<List<Document>> SearchDocumentsAsync(Guid sessionId, SearchDocumentRequestDto request, CancellationToken cancellation);
+
+        List<AIFunction> GetFunctions();
     }
 
     public class DocumentService(ILogger<DocumentService> logger, 
         IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
-        IChatService chatService,
+        IDocumentFunctionService documentFunctionService,
         AIChatDbContext ctx) : IDocumentService
     {
         private readonly ILogger _logger = logger;
         private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator = embeddingGenerator;
-        private readonly IChatService _chatService = chatService;
+        private readonly IDocumentFunctionService _documentFunctionService = documentFunctionService;
         private readonly AIChatDbContext _ctx = ctx;
         private const double _cosineDistanceThreshold = 0.5;
         private const string _documentAgentPrompt = "You are a System Prompt Optimizer specialized in document-related inquiries. When given a user prompt asking about document(s), analyze its intent and generate the single most effective system prompt that instructs an AI assistant to internally interrogate the document—examining its metadata, section headings, and content structure—to resolve any ambiguities and extract the precise information requested, without asking the user any clarifying questions. Respond with only the system prompt text.";
@@ -106,15 +108,16 @@ namespace RR.AI_Chat.Service
                 })
                 .ToListAsync();
 
-            var userPrompt = "Context: I searched for text in a document based on a user's request. Here's what I found:\n\n" +
-                $"{string.Join(" ", docPages.SelectMany(x => x.Pages).Select(p => p.Text))} " +
-                $"\n\nUser's original prompt: `{request.Prompt}`. " +
-                $"\n\nPlease analyze this information and provide a comprehensive answer to the user's question.";
-
-            var test = await _chatService.GetChatCompletionAsync("You are an AI helpful assistant.", userPrompt, cancellationToken);
-
-
             return docPages;
+        }
+
+        public List<AIFunction> GetFunctions()
+        {
+            List<AIFunction> functions = [
+                AIFunctionFactory.Create(_documentFunctionService.GetSessionDocumentsAsync),
+                AIFunctionFactory.Create(_documentFunctionService.GetDocumentOverviewAsync)];
+
+            return functions;
         }
 
         /// <summary>
