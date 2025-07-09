@@ -12,7 +12,7 @@ namespace RR.AI_Chat.Service
 {
     public interface IDocumentFunctionService
     {
-        Task<string> GetSessionDocumentsAsync(CancellationToken cancellationToken = default);
+        Task<string> GetSessionDocumentsAsync(string sessionId, CancellationToken cancellationToken = default);
 
         Task<string> GetDocumentOverviewAsync(Guid sessionId, Guid documentId, CancellationToken cancellationToken = default);
     }
@@ -28,12 +28,11 @@ namespace RR.AI_Chat.Service
         private readonly IChatClient _chatClient = chatClient;
 
         [Description("Get all documents in the current session.")]
-        public async Task<string> GetSessionDocumentsAsync(CancellationToken cancellationToken = default)
+        public async Task<string> GetSessionDocumentsAsync([Description("The session ID")] string sessionId, 
+            CancellationToken cancellationToken = default)
         {
-            var sessionId = _httpContextAccessor.HttpContext?.Request.Headers["sessionId"].FirstOrDefault();
-
             var documents = await _ctx.Documents.AsNoTracking()
-                .Where(x => x.SessionId == Guid.Parse(sessionId!))
+                .Where(x => x.SessionId == Guid.Parse(sessionId))
                 .Select(x => new DocumentDto
                 {
                     Id = x.Id,
@@ -48,7 +47,7 @@ namespace RR.AI_Chat.Service
         [Description("Create a detailed overview of a specific document.")]
         public async Task<string> GetDocumentOverviewAsync(
             [Description("The session ID")] Guid sessionId,
-            [Description("The document ID to create overview for")] Guid documentId,
+            [Description("The document ID")] Guid documentId,
             CancellationToken cancellationToken = default)
         {
             var documentPages = await _ctx.Documents.AsNoTracking()
