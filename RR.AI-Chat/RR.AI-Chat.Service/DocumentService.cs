@@ -18,7 +18,7 @@ namespace RR.AI_Chat.Service
 
         Task<List<Document>> SearchDocumentsAsync(Guid sessionId, SearchDocumentRequestDto request, CancellationToken cancellation);
 
-        List<AIFunction> GetFunctions();
+        IList<AITool> GetFunctions();
     }
 
     public class DocumentService(ILogger<DocumentService> logger, 
@@ -70,7 +70,7 @@ namespace RR.AI_Chat.Service
 
             return new()
             {
-                Id = document.Id,
+                Id = document.Id.ToString(),
                 Name = document.Name
             };
         }
@@ -111,9 +111,9 @@ namespace RR.AI_Chat.Service
             return docPages;
         }
 
-        public List<AIFunction> GetFunctions()
+        public IList<AITool> GetFunctions()
         {
-            List<AIFunction> functions = [
+            IList<AITool> functions = [
                 AIFunctionFactory.Create(_documentFunctionService.GetSessionDocumentsAsync),
                 AIFunctionFactory.Create(_documentFunctionService.GetDocumentOverviewAsync)];
 

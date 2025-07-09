@@ -14,7 +14,7 @@ namespace RR.AI_Chat.Service
     {
         Task<string> GetSessionDocumentsAsync(string sessionId, CancellationToken cancellationToken = default);
 
-        Task<string> GetDocumentOverviewAsync(Guid sessionId, Guid documentId, CancellationToken cancellationToken = default);
+        Task<string> GetDocumentOverviewAsync(string sessionId, string documentId, CancellationToken cancellationToken = default);
     }
 
     public class DocumentFunctionService(ILogger<DocumentFunctionService> logger, 
@@ -35,8 +35,8 @@ namespace RR.AI_Chat.Service
                 .Where(x => x.SessionId == Guid.Parse(sessionId))
                 .Select(x => new DocumentDto
                 {
-                    Id = x.Id,
-                    SessionId = x.SessionId,
+                    Id = x.Id.ToString(),
+                    SessionId = x.SessionId.ToString(),
                     Name = x.Name,
                 }).ToListAsync(cancellationToken).ConfigureAwait(false);
 
@@ -46,21 +46,23 @@ namespace RR.AI_Chat.Service
 
         [Description("Create a detailed overview of a specific document.")]
         public async Task<string> GetDocumentOverviewAsync(
-            [Description("The session ID")] Guid sessionId,
-            [Description("The document ID")] Guid documentId,
+            [Description("The session ID")] string sessionId,
+            [Description("The document ID")] string documentId,
             CancellationToken cancellationToken = default)
         {
-            var documentPages = await _ctx.Documents.AsNoTracking()
-                .Where(x => x.Id == documentId && x.SessionId == sessionId)
+            var documentPages = await _ctx.DocumentPages.AsNoTracking()
+                .Include(x => x.Document)
+                .Where(x => x.DocumentId == Guid.Parse(documentId) && x.Document.SessionId == Guid.Parse(sessionId))
+                .OrderBy(x => x.Number)
                 .Skip(0)
                 .Take(15)
-                .SelectMany(x => x.Pages.Select(x => new DocumentPage
+                .Select(x => new DocumentPage
                 {
                     Id = x.Id,
                     Number = x.Number,
                     Text = x.Text,
-                }).ToList())
-                .ToListAsync()
+                })
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
             var documentText = string.Join("\n\n", documentPages.Select(p =>

@@ -2,11 +2,11 @@
 {
     public class DocumentDto
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; } = null!;
 
-        public Guid SessionId { get; set; }
+        public string SessionId { get; set; } = null!;
 
-        public Guid DocumentId => Id;
+        public string DocumentId => Id;
 
         public string Name { get; set; } = null!;
     }

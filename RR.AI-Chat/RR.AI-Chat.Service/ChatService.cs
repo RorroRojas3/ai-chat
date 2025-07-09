@@ -9,6 +9,7 @@ using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 
 namespace RR.AI_Chat.Service
 {
@@ -56,30 +57,60 @@ namespace RR.AI_Chat.Service
         {
             var chatOptions = new ChatOptions
             {
-               // Assuming AIFunction is a subclass of AITool, you can cast the list to IList<AITool>
-               Tools = _documentService.GetFunctions().Cast<AITool>().ToList(),
-               AllowMultipleToolCalls = true,
+                // Assuming AIFunction is a subclass of AITool, you need to cast each function to AITool
+                Tools = _documentService.GetFunctions(),
+                AllowMultipleToolCalls = true,
+                ToolMode = ChatToolMode.RequireAny
             };
 
             var sessionId = _httpContextAccessor.HttpContext?.Request.Headers["sessionId"].FirstOrDefault();
             systemPrompt = $"""
-                You are an AI assistant helping user RorroRojas3 analyze documents.
-                Current session ID: {sessionId}
-        
-                IMPORTANT WORKFLOW RULES:
-                1. When user asks for document overviews, ALWAYS call GetSessionDocumentsAsync FIRST
-                2. Only after getting session documents, call GetDocumentOverviewAsync with valid document IDs obtained from GetSessionDocumentsAsync
-                3. If user asks for "overview" without specifying document, choose the most recent or relevant document
-                4. Never call GetDocumentOverviewAsync without first knowing what documents exist
-        
-                Available functions:
-                - GetSessionDocumentsAsync: Gets all documents in session (call this first)
-                - GetDocumentOverviewAsync: Creates overview for specific document (call after getting documents)
-        
-                Always follow this sequence for overview requests:
-                Step 1: Call GetSessionDocumentsAsync
-                Step 2: Analyze returned documents
-                Step 3: Call GetDocumentOverviewAsync with appropriate document ID
+                You are an AI assistant which helps analyze documents. You have access to functions that you MUST use to answer user questions.
+
+                CURRENT SESSION ID: {sessionId}
+
+                CRITICAL: You must ACTUALLY CALL the functions, not just describe what you would do.
+
+                MANDATORY WORKFLOW:
+                1. When user asks about documents or overviews, you MUST call GetSessionDocumentsAsync("{sessionId}")
+                2. After GetSessionDocumentsAsync returns results, you MUST call GetDocumentOverviewAsync for each relevant document
+                3. Do NOT explain what you're going to do - just do it by calling the functions
+                4. Only provide explanations AFTER you have the actual results from the function calls
+
+                FUNCTION USAGE:
+                - GetSessionDocumentsAsync("{sessionId}") - Always call this first for document-related queries
+                - GetDocumentOverviewAsync("{sessionId}", documentId) - Call this with the exact "Id" field value from GetSessionDocumentsAsync
+
+                CRITICAL JSON PARSING INSTRUCTIONS:
+                GetSessionDocumentsAsync returns JSON containing DocumentDto objects with these fields:
+                - "Id": The document GUID (THIS IS WHAT YOU NEED for GetDocumentOverviewAsync)
+                - "SessionId": The session GUID
+                - "DocumentId": Same as "Id" (computed property)
+                - "Name": The document filename
+
+                EXAMPLE WORKFLOW:
+                1. Call GetSessionDocumentsAsync("{sessionId}")
+                2. Response: {JsonSerializer.Serialize(new DocumentDto() { Id = "0197ec79-8aa6-7820-b2c2-4b06a97436c1", Name = "doc.pdf"})}
+                3. Extract the "Id" field value: "0197ec79-8aa6-7820-b2c2-4b06a97436c1"
+                4. Call GetDocumentOverviewAsync("{sessionId}", "0197ec79-8aa6-7820-b2c2-4b06a97436c1")
+
+                EXAMPLES OF CORRECT BEHAVIOR:
+                User: "What documents are available?"
+                You: [Call GetSessionDocumentsAsync("{sessionId}")]
+                Then: [Display the results showing document names and IDs]
+
+                User: "Give me an overview of the documents"
+                You: [Call GetSessionDocumentsAsync("{sessionId}")]
+                Then: [Parse JSON response and extract each document's "Id" field]
+                Then: [Call GetDocumentOverviewAsync("{sessionId}", "actual-guid-from-Id-field")]
+                Then: [Repeat for each document using their respective "Id" values]
+                Then: [Present the overviews]
+
+                IMPORTANT: 
+                - Use the exact "Id" field value from the JSON response as the documentId parameter
+                - Do NOT use placeholders like "[first document ID]" or descriptive text
+                - Execute functions immediately, don't announce your intentions first
+                - The "Id" field contains the GUID string you need for GetDocumentOverviewAsync
                 """;
 
             var response = await _chatClient.GetResponseAsync([
