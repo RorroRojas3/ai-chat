@@ -17,8 +17,6 @@ namespace RR.AI_Chat.Service
     {
         Task<string> GetChatCompletionAsync(string systemPrompt, string prompt, CancellationToken cancellationToken);
 
-        IAsyncEnumerable<string?> GetChatStreamingAsync(string prompt, CancellationToken cancellationToken);
-
         Task<SessionDto> CreateChatSessionAsync();
 
         IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken);
@@ -34,15 +32,15 @@ namespace RR.AI_Chat.Service
 
     public class ChatService(ILogger<ChatService> logger, 
         IChatClient chatClient, IConfiguration configuration, 
-        IDocumentService documentService,
+        IDocumentToolService documentToolService,
         IHttpContextAccessor httpContextAccessor,
         ChatStore chatStore, AIChatDbContext ctx) : IChatService
     {
         private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         private readonly IChatClient _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
         private readonly IConfiguration _configuration = configuration;
-        private readonly IDocumentService _documentService = documentService ?? throw new ArgumentNullException(nameof(documentService));
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        private readonly IDocumentToolService _documentToolService = documentToolService ?? throw new ArgumentNullException(nameof(documentToolService));
         private readonly ChatStore _chatStore = chatStore;
         private readonly AIChatDbContext _ctx = ctx;
         private const string _documentAgentPrompt = "You are a Document Query Optimization Agent. For every user request about retrieving or analyzing information from document(s), automatically perform the following steps before executing:\n\n1. **Intent Extraction**\n   - Determine exactly what the user is asking for (e.g., summary, specific data points, definitions, statistics).\n\n2. **Ambiguity Resolution**\n   - Internally identify any vague or underspecified elements (document name, section, format, scope, time frame).\n   - If needed, internally generate the clarifying details without exposing them to the user.\n\n3. **Query Enhancement**\n   - Internally rewrite the request into a precise, unambiguous query that references document names, sections, page ranges, keywords, or data formats as appropriate.\n\n4. **Execution**\n   - Use the enhanced query to locate and extract exactly the information requested from the document(s).\n\n5. **Response Delivery**\n   - Present the final answer clearly and concisely, without displaying the internal refinement process or rewritten query.\n\nMaintain a user-friendly tone and ensure high accuracy by refining queries behind the scenes to eliminate misunderstandings.";
@@ -55,15 +53,10 @@ namespace RR.AI_Chat.Service
         /// <returns>A task that represents the asynchronous operation. The task result contains the chat response message.</returns>
         public async Task<string> GetChatCompletionAsync(string systemPrompt, string prompt, CancellationToken cancellationToken)
         {
-            var chatOptions = new ChatOptions
-            {
-                // Assuming AIFunction is a subclass of AITool, you need to cast each function to AITool
-                Tools = _documentService.GetFunctions(),
-                AllowMultipleToolCalls = true,
-                ToolMode = ChatToolMode.RequireAny
-            };
+            
 
             var sessionId = _httpContextAccessor.HttpContext?.Request.Headers["sessionId"].FirstOrDefault();
+            var chatOptions = CreateChatOptions("gpt-4.1-nano");
             systemPrompt = $"""
                 You are an AI assistant which helps analyze documents. You have access to functions that you MUST use to answer user questions.
 
@@ -121,22 +114,6 @@ namespace RR.AI_Chat.Service
             return response.Messages.Last().Text ?? string.Empty;
         }
 
-        /// <summary>
-        /// Streams chat responses asynchronously based on the provided prompt.
-        /// </summary>
-        /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
-        /// <param name="prompt">The prompt to send to the chat client.</param>
-        /// <returns>An asynchronous stream of chat response messages.</returns>
-        public async IAsyncEnumerable<string?> GetChatStreamingAsync(string prompt, [EnumeratorCancellation] CancellationToken cancellationToken)
-        {
-            await foreach (var message in _chatClient.GetStreamingResponseAsync(prompt, cancellationToken: cancellationToken))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                yield return message.Text;
-            }
-        }
-
         public async Task<SessionDto> CreateChatSessionAsync()
         {
             var newSession = new Session() { DateCreated = DateTime.UtcNow };    
@@ -148,7 +125,26 @@ namespace RR.AI_Chat.Service
                 SessionId = newSession.Id,
                 Messages =
                 [
-                    new ChatMessage(ChatRole.System, "You are a helpful AI assistant.")
+                    new ChatMessage(ChatRole.System, @$"
+            You are a powerful assistant augmented with a rich suite of built-in capabilities—but you have no direct internet access. Instead, you can:
+            - Execute code to analyze or transform data.
+            - Produce charts or interactive tables to clarify complex information.
+            - Read, interpret and summarize uploaded files.
+            - Generate or edit images to illustrate concepts.
+            - Schedule reminders or periodic tasks on the user’s behalf.
+            - Fetch the user’s locale and local time for context-aware suggestions.
+
+            Don’t wait to be told which tool to use—anticipate user needs and invoke the right capability seamlessly. Always:
+            - Explain tool outputs in clear, natural language.
+            - Match the user’s tone and stay concise.
+            - Prioritize accuracy and relevance.
+            - If asked about private memory, direct the user to Settings→Personalization→Memory.
+            - For any properties in function callings please look at your message OR your additional properties to get the values.
+
+            Operate invisibly: your mastery of these features should enhance every response without ever needing to name them.
+            
+            Current session id is : {newSession.Id}
+            ")
                 ]
             };
             _chatStore.Sessions.Add(chatSession);
@@ -167,9 +163,9 @@ namespace RR.AI_Chat.Service
 
             session.Messages.Add(new ChatMessage(ChatRole.User, request.Prompt));
 
-
+            var chatOptions = CreateChatOptions("gpt-4.1-nano");
             StringBuilder sb = new();
-            await foreach (var message in _chatClient.GetStreamingResponseAsync(session.Messages ?? [], new ChatOptions() { ModelId = request.ModelId}, cancellationToken))
+            await foreach (var message in _chatClient.GetStreamingResponseAsync(session.Messages ?? [], chatOptions, cancellationToken))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 sb.Append(message.Text);
@@ -191,7 +187,7 @@ namespace RR.AI_Chat.Service
             return new() 
             { 
                 SessionId = sessionId, 
-                Message = response.Messages[0].Text, 
+                Message = response.Messages.Last().Text, 
                 InputTokenCount = response?.Usage?.InputTokenCount,
                 OutputTokenCount = response?.Usage?.OutputTokenCount,
                 TotalTokenCount = response?.Usage?.TotalTokenCount
@@ -282,6 +278,22 @@ namespace RR.AI_Chat.Service
             }
 
             return response.Messages[0].Text ?? string.Empty;
+        }
+
+        private ChatOptions CreateChatOptions(string modelId)
+        {
+            var documentTools = _documentToolService.GetTools();
+
+            var chatOptions = new ChatOptions
+            {
+                // Assuming AIFunction is a subclass of AITool, you need to cast each function to AITool
+                Tools = documentTools,
+                AllowMultipleToolCalls = true,
+                ToolMode = ChatToolMode.RequireAny,
+                ModelId = modelId,
+            };
+
+            return chatOptions;
         }
     }
 }

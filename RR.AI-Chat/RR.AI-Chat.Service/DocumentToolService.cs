@@ -10,17 +10,19 @@ using System.Text.Json;
 
 namespace RR.AI_Chat.Service
 {
-    public interface IDocumentFunctionService
+    public interface IDocumentToolService
     {
         Task<string> GetSessionDocumentsAsync(string sessionId, CancellationToken cancellationToken = default);
 
         Task<string> GetDocumentOverviewAsync(string sessionId, string documentId, CancellationToken cancellationToken = default);
+    
+        IList<AITool> GetTools();   
     }
 
-    public class DocumentFunctionService(ILogger<DocumentFunctionService> logger, 
+    public class DocumentToolService(ILogger<DocumentToolService> logger, 
         IHttpContextAccessor httpContextAccessor,
         IChatClient chatClient,
-        AIChatDbContext ctx) : IDocumentFunctionService
+        AIChatDbContext ctx) : IDocumentToolService
     {
         private readonly ILogger _logger = logger;
         private readonly AIChatDbContext _ctx = ctx;
@@ -28,9 +30,19 @@ namespace RR.AI_Chat.Service
         private readonly IChatClient _chatClient = chatClient;
 
         [Description("Get all documents in the current session.")]
-        public async Task<string> GetSessionDocumentsAsync([Description("The session ID")] string sessionId, 
+        public async Task<string> GetSessionDocumentsAsync([Description("sessionId")] string sessionId, 
             CancellationToken cancellationToken = default)
         {
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                return "No session ID provided.";
+            }
+
+            if (Guid.TryParse(sessionId, out var sessionGuid) == false)
+            {
+                return "The session ID is not a valid GUID.";
+            }
+
             var documents = await _ctx.Documents.AsNoTracking()
                 .Where(x => x.SessionId == Guid.Parse(sessionId))
                 .Select(x => new DocumentDto
@@ -39,8 +51,12 @@ namespace RR.AI_Chat.Service
                     SessionId = x.SessionId.ToString(),
                     Name = x.Name,
                 }).ToListAsync(cancellationToken).ConfigureAwait(false);
+            if (documents.Count == 0)
+            {
+                return "No documents found in the current session.";
+            }
 
-            var result = $"The documents in the current session are {JsonSerializer.Serialize(documents)}";
+            var result = JsonSerializer.Serialize(documents);
             return result;
         }
 
@@ -76,6 +92,15 @@ namespace RR.AI_Chat.Service
             ], null, cancellationToken);
 
             return response.Messages.Last().Text;
+        }
+
+        public IList<AITool> GetTools()
+        {
+            IList<AITool> functions = [
+                AIFunctionFactory.Create(GetSessionDocumentsAsync),
+                AIFunctionFactory.Create(GetDocumentOverviewAsync)];
+
+            return functions;
         }
     }
 }

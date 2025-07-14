@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>RR.AI_Chat.Api</RootNamespace>
+    <UserSecretsId>27ef94e5-8a02-48e5-b431-caa1880f8198</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,8 +21,10 @@
     <PackageReference Include="Microsoft.Extensions.AI" Version="9.6.0" />
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.6.0" />
     <PackageReference Include="Microsoft.Extensions.AI.Ollama" Version="9.6.0-preview.1.25310.2" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.6.0-preview.1.25310.2" />
     <PackageReference Include="Npgsql" Version="9.0.3" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageReference Include="OpenAI" Version="2.2.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
   </ItemGroup>
 

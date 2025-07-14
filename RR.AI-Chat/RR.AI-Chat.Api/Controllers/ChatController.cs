@@ -17,20 +17,6 @@ namespace RR.AI_Chat.Api.Controllers
             return Ok(response);   
         }
 
-        [HttpPost("streaming")]
-        public async Task GetChatStreamingAsync(string prompt, CancellationToken cancellationToken)
-        {
-            Response.Headers.Append("Content-Type", "text/event-stream");
-            Response.Headers.Append("Cache-Control", "no-cache");
-            Response.Headers.Append("Connection", "keep-alive");
-
-            await foreach (var message in _chatService.GetChatStreamingAsync(prompt, cancellationToken))
-            {
-                await Response.WriteAsync($"data: {message}\n\n", cancellationToken);
-                await Response.Body.FlushAsync(cancellationToken);
-            }
-        }
-
         [HttpPost("session")]
         public async Task<IActionResult> CreateChatSessionAsync()
         {
