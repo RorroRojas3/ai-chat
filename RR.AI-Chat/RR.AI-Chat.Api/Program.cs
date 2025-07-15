@@ -65,6 +65,8 @@ builder.Services.AddSingleton<ChatStore>();
 builder.Services.AddSingleton<DocumentStore>();
 builder.Services.AddTransient<IDocumentService, DocumentService>();
 builder.Services.AddTransient<IDocumentToolService, DocumentToolService>();
+builder.Services.AddTransient<ISessionService, SessionService>();
+builder.Services.AddTransient<IModelService, ModelService>();
 
 var app = builder.Build();
 

@@ -10,21 +10,7 @@ namespace RR.AI_Chat.Api.Controllers
     {
         private readonly IChatService _chatService = chatService;
 
-        [HttpPost("completion")]
-        public async Task<IActionResult> GetChatCompletionAsync(SearchDocumentRequestDto request, CancellationToken cancellationToken)
-        {
-            var response = await _chatService.GetChatCompletionAsync("You are an AI helpful assistant.", request.Prompt, cancellationToken);
-            return Ok(response);   
-        }
-
-        [HttpPost("session")]
-        public async Task<IActionResult> CreateChatSessionAsync()
-        {
-            var dto = await _chatService.CreateChatSessionAsync();
-            return Ok(dto);
-        }
-
-        [HttpPost("session/{sessionId}/stream")]
+        [HttpPost("sessions/{sessionId}/stream")]
         public async Task GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken)
         {
             Response.Headers.Append("Content-Type", "text/event-stream");
@@ -38,24 +24,10 @@ namespace RR.AI_Chat.Api.Controllers
             }
         }
 
-        [HttpPost("session/{sessionId}/completion")]
+        [HttpPost("sessions/{sessionId}/completion")]
         public async Task<IActionResult> GetChatCompletionAsync(Guid sessionId, ChatCompletionRequestDto request, CancellationToken cancellationToken)
         {
             var response = await _chatService.GetChatCompletionAsync(sessionId, request, cancellationToken);
-            return Ok(response);
-        }
-
-        [HttpGet("models")]
-        public async Task<IActionResult> GetModelsAsync()
-        {
-            var response = await _chatService.GetModelsAsync();
-            return Ok(response);
-        }
-
-        [HttpGet("sessions")]
-        public async Task<IActionResult> GetSessionsAsync()
-        {
-            var response = await _chatService.GetSessionsAsync();
             return Ok(response);
         }
 
