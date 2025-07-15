@@ -40,11 +40,13 @@ builder.Services.AddCors(builder => builder.AddPolicy("AllowSpecificOrigins", po
 //            x.MaximumConsecutiveErrorsPerRequest = 5;
 //        });
 
+
 var openAiApiKey = builder.Configuration.GetValue<string>("OpenAI:ApiKey");
 builder.Services.AddChatClient(
     new OpenAIClient(openAiApiKey ?? string.Empty)
     .GetChatClient("gpt-4.1-nano")
     .AsIChatClient())
+    .UseOpenTelemetry()
     .UseFunctionInvocation(null, x =>
     {
         x.AllowConcurrentInvocation = false;

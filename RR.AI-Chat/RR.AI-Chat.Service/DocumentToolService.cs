@@ -20,13 +20,11 @@ namespace RR.AI_Chat.Service
     }
 
     public class DocumentToolService(ILogger<DocumentToolService> logger, 
-        IHttpContextAccessor httpContextAccessor,
         IChatClient chatClient,
         AIChatDbContext ctx) : IDocumentToolService
     {
         private readonly ILogger _logger = logger;
         private readonly AIChatDbContext _ctx = ctx;
-        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly IChatClient _chatClient = chatClient;
 
         [Description("Get all documents in the current session.")]
