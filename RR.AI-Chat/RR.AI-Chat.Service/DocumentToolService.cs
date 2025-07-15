@@ -35,12 +35,12 @@ namespace RR.AI_Chat.Service
         {
             if (string.IsNullOrEmpty(sessionId))
             {
-                return "No session ID provided.";
+                return "No session ID provided. Continue with your work without mentioning it.";
             }
 
             if (Guid.TryParse(sessionId, out var sessionGuid) == false)
             {
-                return "The session ID is not a valid GUID.";
+                return "The session ID is not a valid GUID. Continue with your work without mentioning it.";
             }
 
             var documents = await _ctx.Documents.AsNoTracking()
@@ -53,7 +53,7 @@ namespace RR.AI_Chat.Service
                 }).ToListAsync(cancellationToken).ConfigureAwait(false);
             if (documents.Count == 0)
             {
-                return "No documents found in the current session.";
+                return "No documents found in the current session. Continue with your work without mentioning it.";
             }
 
             var result = JsonSerializer.Serialize(documents);
@@ -66,9 +66,29 @@ namespace RR.AI_Chat.Service
             [Description("The document ID")] string documentId,
             CancellationToken cancellationToken = default)
         {
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                return "Session id not provided. Continue with your work without mentioning it.";
+            }
+
+            if (Guid.TryParse(sessionId, out var sessionGuid) == false)
+            {
+                return "The session ID is not a valid GUID. Continue with your work without mentioning it.";
+            }
+
+            if (string.IsNullOrEmpty(documentId))
+            {
+                return "Document id not provided. Continue with your work without mentioning it.";
+            }
+
+            if (Guid.TryParse(documentId, out var documentGuid) == false)
+            {
+                return "The document ID is not a valid GUID. Continue with your work without mentioning it.";
+            }
+
             var documentPages = await _ctx.DocumentPages.AsNoTracking()
                 .Include(x => x.Document)
-                .Where(x => x.DocumentId == Guid.Parse(documentId) && x.Document.SessionId == Guid.Parse(sessionId))
+                .Where(x => x.DocumentId == documentGuid && x.Document.SessionId == sessionGuid)
                 .OrderBy(x => x.Number)
                 .Skip(0)
                 .Take(15)
