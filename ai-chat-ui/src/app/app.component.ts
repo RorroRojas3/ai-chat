@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/navbar/navbar.component';
-import { ChatService } from './services/chat.service';
 import { StoreService } from './store/store.service';
 import { MenuOffcanvasComponent } from './shared/menu-offcanvas/menu-offcanvas.component';
 import { forkJoin } from 'rxjs';
+import { ModelService } from './services/model.service';
+import { SessionService } from './services/session.service';
 
 @Component({
   selector: 'app-root',
@@ -14,14 +15,15 @@ import { forkJoin } from 'rxjs';
 })
 export class AppComponent implements OnInit {
   constructor(
-    private chatService: ChatService,
-    private storeService: StoreService
+    private storeService: StoreService,
+    private sessionService: SessionService,
+    private modelService: ModelService
   ) {}
 
   ngOnInit(): void {
     forkJoin([
-      this.chatService.getModels(),
-      this.chatService.getSessions(),
+      this.modelService.getModels(),
+      this.sessionService.getSessions(),
     ]).subscribe(([models, sessions]) => {
       this.storeService.models.set(models);
       this.storeService.selectedModelId.set(models[0].name);

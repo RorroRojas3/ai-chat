@@ -8,6 +8,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MessageDto } from '../../../dtos/MessageDto';
 import hljs from 'highlight.js';
 import markdown_it_highlightjs from 'markdown-it-highlightjs';
+import { SessionService } from '../../../services/session.service';
 
 @Component({
   selector: 'app-prompt-box',
@@ -19,7 +20,8 @@ export class PromptBoxComponent implements OnDestroy {
   constructor(
     public storeService: StoreService,
     private chatService: ChatService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private sessionService: SessionService
   ) {
     this.md = new markdownit({
       html: true,
@@ -46,7 +48,9 @@ export class PromptBoxComponent implements OnDestroy {
       this.storeService.disablePromptButton.set(true);
 
       if (this.storeService.sessionId() === '') {
-        const session = await firstValueFrom(this.chatService.createSession());
+        const session = await firstValueFrom(
+          this.sessionService.createSession()
+        );
         this.storeService.sessionId.set(session.id);
       }
 
@@ -76,7 +80,7 @@ export class PromptBoxComponent implements OnDestroy {
             this.storeService.streamMessage.set(
               new MessageDto('', false, undefined)
             );
-            this.chatService.getSessions().subscribe((sessions) => {
+            this.sessionService.getSessions().subscribe((sessions) => {
               this.storeService.sessions.set(sessions);
             });
           },

@@ -6,7 +6,7 @@ namespace RR.AI_Chat.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ChatController(IChatService chatService) : ControllerBase
+    public class ChatsController(IChatService chatService) : ControllerBase
     {
         private readonly IChatService _chatService = chatService;
 
