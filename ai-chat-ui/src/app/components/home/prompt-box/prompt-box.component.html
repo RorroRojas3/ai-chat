@@ -1,4 +1,4 @@
-<div class="card s</div>hadow-sm">
+<div class="card shadow-sm">
   <div class="card-body">
     <div class="d-flex align-items-center mb-3">
       <i class="bi bi-chat-square-text fs-4 text-primary me-2"></i>
@@ -6,12 +6,18 @@
     </div>
 
     <form id="promptForm">
-      <div class="mb-3 position-relative">
+      <div
+        class="mb-3 position-relative"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        [class.drag-over]="isDragOver"
+      >
         <textarea
           class="form-control"
           id="promptInput"
           rows="4"
-          placeholder="Enter your prompt here..."
+          placeholder="Enter your prompt here... You can also drag and drop files into this area."
           [(ngModel)]="prompt"
           [ngModelOptions]="{ standalone: true }"
         ></textarea>
@@ -24,7 +30,77 @@
         >
           <i class="bi bi-send"></i>
         </button>
+
+        <!-- File input (hidden) -->
+        <input
+          type="file"
+          #fileInput
+          multiple
+          style="display: none"
+          (change)="onFileSelect($event)"
+          accept=".pdf,application/pdf"
+        />
       </div>
+
+      <!-- Attached Files Section -->
+      @if (attachedFiles.length > 0) {
+      <div class="mb-3">
+        <h6 class="text-muted mb-2">
+          <i class="bi bi-paperclip me-1"></i>
+          Attached Files ({{ attachedFiles.length }})
+        </h6>
+        <div class="attached-files">
+          @for (file of attachedFiles; track file.id) {
+          <div
+            class="file-item d-flex align-items-center justify-content-between p-2 mb-2 bg-light rounded"
+          >
+            <div class="d-flex align-items-center">
+              <i class="bi bi-file-earmark me-2 text-secondary"></i>
+              <span class="file-name">{{ file.name }}</span>
+              <small class="text-muted ms-2"
+                >({{ formatFileSize(file.size) }})</small
+              >
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-danger"
+              (click)="removeFile(file.id)"
+              title="Remove file"
+            >
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+          }
+        </div>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary me-2"
+          (click)="fileInput.click()"
+        >
+          <i class="bi bi-plus me-1"></i>
+          Add More Files
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-danger"
+          (click)="clearAllFiles()"
+        >
+          <i class="bi bi-trash me-1"></i>
+          Clear All
+        </button>
+      </div>
+      } @else {
+      <div class="mb-3">
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          (click)="fileInput.click()"
+        >
+          <i class="bi bi-paperclip me-1"></i>
+          Attach Files
+        </button>
+      </div>
+      }
 
       <div class="dropdown">
         <button

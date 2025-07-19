@@ -7,4 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Pgvector.EntityFrameworkCore" Version="0.2.2" />
+  </ItemGroup>
+
 </Project>

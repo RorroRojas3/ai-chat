@@ -19,35 +19,19 @@ export class ChatService {
     private zone: NgZone
   ) {}
 
-  createSession(): Observable<SessionDto> {
-    return this.http.post<SessionDto>(`${environment.apiUrl}chat/session`, {});
-  }
-
-  createCompleteMessage(prompt: string): Observable<ChatCompletionDto> {
-    return this.http.post<ChatCompletionDto>(
-      `${
-        environment.apiUrl
-      }chat/session/${this.storeService.sessionId()}/completion`,
-      new ChatCompletionRequestDto(prompt)
-    );
-  }
-
-  createStreamMessage(prompt: string): Observable<string> {
-    return this.http.post(
-      `${
-        environment.apiUrl
-      }chat/session/${this.storeService.sessionId()}/stream`,
-      new ChatStreamRequestDto(prompt, this.storeService.selectedModelId()),
-      {
-        responseType: 'text',
-        observe: 'body',
-        headers: {
-          Accept: 'text/event-stream',
-        },
-      }
-    );
-  }
-
+  /**
+   * Creates an Observable that streams server-sent events from the chat API.
+   *
+   * This method establishes a streaming connection to the chat service endpoint,
+   * sending a chat prompt and receiving real-time response data as it becomes available.
+   * The stream is processed using the Fetch API with ReadableStream and decoded as text.
+   *
+   * @param prompt - The chat message or prompt to send to the AI service
+   * @returns An Observable that emits string chunks of the streaming response
+   *
+   * @throws Will emit an error if the HTTP request fails or if there are network issues
+   * @throws Will emit an error if the response body is null or cannot be read
+   */
   getServerSentEvent(prompt: string): Observable<string> {
     return new Observable((observer) => {
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
@@ -74,7 +58,7 @@ export class ChatService {
       fetch(
         `${
           environment.apiUrl
-        }chat/session/${this.storeService.sessionId()}/stream`,
+        }chats/sessions/${this.storeService.sessionId()}/stream`,
         {
           method: 'POST',
           headers: {
@@ -110,24 +94,6 @@ export class ChatService {
   }
 
   /**
-   * Retrieves the list of available models from the API.
-   *
-   * @returns {Observable<ModelDto[]>} An observable that emits an array of ModelDto objects.
-   */
-  getModels(): Observable<ModelDto[]> {
-    return this.http.get<ModelDto[]>(`${environment.apiUrl}chat/models`);
-  }
-
-  /**
-   * Retrieves an array of chat sessions from the API.
-   *
-   * @returns An Observable that emits an array of SessionDto objects representing chat sessions.
-   */
-  getSessions(): Observable<SessionDto[]> {
-    return this.http.get<SessionDto[]>(`${environment.apiUrl}chat/sessions`);
-  }
-
-  /**
    * Retrieves the conversation associated with the current session.
    *
    * @returns An Observable that emits a SessionConversationDto containing the conversation data
@@ -137,7 +103,7 @@ export class ChatService {
     return this.http.get<SessionCoversationDto>(
       `${
         environment.apiUrl
-      }chat/sessions/${this.storeService.sessionId()}/conversations`
+      }chats/sessions/${this.storeService.sessionId()}/conversations`
     );
   }
 }

@@ -19,4 +19,8 @@
     <ProjectReference Include="..\RR.AI-Chat.Entity\RR.AI-Chat.Entity.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
 </Project>
