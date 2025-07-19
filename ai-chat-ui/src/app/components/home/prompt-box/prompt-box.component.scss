@@ -1,3 +1,27 @@
+.prompt-box {
+  background-color: var(--color-accent);
+}
+
+.prompt-box-textarea {
+  background-color: transparent;
+  border: none !important;
+  color: white;
+  resize: none;
+  outline: none !important;
+  box-shadow: none !important;
+
+  &:focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  &::placeholder {
+    color: #f5f5f5 !important;
+    opacity: 0.8;
+  }
+}
+
 .drag-over {
   textarea {
     border-color: #007bff !important;
@@ -54,4 +78,17 @@
       z-index: 1;
     }
   }
+}
+
+.btn-prompt-box {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--color-accent);
+  --bs-btn-border-color: var(--color-accent);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--color-navy);
+  --bs-btn-hover-border-color: var(--color-navy);
+  --bs-btn-focus-shadow-rgb: 28, 60, 98;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--color-navy);
+  --bs-btn-active-border-color: var(--color-navy);
 }
