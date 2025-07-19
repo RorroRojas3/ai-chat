@@ -1,0 +1,48 @@
+.menu-offcanvas {
+  background-color: var(--color-accent);
+  color: white;
+
+  &__header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+    &--no-border {
+      border-bottom: none;
+    }
+  }
+
+  &__title {
+    color: white;
+  }
+
+  &__close-btn {
+    filter: invert(1);
+  }
+
+  &__body {
+    .menu-list {
+      &__item {
+        background-color: transparent;
+        border: none;
+        color: white;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: var(--color-navy);
+          color: white;
+          border: none;
+        }
+
+        &:focus {
+          background-color: var(--color-navy);
+          color: white;
+          border: none;
+          box-shadow: none;
+        }
+      }
+    }
+  }
+}
+
+.menu-section-title {
+  color: white;
+}
