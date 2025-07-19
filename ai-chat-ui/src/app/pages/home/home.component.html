@@ -1,6 +1,10 @@
-<div class="d-flex flex-column h-100">
-  <div class="d-flex flex-column container flex-grow-1 overflow-hidden">
-    <div #scrollContainer class="flex-grow-1 overflow-y-auto">
+<div
+  class="d-flex flex-column container"
+  style="height: calc(100vh - 56px); width: 100%; overflow: hidden"
+>
+  <div class="flex-grow-1 d-flex flex-column overflow-hidden px-3">
+    <!-- Scrollable conversation area -->
+    <div #scrollContainer class="flex-grow-1 overflow-y-auto py-3">
       @for (message of this.storeService.messages(); track message) {
       <app-message-bubble [message]="message"></app-message-bubble>
       }
@@ -10,7 +14,9 @@
         ></app-message-bubble>
       </div>
     </div>
-    <div class="py-4">
+
+    <!-- Sticky prompt box at bottom of chat container -->
+    <div class="border-0 py-4">
       <app-prompt-box (markdown)="onMarkdownChange($event)"></app-prompt-box>
     </div>
   </div>
