@@ -53,13 +53,12 @@ export class PromptBoxComponent implements OnDestroy {
   private fileIdCounter: number = 0;
 
   async onClickCreateSession(): Promise<void> {
-    if (!this.prompt.trim() || this.storeService.isStreaming()) {
+    if (!this.prompt.trim() || this.storeService.disablePromptButton()) {
       return;
     }
 
     try {
       this.storeService.stream.set('');
-      this.storeService.isStreaming.set(true);
       this.storeService.disablePromptButton.set(true);
 
       if (this.storeService.sessionId() === '') {
@@ -79,6 +78,7 @@ export class PromptBoxComponent implements OnDestroy {
         new MessageDto(this.prompt, true, undefined),
       ]);
 
+      this.storeService.isStreaming.set(true);
       this.sseSubscription = this.chatService
         .getServerSentEvent(this.prompt)
         .subscribe({
