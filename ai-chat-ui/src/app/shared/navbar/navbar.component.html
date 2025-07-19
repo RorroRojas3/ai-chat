@@ -1,16 +1,26 @@
-<nav class="navbar bg-body-tertiary sticky-top">
+<nav
+  class="navbar sticky-top"
+  style="background-color: var(--color-light-blue)"
+>
   <div class="container-fluid">
     <div class="d-flex align-items-center">
       <button
-        class="btn btn-secondary me-2"
+        class="btn me-2"
         type="button"
         data-bs-toggle="offcanvas"
         data-bs-target="#menu-offcanvas"
         aria-controls="offcanvasExample"
+        style="
+          background-color: var(--color-accent);
+          color: white;
+          border-color: var(--color-accent);
+        "
       >
         <i class="bi bi-list"></i>
       </button>
-      <span class="navbar-brand mb-0 h1">AI Chat</span>
+      <span class="navbar-brand mb-0 h1" style="color: var(--color-navy)"
+        >AI Assistant</span
+      >
     </div>
   </div>
 </nav>

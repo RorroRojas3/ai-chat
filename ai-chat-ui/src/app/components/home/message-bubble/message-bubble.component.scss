@@ -8,3 +8,12 @@
   margin-bottom: 4px;
   word-wrap: break-word;
 }
+
+.message-user {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.message-assistant {
+  color: var(--color-accent);
+}
