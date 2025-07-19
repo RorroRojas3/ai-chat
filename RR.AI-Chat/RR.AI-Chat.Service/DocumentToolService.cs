@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Pgvector;
+using Pgvector.EntityFrameworkCore;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
@@ -16,16 +18,21 @@ namespace RR.AI_Chat.Service
 
         Task<string> GetDocumentOverviewAsync(string sessionId, string documentId, CancellationToken cancellationToken = default);
     
-        IList<AITool> GetTools();   
+        IList<AITool> GetTools();
+
+        Task<List<Document>> SearchDocumentsAsync(string sessionId, string prompt, CancellationToken cancellationToken = default);
     }
 
     public class DocumentToolService(ILogger<DocumentToolService> logger, 
         IChatClient chatClient,
+        IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
         AIChatDbContext ctx) : IDocumentToolService
     {
         private readonly ILogger _logger = logger;
         private readonly AIChatDbContext _ctx = ctx;
         private readonly IChatClient _chatClient = chatClient;
+        private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator = embeddingGenerator;
+        private const double _cosineDistanceThreshold = 0.5;
 
         [Description("Get all documents in the current session.")]
         public async Task<string> GetSessionDocumentsAsync([Description("sessionId")] string sessionId, 
@@ -59,7 +66,7 @@ namespace RR.AI_Chat.Service
             return result;
         }
 
-        [Description("Create a detailed overview of a specific document.")]
+        [Description("Create a detailed overview or summary of a specific document if and only if the user asks for it.")]
         public async Task<string> GetDocumentOverviewAsync(
             [Description("The session ID")] string sessionId,
             [Description("The document ID")] string documentId,
@@ -91,8 +98,6 @@ namespace RR.AI_Chat.Service
                         x.Document.SessionId == sessionGuid && 
                         !x.DateDeactivated.HasValue)
                 .OrderBy(x => x.Number)
-                .Skip(0)
-                .Take(15)
                 .Select(x => new DocumentPage
                 {
                     Id = x.Id,
@@ -115,11 +120,55 @@ namespace RR.AI_Chat.Service
             return response.Messages.Last().Text;
         }
 
+        [Description("Searches for information in the document if no overiew or summary is asked.")]
+        public async Task<List<Document>> SearchDocumentsAsync([Description("sessionId")] string sessionId, [Description("What the user is looking for in document")] string prompt, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                return [];
+            }
+
+            if (Guid.TryParse(sessionId, out var sessionGuid) == false)
+            {
+                return [];
+            }
+
+            var embedding = await _embeddingGenerator.GenerateVectorAsync(prompt);
+            var vector = new Vector(embedding);
+
+            var docPages = await _ctx.DocumentPages
+                .AsNoTracking()
+                .Include(p => p.Document)
+                .Where(p => p.Document.SessionId == Guid.Parse(sessionId))
+                .Where(p => p.Embedding.CosineDistance(vector) <= _cosineDistanceThreshold)
+                .OrderBy(p => p.Embedding.CosineDistance(vector))
+                .Take(10)
+                .GroupBy(p => p.Document)
+                .Select(g => new Document
+                {
+                    Id = g.Key.Id,
+                    Name = g.Key.Name,
+                    Extension = g.Key.Extension,
+                    DateCreated = g.Key.DateCreated,
+                    Pages = g.OrderBy(p => p.Embedding.CosineDistance(vector))
+                           .Select(p => new DocumentPage
+                           {
+                               Id = p.Id,
+                               Number = p.Number,
+                               Text = p.Text,
+                           }).ToList()
+                })
+                .ToListAsync(cancellationToken);
+
+            return docPages;
+        }
+
         public IList<AITool> GetTools()
         {
             IList<AITool> functions = [
                 AIFunctionFactory.Create(GetSessionDocumentsAsync),
-                AIFunctionFactory.Create(GetDocumentOverviewAsync)];
+                AIFunctionFactory.Create(GetDocumentOverviewAsync),
+                AIFunctionFactory.Create(SearchDocumentsAsync)];
 
             return functions;
         }

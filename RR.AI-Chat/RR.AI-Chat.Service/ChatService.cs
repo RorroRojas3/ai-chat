@@ -73,7 +73,7 @@ namespace RR.AI_Chat.Service
 
             session.Messages.Add(new ChatMessage(ChatRole.User, request.Prompt));
 
-            var chatOptions = CreateChatOptions("gpt-4.1-nano", sessionId);
+            var chatOptions = CreateChatOptions("gpt-4.1-mini-2025-04-14", sessionId);
             StringBuilder sb = new();
             await foreach (var message in _chatClient.GetStreamingResponseAsync(session.Messages ?? [], chatOptions, cancellationToken))
             {
