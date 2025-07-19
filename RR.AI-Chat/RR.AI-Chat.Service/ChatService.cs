@@ -73,7 +73,7 @@ namespace RR.AI_Chat.Service
 
             session.Messages.Add(new ChatMessage(ChatRole.User, request.Prompt));
 
-            var chatOptions = CreateChatOptions("gpt-4.1-nano");
+            var chatOptions = CreateChatOptions("gpt-4.1-nano", sessionId);
             StringBuilder sb = new();
             await foreach (var message in _chatClient.GetStreamingResponseAsync(session.Messages ?? [], chatOptions, cancellationToken))
             {
@@ -185,7 +185,7 @@ namespace RR.AI_Chat.Service
         /// - RequireAny tool mode to ensure at least one tool is available
         /// - The specified model ID for consistent AI model usage
         /// </remarks>
-        private ChatOptions CreateChatOptions(string modelId)
+        private ChatOptions CreateChatOptions(string modelId, Guid sessionId)
         {
             var documentTools = _documentToolService.GetTools();
 
@@ -196,6 +196,7 @@ namespace RR.AI_Chat.Service
                 AllowMultipleToolCalls = true,
                 ToolMode = ChatToolMode.RequireAny,
                 ModelId = modelId,
+                ConversationId = sessionId.ToString(),
             };
 
             return chatOptions;
