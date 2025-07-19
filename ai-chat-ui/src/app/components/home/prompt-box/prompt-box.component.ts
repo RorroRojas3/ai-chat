@@ -147,6 +147,7 @@ export class PromptBoxComponent implements OnDestroy {
 
     const files = event.dataTransfer?.files;
     if (files) {
+      console.log('Files dropped');
       this.handleFiles(files);
     }
   }
