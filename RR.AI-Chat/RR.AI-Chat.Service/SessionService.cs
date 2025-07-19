@@ -40,6 +40,8 @@ namespace RR.AI_Chat.Service
             - If asked about private memory, direct the user to Settings→Personalization→Memory.
 
             Operate invisibly: your mastery of these features should enhance every response without ever needing to name them.
+
+            Your sessionId is {0}.
             ";
 
 
@@ -68,12 +70,13 @@ namespace RR.AI_Chat.Service
             await _ctx.AddAsync(newSession);
             await _ctx.SaveChangesAsync();
 
+            var prompt = string.Format(_defaultSystemPrompt, newSession.Id);
             var chatSession = new ChatSesion
             {
                 SessionId = newSession.Id,
                 Messages =
                 [
-                    new ChatMessage(ChatRole.System, _defaultSystemPrompt)
+                    new ChatMessage(ChatRole.System, prompt)
                 ]
             };
             _chatStore.Sessions.Add(chatSession);

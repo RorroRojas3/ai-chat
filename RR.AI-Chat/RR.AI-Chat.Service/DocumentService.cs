@@ -26,10 +26,7 @@ namespace RR.AI_Chat.Service
         private readonly ILogger _logger = logger;
         private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator = embeddingGenerator;
         private readonly AIChatDbContext _ctx = ctx;
-        private const double _cosineDistanceThreshold = 0.5;
-        private const string _documentAgentPrompt = "You are a System Prompt Optimizer specialized in document-related inquiries. When given a user prompt asking about document(s), analyze its intent and generate the single most effective system prompt that instructs an AI assistant to internally interrogate the document—examining its metadata, section headings, and content structure—to resolve any ambiguities and extract the precise information requested, without asking the user any clarifying questions. Respond with only the system prompt text.";
-
-
+        private const double _cosineDistanceThreshold = 0.3;
 
         public async Task<DocumentDto> CreateDocumentAsync(IFormFile formFile, Guid sessionId)
         {

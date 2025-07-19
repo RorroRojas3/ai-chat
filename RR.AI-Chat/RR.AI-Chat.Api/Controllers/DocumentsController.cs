@@ -6,14 +6,14 @@ namespace RR.AI_Chat.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DocumentController(IDocumentService service) : ControllerBase
+    public class DocumentsController(IDocumentService service) : ControllerBase
     {
         private readonly IDocumentService _service = service;
 
-        [HttpPost]
-        public async Task<IActionResult> CreateDocumentAsync(IFormFile file)
+        [HttpPost("sessions/{sessionId}")]
+        public async Task<IActionResult> CreateDocumentAsync([FromRoute] Guid sessionId, IFormFile file)
         {
-            var document = await _service.CreateDocumentAsync(file, Guid.Parse(Request.Headers["sessionId"].ToString()));
+            var document = await _service.CreateDocumentAsync(file, sessionId);
             return Created($"api/documents/{document.Id}", document);
         }
 

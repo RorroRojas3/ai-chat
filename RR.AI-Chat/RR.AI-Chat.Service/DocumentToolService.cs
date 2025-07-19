@@ -42,7 +42,8 @@ namespace RR.AI_Chat.Service
             }
 
             var documents = await _ctx.Documents.AsNoTracking()
-                .Where(x => x.SessionId == Guid.Parse(sessionId))
+                .Where(x => x.SessionId == Guid.Parse(sessionId) && 
+                        !   x.DateDeactivated.HasValue )
                 .Select(x => new DocumentDto
                 {
                     Id = x.Id.ToString(),
@@ -86,7 +87,9 @@ namespace RR.AI_Chat.Service
 
             var documentPages = await _ctx.DocumentPages.AsNoTracking()
                 .Include(x => x.Document)
-                .Where(x => x.DocumentId == documentGuid && x.Document.SessionId == sessionGuid)
+                .Where(x => x.DocumentId == documentGuid && 
+                        x.Document.SessionId == sessionGuid && 
+                        !x.DateDeactivated.HasValue)
                 .OrderBy(x => x.Number)
                 .Skip(0)
                 .Take(15)
