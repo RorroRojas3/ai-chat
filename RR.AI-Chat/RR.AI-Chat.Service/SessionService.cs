@@ -11,11 +11,9 @@ namespace RR.AI_Chat.Service
     {
         Task<SessionDto> CreateChatSessionAsync();
 
-        Task<List<SessionDto>> GetSessionsAsync();
-
         Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request);
 
-        Task<List<SessionDto>> SearchSessionsAsync(string query);
+        Task<List<SessionDto>> SearchSessionsAsync(string? query);
     }
 
     public class SessionService(ILogger<SessionService> logger,
@@ -88,17 +86,6 @@ namespace RR.AI_Chat.Service
         }
 
         /// <summary>
-        /// Asynchronously retrieves a list of chat sessions.
-        /// </summary>
-        /// <returns>A task that represents the asynchronous operation. The task result contains a list of the last 10 chat sessions.</returns>
-        public async Task<List<SessionDto>> GetSessionsAsync()
-        {
-            var sessions = _chatStore.Sessions.Take(10).Select(s => new SessionDto { Id = s.SessionId, Name = s.Name }).ToList();
-            await Task.CompletedTask;
-            return sessions;
-        }
-
-        /// <summary>
         /// Creates a session name asynchronously based on the provided request.
         /// </summary>
         /// <param name="sessionId">The unique identifier of the session.</param>
@@ -111,9 +98,23 @@ namespace RR.AI_Chat.Service
             ArgumentException.ThrowIfNullOrEmpty(nameof(request));
             ArgumentException.ThrowIfNullOrWhiteSpace(nameof(request));
 
+            var session = await _ctx.Sessions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == sessionId);
+            if (session == null)
+            {
+                _logger.LogError("Session with id {id} not found", sessionId);
+                throw new InvalidOperationException($"Session with id {sessionId} not found");
+            }
+
+            var model = await _ctx.Models.AsNoTracking().FirstOrDefaultAsync(x => x.Name == request.ModelId);
+            if (model == null)
+            {
+                _logger.LogError("Model with id {id} not found", request.ModelId);
+                throw new InvalidOperationException($"Model with id {request.ModelId} not found");
+            }
+
             var response = await _chatClient.GetResponseAsync([
                                  new ChatMessage(ChatRole.System, _defaultSystemPrompt),
-                                 new ChatMessage(ChatRole.User, $"Create a session name based on the following prompt, please make it 50 characters or less and make it a string, not markdown. Prompt: {request.Prompt}")
+                                 new ChatMessage(ChatRole.User, $"Create a session name based on the following prompt, please make it 25 maximum and make it a string. Do not hav the name on the session nor the id. Just the name based on the prompt. The result must be a string, not markdown. Prompt: {request.Prompt}")
                              ], new() { ModelId = request.ModelId }, CancellationToken.None);
             if (response == null)
             {
@@ -121,7 +122,17 @@ namespace RR.AI_Chat.Service
                 throw new InvalidOperationException($"Failed to create session name for id {sessionId}");
             }
 
-            return response.Messages.Last().Text ?? string.Empty;
+            var newDetails = new SessionDetail
+            {
+                SessionId = sessionId,
+                ModelId = model.Id,
+                Name = response.Messages.Last().Text?.Trim() ?? string.Empty,
+                DateCreated = DateTime.UtcNow
+            };
+            await _ctx.AddAsync(newDetails);
+            await _ctx.SaveChangesAsync();
+
+            return newDetails.Name;
         }
 
         /// <summary>
@@ -144,7 +155,7 @@ namespace RR.AI_Chat.Service
         /// </remarks>
         /// <exception cref="InvalidOperationException">Thrown when the database context is in an invalid state.</exception>
         /// <exception cref="SqlException">Thrown when a database-related error occurs during query execution.</exception>
-        public async Task<List<SessionDto>> SearchSessionsAsync(string query)
+        public async Task<List<SessionDto>> SearchSessionsAsync(string? query)
         {
             if (string.IsNullOrWhiteSpace(query))
             {
@@ -158,9 +169,9 @@ namespace RR.AI_Chat.Service
 
             var sessions = await _ctx.SessionDetails.AsNoTracking()
                 .Where(x => !string.IsNullOrWhiteSpace(x.Name) &&
-                            EF.Functions.Like(x.Name, $"%{query}%"))
+                            EF.Functions.ILike(x.Name, $"%{query}%"))
                 .Take(10)
-                .Select(s => new SessionDto { Id = s.Id, Name = s.Name })
+                .Select(s => new SessionDto { Id = s.SessionId, Name = s.Name })
                 .ToListAsync();
             return sessions;
         }

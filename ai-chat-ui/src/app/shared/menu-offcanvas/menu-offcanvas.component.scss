@@ -38,6 +38,31 @@
           border: none;
           box-shadow: none;
         }
+
+        &--no-results {
+          background-color: transparent;
+          color: rgba(255, 255, 255, 0.6);
+          font-style: italic;
+          cursor: default;
+          pointer-events: none;
+
+          &:hover {
+            background-color: transparent;
+            color: rgba(255, 255, 255, 0.6);
+          }
+        }
+
+        &--loading {
+          background-color: transparent;
+          color: rgba(255, 255, 255, 0.8);
+          cursor: default;
+          pointer-events: none;
+
+          &:hover {
+            background-color: transparent;
+            color: rgba(255, 255, 255, 0.8);
+          }
+        }
       }
     }
   }
@@ -45,4 +70,41 @@
 
 .menu-section-title {
   color: white;
+}
+
+.menu-search {
+  &__icon {
+    background-color: var(--color-navy);
+    border-color: var(--color-navy);
+    color: white;
+  }
+
+  &__input {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--color-navy);
+    color: white;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    &:focus {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-color: var(--color-navy);
+      box-shadow: 0 0 0 0.2rem rgba(28, 60, 98, 0.25);
+      color: white;
+    }
+  }
+
+  &__clear {
+    background-color: var(--color-navy);
+    border-color: var(--color-navy);
+    color: white;
+
+    &:hover {
+      background-color: var(--color-accent);
+      border-color: var(--color-accent);
+      color: white;
+    }
+  }
 }

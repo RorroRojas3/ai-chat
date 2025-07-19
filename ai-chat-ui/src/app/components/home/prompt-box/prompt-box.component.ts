@@ -53,7 +53,7 @@ export class PromptBoxComponent implements OnDestroy {
   private fileIdCounter: number = 0;
 
   async onClickCreateSession(): Promise<void> {
-    if (!this.prompt.trim()) {
+    if (!this.prompt.trim() || this.storeService.disablePromptButton()) {
       return;
     }
 
@@ -99,9 +99,18 @@ export class PromptBoxComponent implements OnDestroy {
             this.storeService.streamMessage.set(
               new MessageDto('', false, undefined)
             );
-            this.sessionService.getSessions().subscribe((sessions) => {
-              this.storeService.sessions.set(sessions);
-            });
+            // Refresh sessions based on current search state
+            if (this.storeService.hasSearchFilter()) {
+              this.sessionService
+                .searchSessions(this.storeService.searchFilter())
+                .subscribe((sessions) => {
+                  this.storeService.sessions.set(sessions);
+                });
+            } else {
+              this.sessionService.searchSessions('').subscribe((sessions) => {
+                this.storeService.sessions.set(sessions);
+              });
+            }
           },
           error: (error) => {
             this.storeService.stream.set('');
@@ -163,9 +172,6 @@ export class PromptBoxComponent implements OnDestroy {
   }
 
   // Handle multiple files
-  // ...existing code...
-
-  // Handle multiple files
   private handleFiles(fileList: FileList): void {
     Array.from(fileList).forEach((file) => {
       // Only accept PDF files
@@ -189,8 +195,6 @@ export class PromptBoxComponent implements OnDestroy {
       }
     });
   }
-
-  // ...existing code...
 
   // Remove a specific file
   removeFile(fileId: string): void {
@@ -233,6 +237,27 @@ export class PromptBoxComponent implements OnDestroy {
     );
 
     await Promise.all(uploadPromises);
+  }
+
+  /**
+   * Handles keydown events on the textarea
+   * Sends message on Enter (but allows Shift+Enter for new lines)
+   */
+  onTextareaKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.onClickCreateSession();
+    }
+  }
+
+  /**
+   * Handles keydown events on the form
+   * Prevents form submission on Enter key in form elements
+   */
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+    }
   }
 
   ngOnDestroy(): void {
