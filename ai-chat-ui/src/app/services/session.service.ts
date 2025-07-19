@@ -20,11 +20,14 @@ export class SessionService {
   }
 
   /**
-   * Retrieves an array of chat sessions from the API.
+   * Searches for sessions based on the provided query string.
    *
-   * @returns An Observable that emits an array of SessionDto objects representing chat sessions.
+   * @param query - The search query string to filter sessions
+   * @returns An Observable that emits an array of SessionDto objects matching the search criteria
    */
-  getSessions(): Observable<SessionDto[]> {
-    return this.http.get<SessionDto[]>(`${environment.apiUrl}sessions`);
+  searchSessions(query: string): Observable<SessionDto[]> {
+    return this.http.get<SessionDto[]>(`${environment.apiUrl}sessions/search`, {
+      params: { query },
+    });
   }
 }

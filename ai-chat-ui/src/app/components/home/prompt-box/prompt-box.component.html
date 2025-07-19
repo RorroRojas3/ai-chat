@@ -1,6 +1,10 @@
 <div class="card border-0 rounded-5 prompt-box">
   <div class="card-body">
-    <form id="promptForm">
+    <form
+      id="promptForm"
+      (ngSubmit)="onClickCreateSession()"
+      (keydown)="onKeyDown($event)"
+    >
       <div
         class="position-relative"
         (dragover)="onDragOver($event)"
@@ -17,6 +21,7 @@
               placeholder="Ask anything..."
               [(ngModel)]="prompt"
               [ngModelOptions]="{ standalone: true }"
+              (keydown)="onTextareaKeyDown($event)"
             ></textarea>
           </div>
         </div>

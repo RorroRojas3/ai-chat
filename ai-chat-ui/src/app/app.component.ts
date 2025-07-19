@@ -23,7 +23,7 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     forkJoin([
       this.modelService.getModels(),
-      this.sessionService.getSessions(),
+      this.sessionService.searchSessions(''),
     ]).subscribe(([models, sessions]) => {
       this.storeService.models.set(models);
       this.storeService.selectedModelId.set(models[0].name);

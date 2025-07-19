@@ -16,15 +16,8 @@ namespace RR.AI_Chat.Api.Controllers
             return Created($"api/sessions/{response.Id}", response);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetSessionsAsync()
-        {
-            var response = await _sessionService.GetSessionsAsync();
-            return Ok(response);
-        }
-
         [HttpGet("search")]
-        public async Task<IActionResult> SearchSessionsAsync([FromQuery] string query)
+        public async Task<IActionResult> SearchSessionsAsync([FromQuery] string? query)
         {
             var response = await _sessionService.SearchSessionsAsync(query);
             return Ok(response);

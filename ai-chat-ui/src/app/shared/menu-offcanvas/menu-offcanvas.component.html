@@ -36,9 +36,40 @@
         ><i class="bi bi-chat-text"></i>&nbsp;New Chat</a
       >
     </ul>
+
+    <!-- Search functionality -->
+    <div class="mb-3">
+      <div class="input-group">
+        <span class="input-group-text menu-search__icon">
+          <i class="bi bi-search"></i>
+        </span>
+        <input
+          type="text"
+          class="form-control menu-search__input"
+          placeholder="Search chats..."
+          [value]="storeService.searchFilter()"
+          (input)="onSearchChange($any($event.target).value)"
+        />
+        @if (storeService.searchFilter()) {
+        <button
+          class="btn btn-outline-secondary menu-search__clear"
+          type="button"
+          (click)="clearSearch()"
+        >
+          <i class="bi bi-x"></i>
+        </button>
+        }
+      </div>
+    </div>
+
     <h6 class="offcanvas-title menu-section-title">Chats</h6>
     <ul class="list-group menu-list">
-      @for (session of this.storeService.sessions(); track session) {
+      @if (storeService.isSearching()) {
+      <li class="list-group-item menu-list__item menu-list__item--loading">
+        <i class="bi bi-search me-2"></i>
+        Searching...
+      </li>
+      } @else { @for (session of storeService.sessions(); track session) {
       <a
         href="#"
         class="list-group-item list-group-item-action menu-list__item"
@@ -49,7 +80,12 @@
             : session.name
         }}</a
       >
-      }
+      } @empty { @if (storeService.searchFilter()) {
+      <li class="list-group-item menu-list__item menu-list__item--no-results">
+        <i class="bi bi-search me-2"></i>
+        No chats found for "{{ storeService.searchFilter() }}"
+      </li>
+      } } }
     </ul>
   </div>
 </div>
