@@ -49,7 +49,6 @@ export class PromptBoxComponent implements OnDestroy {
 
   // File handling properties
   attachedFiles: AttachedFile[] = [];
-  isDragOver: boolean = false;
   private fileIdCounter: number = 0;
 
   async onClickCreateSession(): Promise<void> {
@@ -132,33 +131,13 @@ export class PromptBoxComponent implements OnDestroy {
     }
   }
 
+  /**
+   * Handles model selection change events and updates the selected model ID in the store.
+   *
+   * @param event - The ID of the newly selected model
+   */
   onModelChange(event: string): void {
     this.storeService.selectedModelId.set(event);
-  }
-
-  // Drag and drop handlers
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragOver = true;
-  }
-
-  onDragLeave(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragOver = false;
-  }
-
-  onDrop(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragOver = false;
-
-    const files = event.dataTransfer?.files;
-    if (files) {
-      console.log('Files dropped');
-      this.handleFiles(files);
-    }
   }
 
   // File selection handler
@@ -260,6 +239,10 @@ export class PromptBoxComponent implements OnDestroy {
     }
   }
 
+  /**
+   * Angular lifecycle hook that is called when the component is destroyed.
+   * Cleans up the SSE (Server-Sent Events) subscription to prevent memory leaks.
+   */
   ngOnDestroy(): void {
     if (this.sseSubscription) {
       this.sseSubscription.unsubscribe();

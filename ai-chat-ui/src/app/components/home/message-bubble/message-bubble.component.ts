@@ -1,5 +1,5 @@
 import { NgClass, NgIf } from '@angular/common';
-import { AfterViewChecked, Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { MessageDto } from '../../../dtos/MessageDto';
 import { StoreService } from '../../../store/store.service';
 
