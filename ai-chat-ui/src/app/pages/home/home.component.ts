@@ -1,10 +1,4 @@
-import {
-  AfterViewChecked,
-  AfterViewInit,
-  Component,
-  computed,
-  signal,
-} from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { PromptBoxComponent } from '../../components/home/prompt-box/prompt-box.component';
 import { StoreService } from '../../store/store.service';
 import { MessageBubbleComponent } from '../../components/home/message-bubble/message-bubble.component';
@@ -39,15 +33,17 @@ export class HomeComponent {
     }).use(markdown_it_highlightjs, { hljs });
   }
 
+  /**
+   * Handles changes to the markdown content by updating the local markdown property
+   * and synchronizing the change with the stream message in the store service.
+   *
+   * @param markdown - The updated markdown content as SafeHtml
+   */
   onMarkdownChange(markdown: SafeHtml): void {
     this.markdown = markdown;
     this.storeService.streamMessage.update((streamMessage) => ({
       ...streamMessage,
       markdown,
     }));
-  }
-
-  onStreamChange(stream: string): void {
-    this.stream = stream;
   }
 }
