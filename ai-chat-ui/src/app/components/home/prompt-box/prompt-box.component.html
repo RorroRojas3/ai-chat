@@ -1,5 +1,20 @@
-<div class="card border-0 rounded-5 prompt-box">
+<div
+  class="card border-0 rounded-5 prompt-box"
+  [class.drag-over]="isDragOver"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+>
   <div class="card-body">
+    <!-- Drag and drop overlay -->
+    @if (isDragOver) {
+    <div class="drag-overlay">
+      <div class="drag-content">
+        <i class="bi bi-files drag-icon"></i>
+        <p class="drag-text">Drop file(s)</p>
+      </div>
+    </div>
+    }
     <form
       id="promptForm"
       (ngSubmit)="onClickCreateSession()"
@@ -88,5 +103,29 @@
         />
       </div>
     </form>
+
+    <!-- File cards display -->
+    @if (attachedFiles.length > 0) {
+    <div class="file-cards-container mt-1">
+      <div class="file-cards-scroll">
+        @for (file of attachedFiles; track file.id) {
+        <div class="file-card card">
+          <div class="file-card-body card-body text-center">
+            <div class="file-card-remove">
+              <span class="badge bg-danger" (click)="removeFile(file.id)">
+                <i class="bi bi-x"></i>
+              </span>
+            </div>
+            <div class="file-card-icon">
+              <i class="bi bi-file-earmark-pdf"></i>
+            </div>
+            <div class="file-card-name">{{ file.name }}</div>
+            <div class="file-card-size">{{ formatFileSize(file.size) }}</div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
   </div>
 </div>
