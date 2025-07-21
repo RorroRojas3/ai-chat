@@ -11,6 +11,7 @@ import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import { SessionService } from '../../../services/session.service';
 import { DocumentService } from '../../../services/document.service';
 import { ModelDto } from '../../../dtos/ModelDto';
+import { AiServiceType } from '../../../dtos/const/AiServiceType';
 
 interface AttachedFile {
   id: string;
@@ -237,6 +238,24 @@ export class PromptBoxComponent implements OnDestroy {
   onKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
+    }
+  }
+
+  /**
+   * Gets the appropriate Bootstrap icon class based on the AI service ID.
+   * @param aiServiceId The unique identifier for the AI service
+   * @returns Bootstrap icon class string
+   */
+  getServiceIcon(aiServiceId: string): string {
+    switch (aiServiceId) {
+      case AiServiceType.Ollama:
+        return 'bi bi-robot'; // Robot icon for Ollama
+      case AiServiceType.OpenAI:
+        return 'bi bi-openai'; // Lightning charge icon for OpenAI
+      case AiServiceType.AzureOpenAI:
+        return 'bi bi-microsoft'; // Cloud icon for Azure OpenAI
+      default:
+        return 'bi bi-question-circle'; // Question circle for unknown services
     }
   }
 

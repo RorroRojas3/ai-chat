@@ -30,14 +30,30 @@
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                 >
-                  {{ this.storeService.selectedModel().name || "Models..." }}
+                  @if (this.storeService.selectedModel().name) {
+                  <i
+                    class="me-2 {{
+                      getServiceIcon(
+                        this.storeService.selectedModel().aiServiceId
+                      )
+                    }}"
+                  ></i>
+                  {{ this.storeService.selectedModel().name }}
+                  } @else { Models... }
                 </button>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <ul
+                  class="dropdown-menu"
+                  style="background-color: var(--color-light-blue)"
+                  aria-labelledby="dropdownMenuButton"
+                >
                   @for (model of this.storeService.models(); track model) {
                   <li>
-                    <a class="dropdown-item" (click)="onModelChange(model)">{{
-                      model.name
-                    }}</a>
+                    <a class="dropdown-item" (click)="onModelChange(model)">
+                      <i
+                        class="me-2 {{ getServiceIcon(model.aiServiceId) }}"
+                      ></i>
+                      {{ model.name }}
+                    </a>
                   </li>
                   }
                 </ul>
