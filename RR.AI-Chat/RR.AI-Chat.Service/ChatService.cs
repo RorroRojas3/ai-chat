@@ -6,6 +6,7 @@ using RR.AI_Chat.Dto.Enums;
 using RR.AI_Chat.Repository;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace RR.AI_Chat.Service
 {
@@ -18,18 +19,22 @@ namespace RR.AI_Chat.Service
         Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId);
     }
 
-    public class ChatService(ILogger<ChatService> logger, 
-        IChatClient chatClient,
+    public class ChatService(ILogger<ChatService> logger,
         IDocumentToolService documentToolService,
         IHttpContextAccessor httpContextAccessor,
         ISessionService sessionService,
+        IModelService modelService,
+        [FromKeyedServices("ollama")] IChatClient ollamaClient,
+        [FromKeyedServices("openai")] IChatClient openAiClient,
         ChatStore chatStore, AIChatDbContext ctx) : IChatService
     {
+        private readonly IChatClient _ollamaClient = ollamaClient ?? throw new ArgumentNullException(nameof(ollamaClient));
+        private readonly IChatClient _openAiClient = openAiClient ?? throw new ArgumentNullException(nameof(openAiClient));
         private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        private readonly IChatClient _chatClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         private readonly IDocumentToolService _documentToolService = documentToolService ?? throw new ArgumentNullException(nameof(documentToolService));
         private readonly ISessionService _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+        private readonly IModelService _modelService = modelService ?? throw new ArgumentNullException(nameof(modelService));
         private readonly ChatStore _chatStore = chatStore;
         private readonly AIChatDbContext _ctx = ctx;
 
@@ -73,9 +78,11 @@ namespace RR.AI_Chat.Service
 
             session.Messages.Add(new ChatMessage(ChatRole.User, request.Prompt));
 
-            var chatOptions = CreateChatOptions(request.ModelId, sessionId);
+            var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId);
+            var chatClient = GetChatClient(request.ServiceId);
+            var chatOptions = CreateChatOptions(sessionId, model);
             StringBuilder sb = new();
-            await foreach (var message in _chatClient.GetStreamingResponseAsync(session.Messages ?? [], chatOptions, cancellationToken))
+            await foreach (var message in chatClient.GetStreamingResponseAsync(session.Messages ?? [], chatOptions, cancellationToken))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 sb.Append(message.Text);
@@ -122,7 +129,7 @@ namespace RR.AI_Chat.Service
             _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.User, prompt.Prompt));
             
             var messages = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages;
-            var response = await _chatClient.GetResponseAsync(messages ?? [], null,cancellationToken);
+            var response = await _ollamaClient.GetResponseAsync(messages ?? [], null,cancellationToken);
 
             _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.System, response.Messages[0].Text));
             
@@ -172,30 +179,53 @@ namespace RR.AI_Chat.Service
             return new() { Id = sessionId, Name = session.Name, Messages = messages };
         }
 
-
         /// <summary>
-        /// Creates and configures a ChatOptions instance for AI chat interactions.
+        /// Retrieves the appropriate chat client based on the specified AI service type.
         /// </summary>
-        /// <param name="modelId">The identifier of the AI model to use for chat operations.</param>
-        /// <returns>A configured ChatOptions object with document tools, multi-tool calling enabled, and the specified model ID.</returns>
+        /// <param name="serviceId">The unique identifier of the AI service type to determine which chat client to return.</param>
+        /// <returns>
+        /// An <see cref="IChatClient"/> instance corresponding to the specified service type.
+        /// Returns the Ollama client for <see cref="AIServiceType.Ollama"/> or the OpenAI client for <see cref="AIServiceType.OpenAI"/>.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the specified <paramref name="serviceId"/> does not match any supported AI service type.
+        /// </exception>
         /// <remarks>
-        /// This method configures the chat options with:
-        /// - Document tools from the document tool service for enhanced functionality
-        /// - Multiple tool calls allowed for complex operations
-        /// - RequireAny tool mode to ensure at least one tool is available
-        /// - The specified model ID for consistent AI model usage
+        /// This method supports the following AI service types:
+        /// <list type="bullet">
+        /// <item><see cref="AIServiceType.Ollama"/> - Returns the locally hosted Ollama chat client</item>
+        /// <item><see cref="AIServiceType.OpenAI"/> - Returns the OpenAI chat client</item>
+        /// </list>
+        /// The method performs a direct comparison between the service ID and predefined service type constants.
         /// </remarks>
-        private ChatOptions CreateChatOptions(string modelId, Guid sessionId)
+        private IChatClient GetChatClient(Guid serviceId)
+        {
+            if (AIServiceType.Ollama == serviceId)
+            {
+                return _ollamaClient;
+            }
+            else if (AIServiceType.OpenAI == serviceId)
+            {
+                return _openAiClient;
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unsupported AI service type: {serviceId}");
+            }
+        }
+
+
+        private ChatOptions CreateChatOptions(Guid sessionId, ModelDto model)
         {
             var documentTools = _documentToolService.GetTools();
 
             var chatOptions = new ChatOptions
             {
                 // Assuming AIFunction is a subclass of AITool, you need to cast each function to AITool
-               // Tools = documentTools,
+                Tools = model.IsToolEnabled ? documentTools : [],
                 AllowMultipleToolCalls = true,
                 ToolMode = ChatToolMode.RequireAny,
-                ModelId = modelId,
+                ModelId = model.Name,
                 ConversationId = sessionId.ToString(),
             };
 

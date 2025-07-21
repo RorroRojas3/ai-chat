@@ -12,6 +12,8 @@ namespace RR.AI_Chat.Entity
         [StringLength(25)]
         public string Name { get; set; } = null!;
 
+        public bool IsToolEnabled { get; set; }
+
         public AIService AIService { get; set; } = null!;
     }
 }

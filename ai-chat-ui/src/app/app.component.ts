@@ -26,7 +26,7 @@ export class AppComponent implements OnInit {
       this.sessionService.searchSessions(''),
     ]).subscribe(([models, sessions]) => {
       this.storeService.models.set(models);
-      this.storeService.selectedModelId.set(models[0].name);
+      this.storeService.selectedModel.set(models[0]);
       this.storeService.sessions.set(sessions);
     });
   }

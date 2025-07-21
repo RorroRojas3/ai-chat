@@ -30,16 +30,14 @@
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                 >
-                  {{ this.storeService.selectedModelId() || "Models..." }}
+                  {{ this.storeService.selectedModel().name || "Models..." }}
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                   @for (model of this.storeService.models(); track model) {
                   <li>
-                    <a
-                      class="dropdown-item"
-                      (click)="onModelChange(model.name)"
-                      >{{ model.name }}</a
-                    >
+                    <a class="dropdown-item" (click)="onModelChange(model)">{{
+                      model.name
+                    }}</a>
                   </li>
                   }
                 </ul>

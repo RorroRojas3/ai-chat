@@ -51,6 +51,18 @@ namespace RR.AI_Chat.Repository.Migrations
                             Id = new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"),
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Ollama"
+                        },
+                        new
+                        {
+                            Id = new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "OpenAI"
+                        },
+                        new
+                        {
+                            Id = new Guid("9f29b328-8e63-4b87-a78d-51e96a660135"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "AzureOpenAI"
                         });
                 });
 
@@ -139,6 +151,9 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<DateTime?>("DateDeactivated")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsToolEnabled")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(25)
@@ -156,6 +171,7 @@ namespace RR.AI_Chat.Repository.Migrations
                             Id = new Guid("157b91cf-1880-4977-9b7a-7f80f548df04"),
                             AIServiceId = new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"),
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = false,
                             Name = "llama3.2"
                         },
                         new
@@ -163,6 +179,7 @@ namespace RR.AI_Chat.Repository.Migrations
                             Id = new Guid("9910ba5f-faca-4790-88a4-352e71e14724"),
                             AIServiceId = new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"),
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = false,
                             Name = "mistral"
                         },
                         new
@@ -170,7 +187,24 @@ namespace RR.AI_Chat.Repository.Migrations
                             Id = new Guid("1fe5381b-0262-469a-b63e-f4d0c4807a98"),
                             AIServiceId = new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"),
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = false,
                             Name = "gemma3"
+                        },
+                        new
+                        {
+                            Id = new Guid("1983e31e-627d-4617-9320-17ded79efa2b"),
+                            AIServiceId = new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "gpt-4.1-nano"
+                        },
+                        new
+                        {
+                            Id = new Guid("e9bc0791-2d15-43c8-9299-5c86039786f9"),
+                            AIServiceId = new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "gpt-4.1-mini"
                         });
                 });
 
@@ -208,8 +242,8 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(25)
-                        .HasColumnType("character varying(25)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<Guid>("SessionId")
                         .HasColumnType("uuid");

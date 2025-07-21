@@ -10,6 +10,7 @@ import hljs from 'highlight.js';
 import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import { SessionService } from '../../../services/session.service';
 import { DocumentService } from '../../../services/document.service';
+import { ModelDto } from '../../../dtos/ModelDto';
 
 interface AttachedFile {
   id: string;
@@ -136,8 +137,8 @@ export class PromptBoxComponent implements OnDestroy {
    *
    * @param event - The ID of the newly selected model
    */
-  onModelChange(event: string): void {
-    this.storeService.selectedModelId.set(event);
+  onModelChange(event: ModelDto): void {
+    this.storeService.selectedModel.set(event);
   }
 
   // File selection handler

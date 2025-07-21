@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Entity;
@@ -17,12 +18,12 @@ namespace RR.AI_Chat.Service
     }
 
     public class SessionService(ILogger<SessionService> logger,
-        IChatClient chatClient,
+        [FromKeyedServices("openai")] IChatClient openAiClient,
         AIChatDbContext ctx,
         ChatStore chatStore) : ISessionService
     {
         private readonly ILogger<SessionService> _logger = logger;
-        private readonly IChatClient _chatClient = chatClient;
+        private readonly IChatClient _chatClient = openAiClient;
         private readonly ChatStore _chatStore = chatStore;
         private readonly AIChatDbContext _ctx = ctx;
         private readonly string _defaultSystemPrompt = @"
@@ -105,7 +106,7 @@ namespace RR.AI_Chat.Service
                 throw new InvalidOperationException($"Session with id {sessionId} not found");
             }
 
-            var model = await _ctx.Models.AsNoTracking().FirstOrDefaultAsync(x => x.Name == request.ModelId);
+            var model = await _ctx.Models.AsNoTracking().FirstOrDefaultAsync(x => x.Id == request.ModelId);
             if (model == null)
             {
                 _logger.LogError("Model with id {id} not found", request.ModelId);
@@ -115,7 +116,7 @@ namespace RR.AI_Chat.Service
             var response = await _chatClient.GetResponseAsync([
                                  new ChatMessage(ChatRole.System, _defaultSystemPrompt),
                                  new ChatMessage(ChatRole.User, $"Create a session name based on the following prompt, please make it 25 maximum and make it a string. Do not hav the name on the session nor the id. Just the name based on the prompt. The result must be a string, not markdown. Prompt: {request.Prompt}")
-                             ], new() { ModelId = request.ModelId }, CancellationToken.None);
+                             ], new() { ModelId = model.Name }, CancellationToken.None);
             if (response == null)
             {
                 _logger.LogError("Failed to create session name for session id {id}", sessionId);
