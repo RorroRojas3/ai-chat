@@ -146,7 +146,7 @@
 .file-card-icon {
   font-size: 2rem;
   margin-bottom: 0.5rem;
-  color: #dc3545; // Bootstrap red color for PDF icon
+  color: var(--color-danger); // Bootstrap red color for PDF icon
 }
 
 .file-card-name {
