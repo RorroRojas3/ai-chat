@@ -108,7 +108,7 @@ namespace RR.AI_Chat.Repository.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     SessionId = table.Column<Guid>(type: "uuid", nullable: false),
                     ModelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     DateDeactivated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },

@@ -52,6 +52,7 @@ export class PromptBoxComponent implements OnDestroy {
   // File handling properties
   attachedFiles: AttachedFile[] = [];
   private fileIdCounter: number = 0;
+  isDragOver: boolean = false;
 
   async onClickCreateSession(): Promise<void> {
     if (!this.prompt.trim() || this.storeService.disablePromptButton()) {
@@ -79,11 +80,13 @@ export class PromptBoxComponent implements OnDestroy {
         new MessageDto(this.prompt, true, undefined),
       ]);
 
-      this.storeService.isStreaming.set(true);
       this.sseSubscription = this.chatService
         .getServerSentEvent(this.prompt)
         .subscribe({
           next: (message) => {
+            if (!this.storeService.isStreaming()) {
+              this.storeService.isStreaming.set(true);
+            }
             this.storeService.stream.update((stream) => stream + message);
             const html = this.md.render(this.storeService.stream());
             this.sanitizeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
@@ -218,6 +221,30 @@ export class PromptBoxComponent implements OnDestroy {
     );
 
     await Promise.all(uploadPromises);
+  }
+
+  // Drag and drop event handlers
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver = false;
+
+    const files = event.dataTransfer?.files;
+    if (files) {
+      this.handleFiles(files);
+    }
   }
 
   /**

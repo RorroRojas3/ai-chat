@@ -8,10 +8,15 @@
       @for (message of this.storeService.messages(); track message) {
       <app-message-bubble [message]="message"></app-message-bubble>
       }
-      <div *ngIf="this.storeService.isStreaming()">
+      <div *ngIf="this.storeService.isStreaming() && this.storeService.disablePromptButton()">
         <app-message-bubble
           [message]="this.storeService.streamMessage()"
         ></app-message-bubble>
+      </div>
+      <div *ngIf="!this.storeService.isStreaming() && this.storeService.disablePromptButton()" class="d-flex justify-content-start">
+        <div class="spinner-border streaming-spinner" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
       </div>
     </div>
 
