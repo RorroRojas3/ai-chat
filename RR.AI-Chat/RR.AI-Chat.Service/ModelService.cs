@@ -8,6 +8,8 @@ namespace RR.AI_Chat.Service
     public interface IModelService
     {
         Task<List<ModelDto>> GetModelsAsync();
+
+        Task<ModelDto> GetModelAsync(Guid id, Guid serviceId);
     }
 
     public class ModelService(ILogger<ModelService> logger,
@@ -33,11 +35,27 @@ namespace RR.AI_Chat.Service
                             .Select(x => new ModelDto
                             {
                                 Id = x.Id,
-                                Name = x.Name
+                                Name = x.Name,
+                                AiServiceId = x.AIServiceId
                             })
                             .ToListAsync();
 
             return models;
+        }
+
+        public async Task<ModelDto> GetModelAsync(Guid id, Guid serviceId)
+        {
+            return await _ctx.Models
+                .AsNoTracking()
+                .Where(x => x.Id == id && x.AIServiceId == serviceId)
+                .Select(x => new ModelDto
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    AiServiceId = x.AIServiceId,
+                    IsToolEnabled = x.IsToolEnabled
+                })
+                .FirstOrDefaultAsync() ?? throw new InvalidOperationException("Model not found.");
         }
     }
 }

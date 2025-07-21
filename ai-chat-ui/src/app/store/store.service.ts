@@ -16,7 +16,7 @@ export class StoreService {
   messages = signal<MessageDto[]>([]);
   streamMessage = signal<MessageDto>(new MessageDto('', false, undefined));
   models = signal<ModelDto[]>([]);
-  selectedModelId = signal<string>('');
+  selectedModel = signal<ModelDto>({} as ModelDto);
   sessions = signal<SessionDto[]>([]);
 
   // Search functionality

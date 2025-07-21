@@ -4,6 +4,8 @@
     {
         public string Prompt { get; set; } = null!;
 
-        public string ModelId { get; set; } = null!;
+        public Guid ModelId { get; set; }
+
+        public Guid ServiceId { get; set; } 
     }
 }

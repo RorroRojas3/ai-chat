@@ -11,7 +11,7 @@ namespace RR.AI_Chat.Entity
 
         public Guid ModelId { get; set; }
 
-        [StringLength(25)]
+        [StringLength(50)]
         public string Name { get; set; } = null!;
 
         public Session Session { get; set; } = null!;

@@ -1,13 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, NgZone } from '@angular/core';
 import { Observable } from 'rxjs';
-import { SessionCoversationDto, SessionDto } from '../dtos/SessionDto';
+import { SessionCoversationDto } from '../dtos/SessionDto';
 import { environment } from '../../environments/environment';
-import { ChatCompletionDto } from '../dtos/ChatCompletionDto';
 import { StoreService } from '../store/store.service';
-import { ChatCompletionRequestDto } from '../dtos/ChatCompletionRequestDto';
 import { ChatStreamRequestDto } from '../dtos/ChatStreamRequestDto';
-import { ModelDto } from '../dtos/ModelDto';
 
 @Injectable({
   providedIn: 'root',
@@ -68,7 +65,8 @@ export class ChatService {
           body: JSON.stringify(
             new ChatStreamRequestDto(
               prompt,
-              this.storeService.selectedModelId()
+              this.storeService.selectedModel().id,
+              this.storeService.selectedModel().aiServiceId
             )
           ),
         }

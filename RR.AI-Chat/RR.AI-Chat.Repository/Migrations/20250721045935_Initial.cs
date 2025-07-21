@@ -60,6 +60,7 @@ namespace RR.AI_Chat.Repository.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     AIServiceId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(25)", maxLength: 25, nullable: false),
+                    IsToolEnabled = table.Column<bool>(type: "boolean", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     DateDeactivated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
@@ -107,7 +108,7 @@ namespace RR.AI_Chat.Repository.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     SessionId = table.Column<Guid>(type: "uuid", nullable: false),
                     ModelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(25)", maxLength: 25, nullable: false),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     DateDeactivated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
@@ -159,17 +160,24 @@ namespace RR.AI_Chat.Repository.Migrations
                 schema: "AI.Ref",
                 table: "AIService",
                 columns: new[] { "Id", "DateCreated", "DateDeactivated", "Name" },
-                values: new object[] { new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "Ollama" });
+                values: new object[,]
+                {
+                    { new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "OpenAI" },
+                    { new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "Ollama" },
+                    { new Guid("9f29b328-8e63-4b87-a78d-51e96a660135"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "AzureOpenAI" }
+                });
 
             migrationBuilder.InsertData(
                 schema: "AI.Ref",
                 table: "Model",
-                columns: new[] { "Id", "AIServiceId", "DateCreated", "DateDeactivated", "Name" },
+                columns: new[] { "Id", "AIServiceId", "DateCreated", "DateDeactivated", "IsToolEnabled", "Name" },
                 values: new object[,]
                 {
-                    { new Guid("157b91cf-1880-4977-9b7a-7f80f548df04"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "llama3.2" },
-                    { new Guid("1fe5381b-0262-469a-b63e-f4d0c4807a98"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "gemma3" },
-                    { new Guid("9910ba5f-faca-4790-88a4-352e71e14724"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "mistral" }
+                    { new Guid("157b91cf-1880-4977-9b7a-7f80f548df04"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, false, "llama3.2" },
+                    { new Guid("1983e31e-627d-4617-9320-17ded79efa2b"), new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "gpt-4.1-nano" },
+                    { new Guid("1fe5381b-0262-469a-b63e-f4d0c4807a98"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, false, "gemma3" },
+                    { new Guid("9910ba5f-faca-4790-88a4-352e71e14724"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, false, "mistral" },
+                    { new Guid("e9bc0791-2d15-43c8-9299-5c86039786f9"), new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "gpt-4.1-mini" }
                 });
 
             migrationBuilder.CreateIndex(

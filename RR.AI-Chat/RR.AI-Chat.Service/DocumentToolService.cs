@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Pgvector;
 using Pgvector.EntityFrameworkCore;
@@ -23,14 +24,14 @@ namespace RR.AI_Chat.Service
         Task<List<Document>> SearchDocumentsAsync(string sessionId, string prompt, CancellationToken cancellationToken = default);
     }
 
-    public class DocumentToolService(ILogger<DocumentToolService> logger, 
-        IChatClient chatClient,
+    public class DocumentToolService(ILogger<DocumentToolService> logger,
+         [FromKeyedServices("openai")] IChatClient openAiClient,
         IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
         AIChatDbContext ctx) : IDocumentToolService
     {
         private readonly ILogger _logger = logger;
         private readonly AIChatDbContext _ctx = ctx;
-        private readonly IChatClient _chatClient = chatClient;
+        private readonly IChatClient _chatClient = openAiClient;
         private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator = embeddingGenerator;
         private const double _cosineDistanceThreshold = 0.5;
 
