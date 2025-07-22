@@ -26,12 +26,13 @@ namespace RR.AI_Chat.Service
         IModelService modelService,
         [FromKeyedServices("ollama")] IChatClient ollamaClient,
         [FromKeyedServices("openai")] IChatClient openAiClient,
+        [FromKeyedServices("azureopenai")] IChatClient azureOpenAiClient,
         ChatStore chatStore, AIChatDbContext ctx) : IChatService
     {
+        private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         private readonly IChatClient _ollamaClient = ollamaClient ?? throw new ArgumentNullException(nameof(ollamaClient));
         private readonly IChatClient _openAiClient = openAiClient ?? throw new ArgumentNullException(nameof(openAiClient));
-        private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        private readonly IChatClient _azureOpenAiClient = azureOpenAiClient ?? throw new ArgumentNullException(nameof(azureOpenAiClient));      
         private readonly IDocumentToolService _documentToolService = documentToolService ?? throw new ArgumentNullException(nameof(documentToolService));
         private readonly ISessionService _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
         private readonly IModelService _modelService = modelService ?? throw new ArgumentNullException(nameof(modelService));
@@ -207,6 +208,10 @@ namespace RR.AI_Chat.Service
             else if (AIServiceType.OpenAI == serviceId)
             {
                 return _openAiClient;
+            }
+            else if (AIServiceType.AzureOpenAI == serviceId)
+            {
+                return _azureOpenAiClient;
             }
             else
             {
