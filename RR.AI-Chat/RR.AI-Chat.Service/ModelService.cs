@@ -46,6 +46,18 @@ namespace RR.AI_Chat.Service
             return models;
         }
 
+        /// <summary>
+        /// Retrieves a specific AI model by its unique identifier and associated service identifier.
+        /// </summary>
+        /// <param name="id">The unique identifier of the model to retrieve.</param>
+        /// <param name="serviceId">The unique identifier of the AI service that owns the model.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains a <see cref="ModelDto"/> 
+        /// object representing the requested model with its ID, name, AI service ID, and tool enablement status.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when no model is found with the specified ID and service ID combination.
+        /// </exception>
         public async Task<ModelDto> GetModelAsync(Guid id, Guid serviceId)
         {
             return await _ctx.Models

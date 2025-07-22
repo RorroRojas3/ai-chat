@@ -28,6 +28,21 @@ namespace RR.AI_Chat.Service
         private readonly AIChatDbContext _ctx = ctx;
         private const double _cosineDistanceThreshold = 0.3;
 
+        /// <summary>
+        /// Creates a new document asynchronously by extracting text from a PDF file, generating embeddings for each page, and storing the document in the database.
+        /// </summary>
+        /// <param name="formFile">The uploaded PDF file to process. Must not be null.</param>
+        /// <param name="sessionId">The unique identifier of the session to associate the document with.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="DocumentDto"/> with the created document's ID and name.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="formFile"/> is null.</exception>
+        /// <remarks>
+        /// This method performs the following operations:
+        /// 1. Reads the uploaded file as a byte array
+        /// 2. Extracts text from each page of the PDF
+        /// 3. Generates vector embeddings for each page's text
+        /// 4. Creates document page entities with embeddings
+        /// 5. Saves the document and all pages to the database
+        /// </remarks>
         public async Task<DocumentDto> CreateDocumentAsync(IFormFile formFile, Guid sessionId)
         {
             ArgumentNullException.ThrowIfNull(formFile, nameof(formFile));
