@@ -31,6 +31,9 @@ namespace RR.AI_Chat.Service
         public async Task<List<ModelDto>> GetModelsAsync()
         {
             var models = await _ctx.Models
+                            .Include(x => x.AIService)
+                            .OrderBy(x => x.AIService.Name)
+                                .ThenBy(x => x.Name)
                             .AsNoTracking()
                             .Select(x => new ModelDto
                             {

@@ -205,6 +205,14 @@ namespace RR.AI_Chat.Repository.Migrations
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsToolEnabled = true,
                             Name = "gpt-4.1-mini"
+                        },
+                        new
+                        {
+                            Id = new Guid("a24fcce0-02e7-4ecb-88d7-27f33e47fecf"),
+                            AIServiceId = new Guid("9f29b328-8e63-4b87-a78d-51e96a660135"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "gpt-4.1-nano"
                         });
                 });
 
