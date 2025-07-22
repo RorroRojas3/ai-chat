@@ -222,11 +222,27 @@ namespace RR.AI_Chat.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Conversations")
+                        .HasColumnType("jsonb");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("DateDeactivated")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InputTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("OutputTokens")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

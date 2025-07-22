@@ -7,6 +7,8 @@ using RR.AI_Chat.Repository;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
+using RR.AI_Chat.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace RR.AI_Chat.Service
 {
@@ -70,27 +72,38 @@ namespace RR.AI_Chat.Service
         /// </remarks>
         public async IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var session = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId) ?? throw new InvalidOperationException($"Session with id {sessionId} not found.");
-            if (session.Messages.Count == 1)
+            var session = await _ctx.Sessions.FindAsync(sessionId, cancellationToken);
+            if (session == null || session.Conversations == null)
+            {
+                _logger.LogError("Session with id {id} not found.", sessionId);
+                throw new InvalidOperationException($"Session with id {sessionId} not found.");
+            }
+
+            if (session.Conversations.Count == 1)
             {
                 var sessionName = await _sessionService.CreateSessionNameAsync(sessionId, request);
                 session.Name = sessionName;
             }
 
-            session.Messages.Add(new ChatMessage(ChatRole.User, request.Prompt));
+            session.Conversations.Add(new Conversation(ChatRole.User, request.Prompt));
 
             var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId);
             var chatClient = GetChatClient(request.ServiceId);
             var chatOptions = CreateChatOptions(sessionId, model);
             StringBuilder sb = new();
-            await foreach (var message in chatClient.GetStreamingResponseAsync(session.Messages ?? [], chatOptions, cancellationToken))
+            await foreach (var message in chatClient.GetStreamingResponseAsync(session.Conversations.Select(x => new ChatMessage(x.Role, x.Content)) ?? [], chatOptions, cancellationToken))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 sb.Append(message.Text);
                 yield return message.Text;
             }
 
-            session.Messages?.Add(new ChatMessage(ChatRole.Assistant, sb.ToString()));
+            session.Conversations?.Add(new Conversation(ChatRole.Assistant, sb.ToString()));
+            session.DateModified = DateTime.UtcNow;
+            // Explicitly mark as modified for JSON columns
+            _ctx.Entry(session).Property(e => e.Conversations).IsModified = true;
+
+            await _ctx.SaveChangesAsync(cancellationToken);
         }
 
         /// <summary>
@@ -155,25 +168,24 @@ namespace RR.AI_Chat.Service
         /// </exception>
         public async Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId)
         {
-            var session = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId);
+            var session = await _ctx.Sessions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == sessionId);
             if (session == null)
             {
                 _logger.LogError("Session with id {id} not found.", sessionId);
                 throw new InvalidOperationException($"Session with id {sessionId} not found.");
             }
 
-            var messages = session.Messages
+            var messages = session.Conversations!
                             .Where(x => x.Role != ChatRole.System)
                             .Select(x => new SessionMessageDto() 
                             { 
-                                Text = x.Text ?? string.Empty,
+                                Text = x.Content ?? string.Empty,
                                 Role = x.Role == ChatRole.User ? ChatRoleType.User : ChatRoleType.System
                             })
                             .ToList();
             if (messages == null || messages.Count == 0)
             {
                 _logger.LogError("Session with id {id} does not contain any messages.", sessionId);
-                throw new InvalidOperationException($"Session with id {sessionId} does not contain any messages.");
             }
 
             await Task.CompletedTask;

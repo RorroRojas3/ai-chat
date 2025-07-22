@@ -44,6 +44,11 @@ namespace RR.AI_Chat.Repository.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    Conversations = table.Column<string>(type: "jsonb", nullable: true),
+                    InputTokens = table.Column<int>(type: "integer", nullable: false),
+                    OutputTokens = table.Column<int>(type: "integer", nullable: false),
+                    DateModified = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     DateDeactivated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },

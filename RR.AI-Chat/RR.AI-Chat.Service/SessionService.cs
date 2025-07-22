@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
+using System.Text.Json;
 
 namespace RR.AI_Chat.Service
 {
@@ -68,20 +69,34 @@ namespace RR.AI_Chat.Service
         /// <exception cref="InvalidOperationException">Thrown when the entity framework context is in an invalid state.</exception>
         public async Task<SessionDto> CreateChatSessionAsync()
         {
-            var newSession = new Session() { DateCreated = DateTime.UtcNow };
+            var transaction = await _ctx.Database.BeginTransactionAsync();
+            var date = DateTime.UtcNow;
+            var newSession = new Session() 
+            { 
+                DateCreated = date,
+                DateModified = date
+            };
             await _ctx.AddAsync(newSession);
             await _ctx.SaveChangesAsync();
 
             var prompt = string.Format(_defaultSystemPrompt, newSession.Id);
-            var chatSession = new ChatSesion
+            var coversations = new List<ChatMessage>
             {
-                SessionId = newSession.Id,
-                Messages =
-                [
-                    new ChatMessage(ChatRole.System, prompt)
-                ]
+                new(ChatRole.System, prompt)
             };
-            _chatStore.Sessions.Add(chatSession);
+            //var chatSession = new ChatSesion
+            //{
+            //    SessionId = newSession.Id,
+            //    Messages =
+            //    [
+            //        new ChatMessage(ChatRole.System, prompt)
+            //    ]
+            //};
+            //_chatStore.Sessions.Add(chatSession);
+            newSession.Conversations = [.. coversations.Select(x => new Conversation(x.Role, x.Text))];
+            newSession.DateModified = date;
+            await _ctx.SaveChangesAsync();
+            await transaction.CommitAsync();
 
             return new() { Id = newSession.Id };
         }
@@ -99,7 +114,7 @@ namespace RR.AI_Chat.Service
             ArgumentException.ThrowIfNullOrEmpty(nameof(request));
             ArgumentException.ThrowIfNullOrWhiteSpace(nameof(request));
 
-            var session = await _ctx.Sessions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == sessionId);
+            var session = await _ctx.Sessions.FindAsync(sessionId);
             if (session == null)
             {
                 _logger.LogError("Session with id {id} not found", sessionId);
@@ -123,11 +138,13 @@ namespace RR.AI_Chat.Service
                 throw new InvalidOperationException($"Failed to create session name for id {sessionId}");
             }
 
+            var name = response.Messages.Last().Text?.Trim() ?? string.Empty;
+            session.Name = name;
             var newDetails = new SessionDetail
             {
                 SessionId = sessionId,
                 ModelId = model.Id,
-                Name = response.Messages.Last().Text?.Trim() ?? string.Empty,
+                Name = name,
                 DateCreated = DateTime.UtcNow
             };
             await _ctx.AddAsync(newDetails);
