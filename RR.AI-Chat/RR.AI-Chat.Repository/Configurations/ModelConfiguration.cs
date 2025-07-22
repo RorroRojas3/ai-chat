@@ -50,6 +50,14 @@ namespace RR.AI_Chat.Repository.Configurations
                     Name = "gpt-4.1-mini",
                     IsToolEnabled = true,
                     DateCreated = dateCreated
+                },
+                new Model
+                {
+                    Id = new("a24fcce0-02e7-4ecb-88d7-27f33e47fecf"),
+                    AIServiceId = AIServiceType.AzureOpenAI,
+                    Name = "gpt-4.1-nano",
+                    IsToolEnabled = true,
+                    DateCreated = dateCreated
                 }
             );
         }

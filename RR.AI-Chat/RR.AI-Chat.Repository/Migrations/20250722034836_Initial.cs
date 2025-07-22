@@ -177,6 +177,7 @@ namespace RR.AI_Chat.Repository.Migrations
                     { new Guid("1983e31e-627d-4617-9320-17ded79efa2b"), new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "gpt-4.1-nano" },
                     { new Guid("1fe5381b-0262-469a-b63e-f4d0c4807a98"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, false, "gemma3" },
                     { new Guid("9910ba5f-faca-4790-88a4-352e71e14724"), new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, false, "mistral" },
+                    { new Guid("a24fcce0-02e7-4ecb-88d7-27f33e47fecf"), new Guid("9f29b328-8e63-4b87-a78d-51e96a660135"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "gpt-4.1-nano" },
                     { new Guid("e9bc0791-2d15-43c8-9299-5c86039786f9"), new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "gpt-4.1-mini" }
                 });
 
