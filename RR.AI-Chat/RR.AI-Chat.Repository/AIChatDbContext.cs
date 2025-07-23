@@ -18,8 +18,6 @@ namespace RR.AI_Chat.Repository
         public virtual DbSet<Model> Models { get; set; }
 
         public virtual DbSet<Session> Sessions { get; set; }
-
-        public virtual DbSet<SessionDetail> SessionDetails { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

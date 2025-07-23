@@ -23,13 +23,12 @@ namespace RR.AI_Chat.Service
 
     public class ChatService(ILogger<ChatService> logger,
         IDocumentToolService documentToolService,
-        IHttpContextAccessor httpContextAccessor,
         ISessionService sessionService,
         IModelService modelService,
         [FromKeyedServices("ollama")] IChatClient ollamaClient,
         [FromKeyedServices("openai")] IChatClient openAiClient,
         [FromKeyedServices("azureopenai")] IChatClient azureOpenAiClient,
-        ChatStore chatStore, AIChatDbContext ctx) : IChatService
+        AIChatDbContext ctx) : IChatService
     {
         private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         private readonly IChatClient _ollamaClient = ollamaClient ?? throw new ArgumentNullException(nameof(ollamaClient));
@@ -38,7 +37,6 @@ namespace RR.AI_Chat.Service
         private readonly IDocumentToolService _documentToolService = documentToolService ?? throw new ArgumentNullException(nameof(documentToolService));
         private readonly ISessionService _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
         private readonly IModelService _modelService = modelService ?? throw new ArgumentNullException(nameof(modelService));
-        private readonly ChatStore _chatStore = chatStore;
         private readonly AIChatDbContext _ctx = ctx;
 
         /// <summary>
@@ -100,7 +98,6 @@ namespace RR.AI_Chat.Service
 
             session.Conversations?.Add(new Conversation(ChatRole.Assistant, sb.ToString()));
             session.DateModified = DateTime.UtcNow;
-            // Explicitly mark as modified for JSON columns
             _ctx.Entry(session).Property(e => e.Conversations).IsModified = true;
 
             await _ctx.SaveChangesAsync(cancellationToken);
@@ -140,13 +137,24 @@ namespace RR.AI_Chat.Service
         /// </remarks>
         public async Task<ChatCompletionDto> GetChatCompletionAsync(Guid sessionId, ChatCompletionRequestDto prompt, CancellationToken cancellationToken)
         {
-            _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.User, prompt.Prompt));
-            
-            var messages = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages;
-            var response = await _ollamaClient.GetResponseAsync(messages ?? [], null,cancellationToken);
+            var session = await _ctx.Sessions.FindAsync(sessionId);
+            if (session == null || session.Conversations == null)
+            {
+                _logger.LogError("Session with id {id} not found.", sessionId);
+                throw new InvalidOperationException($"Session with id {sessionId} not found.");
+            }
 
-            _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.System, response.Messages[0].Text));
-            
+            var conversation = new Conversation(ChatRole.User, prompt.Prompt);
+            session.Conversations.Add(conversation);
+
+            var response = await _ollamaClient.GetResponseAsync([new ChatMessage(conversation.Role, conversation.Content)], null,cancellationToken);
+
+            var conversationResponse = new Conversation(ChatRole.System, response.Messages.Last().Text);
+            session.Conversations.Add(conversationResponse);
+            session.DateModified = DateTime.UtcNow;
+            _ctx.Entry(session).Property(e => e.Conversations).IsModified = true;
+            await _ctx.SaveChangesAsync(cancellationToken);
+
             return new() 
             { 
                 SessionId = sessionId, 
@@ -189,7 +197,7 @@ namespace RR.AI_Chat.Service
             }
 
             await Task.CompletedTask;
-            return new() { Id = sessionId, Name = session.Name, Messages = messages };
+            return new() { Id = sessionId, Name = session.Name!, Messages = messages! };
         }
 
         

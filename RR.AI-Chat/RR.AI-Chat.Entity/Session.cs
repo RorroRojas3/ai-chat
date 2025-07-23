@@ -11,7 +11,7 @@ namespace RR.AI_Chat.Entity
         public string? Name { get; set; }
 
         [Column(TypeName = "jsonb")]
-        public List<Conversation>? Conversations { get; set; }
+        public List<Conversation>? Conversations { get; set; } = [];
 
         public int InputTokens { get; set; }
 

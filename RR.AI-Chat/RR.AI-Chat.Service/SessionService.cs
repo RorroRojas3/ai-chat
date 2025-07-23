@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
-using System.Text.Json;
 
 namespace RR.AI_Chat.Service
 {
@@ -20,12 +19,10 @@ namespace RR.AI_Chat.Service
 
     public class SessionService(ILogger<SessionService> logger,
         [FromKeyedServices("openai")] IChatClient openAiClient,
-        AIChatDbContext ctx,
-        ChatStore chatStore) : ISessionService
+        AIChatDbContext ctx) : ISessionService
     {
         private readonly ILogger<SessionService> _logger = logger;
         private readonly IChatClient _chatClient = openAiClient;
-        private readonly ChatStore _chatStore = chatStore;
         private readonly AIChatDbContext _ctx = ctx;
         private readonly string _defaultSystemPrompt = @"
             You are a powerful assistant augmented with a rich suite of built-in capabilities—but you have no direct internet access. Instead, you can:
@@ -84,15 +81,6 @@ namespace RR.AI_Chat.Service
             {
                 new(ChatRole.System, prompt)
             };
-            //var chatSession = new ChatSesion
-            //{
-            //    SessionId = newSession.Id,
-            //    Messages =
-            //    [
-            //        new ChatMessage(ChatRole.System, prompt)
-            //    ]
-            //};
-            //_chatStore.Sessions.Add(chatSession);
             newSession.Conversations = [.. coversations.Select(x => new Conversation(x.Role, x.Text))];
             newSession.DateModified = date;
             await _ctx.SaveChangesAsync();
@@ -140,17 +128,9 @@ namespace RR.AI_Chat.Service
 
             var name = response.Messages.Last().Text?.Trim() ?? string.Empty;
             session.Name = name;
-            var newDetails = new SessionDetail
-            {
-                SessionId = sessionId,
-                ModelId = model.Id,
-                Name = name,
-                DateCreated = DateTime.UtcNow
-            };
-            await _ctx.AddAsync(newDetails);
             await _ctx.SaveChangesAsync();
 
-            return newDetails.Name;
+            return session.Name;
         }
 
         /// <summary>
@@ -177,19 +157,19 @@ namespace RR.AI_Chat.Service
         {
             if (string.IsNullOrWhiteSpace(query))
             {
-                return await _ctx.SessionDetails.AsNoTracking()
+                return await _ctx.Sessions.AsNoTracking()
                     .Where(x => !string.IsNullOrWhiteSpace(x.Name))
                     .OrderByDescending(x => x.DateCreated)
                     .Take(10)
-                    .Select(s => new SessionDto { Id = s.SessionId, Name = s.Name })
+                    .Select(s => new SessionDto { Id = s.Id, Name = s.Name! })
                     .ToListAsync();
             }
 
-            var sessions = await _ctx.SessionDetails.AsNoTracking()
+            var sessions = await _ctx.Sessions.AsNoTracking()
                 .Where(x => !string.IsNullOrWhiteSpace(x.Name) &&
                             EF.Functions.ILike(x.Name, $"%{query}%"))
                 .Take(10)
-                .Select(s => new SessionDto { Id = s.SessionId, Name = s.Name })
+                .Select(s => new SessionDto { Id = s.Id, Name = s.Name! })
                 .ToListAsync();
             return sessions;
         }

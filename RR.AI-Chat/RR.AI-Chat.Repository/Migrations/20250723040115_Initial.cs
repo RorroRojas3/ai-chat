@@ -106,37 +106,6 @@ namespace RR.AI_Chat.Repository.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SessionDetail",
-                schema: "AI",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    SessionId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ModelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateDeactivated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_SessionDetail", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_SessionDetail_Model_ModelId",
-                        column: x => x.ModelId,
-                        principalSchema: "AI.Ref",
-                        principalTable: "Model",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_SessionDetail_Session_SessionId",
-                        column: x => x.SessionId,
-                        principalSchema: "AI",
-                        principalTable: "Session",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "DocumentPage",
                 schema: "AI",
                 columns: table => new
@@ -213,18 +182,6 @@ namespace RR.AI_Chat.Repository.Migrations
                 schema: "AI.Ref",
                 table: "Model",
                 column: "AIServiceId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SessionDetail_ModelId",
-                schema: "AI",
-                table: "SessionDetail",
-                column: "ModelId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SessionDetail_SessionId",
-                schema: "AI",
-                table: "SessionDetail",
-                column: "SessionId");
         }
 
         /// <inheritdoc />
@@ -235,24 +192,20 @@ namespace RR.AI_Chat.Repository.Migrations
                 schema: "AI");
 
             migrationBuilder.DropTable(
-                name: "SessionDetail",
-                schema: "AI");
+                name: "Model",
+                schema: "AI.Ref");
 
             migrationBuilder.DropTable(
                 name: "Document",
                 schema: "AI");
 
             migrationBuilder.DropTable(
-                name: "Model",
+                name: "AIService",
                 schema: "AI.Ref");
 
             migrationBuilder.DropTable(
                 name: "Session",
                 schema: "AI");
-
-            migrationBuilder.DropTable(
-                name: "AIService",
-                schema: "AI.Ref");
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -67,7 +66,7 @@ namespace RR.AI_Chat.Service
             return result;
         }
 
-        [Description("Create a detailed overview or summary of a specific document if and only if the user asks for it.")]
+        [Description("Creates a detailed overview of the document. Do not call if asked for summary. For the output leave it as is returned.")]
         public async Task<string> GetDocumentOverviewAsync(
             [Description("The session ID")] string sessionId,
             [Description("The document ID")] string documentId,
@@ -111,12 +110,14 @@ namespace RR.AI_Chat.Service
             var documentText = string.Join("\n\n", documentPages.Select(p =>
            $"Page {p.Number}: {p.Text}"));
 
+            var context = FunctionInvokingChatClient.CurrentContext;
             var response = await _chatClient.GetResponseAsync([
                 new ChatMessage(ChatRole.System, "You are an AI assistant that creates comprehensive document overviews. " +
-                "Analyze the provided document content and create a structured summary including: " +
-                "1. Main topics covered, 2. Key insights, 3. Important details, 4. Overall summary."),
+                "Analyze the provided document content and create a structured overview including: " +
+                "1. Main topics covered, 2. Key insights, 3. Important details, 4. Overall summary. " +
+                "Return in that format."),
                 new ChatMessage(ChatRole.User, JsonSerializer.Serialize(documentText)),
-            ], null, cancellationToken);
+            ], new ChatOptions() { ModelId = context.Options.ModelId}, cancellationToken);
 
             return response.Messages.Last().Text;
         }
