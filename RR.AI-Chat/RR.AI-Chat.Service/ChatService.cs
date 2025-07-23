@@ -7,6 +7,8 @@ using RR.AI_Chat.Repository;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
+using RR.AI_Chat.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace RR.AI_Chat.Service
 {
@@ -21,13 +23,12 @@ namespace RR.AI_Chat.Service
 
     public class ChatService(ILogger<ChatService> logger,
         IDocumentToolService documentToolService,
-        IHttpContextAccessor httpContextAccessor,
         ISessionService sessionService,
         IModelService modelService,
         [FromKeyedServices("ollama")] IChatClient ollamaClient,
         [FromKeyedServices("openai")] IChatClient openAiClient,
         [FromKeyedServices("azureopenai")] IChatClient azureOpenAiClient,
-        ChatStore chatStore, AIChatDbContext ctx) : IChatService
+        AIChatDbContext ctx) : IChatService
     {
         private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         private readonly IChatClient _ollamaClient = ollamaClient ?? throw new ArgumentNullException(nameof(ollamaClient));
@@ -36,7 +37,6 @@ namespace RR.AI_Chat.Service
         private readonly IDocumentToolService _documentToolService = documentToolService ?? throw new ArgumentNullException(nameof(documentToolService));
         private readonly ISessionService _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
         private readonly IModelService _modelService = modelService ?? throw new ArgumentNullException(nameof(modelService));
-        private readonly ChatStore _chatStore = chatStore;
         private readonly AIChatDbContext _ctx = ctx;
 
         /// <summary>
@@ -70,27 +70,37 @@ namespace RR.AI_Chat.Service
         /// </remarks>
         public async IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var session = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId) ?? throw new InvalidOperationException($"Session with id {sessionId} not found.");
-            if (session.Messages.Count == 1)
+            var session = await _ctx.Sessions.FindAsync(sessionId, cancellationToken);
+            if (session == null || session.Conversations == null)
+            {
+                _logger.LogError("Session with id {id} not found.", sessionId);
+                throw new InvalidOperationException($"Session with id {sessionId} not found.");
+            }
+
+            if (session.Conversations.Count == 1)
             {
                 var sessionName = await _sessionService.CreateSessionNameAsync(sessionId, request);
                 session.Name = sessionName;
             }
 
-            session.Messages.Add(new ChatMessage(ChatRole.User, request.Prompt));
+            session.Conversations.Add(new Conversation(ChatRole.User, request.Prompt));
 
             var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId);
             var chatClient = GetChatClient(request.ServiceId);
             var chatOptions = CreateChatOptions(sessionId, model);
             StringBuilder sb = new();
-            await foreach (var message in chatClient.GetStreamingResponseAsync(session.Messages ?? [], chatOptions, cancellationToken))
+            await foreach (var message in chatClient.GetStreamingResponseAsync(session.Conversations.Select(x => new ChatMessage(x.Role, x.Content)) ?? [], chatOptions, cancellationToken))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 sb.Append(message.Text);
                 yield return message.Text;
             }
 
-            session.Messages?.Add(new ChatMessage(ChatRole.Assistant, sb.ToString()));
+            session.Conversations?.Add(new Conversation(ChatRole.Assistant, sb.ToString()));
+            session.DateModified = DateTime.UtcNow;
+            _ctx.Entry(session).Property(e => e.Conversations).IsModified = true;
+
+            await _ctx.SaveChangesAsync(cancellationToken);
         }
 
         /// <summary>
@@ -127,13 +137,24 @@ namespace RR.AI_Chat.Service
         /// </remarks>
         public async Task<ChatCompletionDto> GetChatCompletionAsync(Guid sessionId, ChatCompletionRequestDto prompt, CancellationToken cancellationToken)
         {
-            _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.User, prompt.Prompt));
-            
-            var messages = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages;
-            var response = await _ollamaClient.GetResponseAsync(messages ?? [], null,cancellationToken);
+            var session = await _ctx.Sessions.FindAsync(sessionId);
+            if (session == null || session.Conversations == null)
+            {
+                _logger.LogError("Session with id {id} not found.", sessionId);
+                throw new InvalidOperationException($"Session with id {sessionId} not found.");
+            }
 
-            _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId)?.Messages.Add(new ChatMessage(ChatRole.System, response.Messages[0].Text));
-            
+            var conversation = new Conversation(ChatRole.User, prompt.Prompt);
+            session.Conversations.Add(conversation);
+
+            var response = await _ollamaClient.GetResponseAsync([new ChatMessage(conversation.Role, conversation.Content)], null,cancellationToken);
+
+            var conversationResponse = new Conversation(ChatRole.System, response.Messages.Last().Text);
+            session.Conversations.Add(conversationResponse);
+            session.DateModified = DateTime.UtcNow;
+            _ctx.Entry(session).Property(e => e.Conversations).IsModified = true;
+            await _ctx.SaveChangesAsync(cancellationToken);
+
             return new() 
             { 
                 SessionId = sessionId, 
@@ -155,29 +176,28 @@ namespace RR.AI_Chat.Service
         /// </exception>
         public async Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId)
         {
-            var session = _chatStore.Sessions.FirstOrDefault(s => s.SessionId == sessionId);
+            var session = await _ctx.Sessions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == sessionId);
             if (session == null)
             {
                 _logger.LogError("Session with id {id} not found.", sessionId);
                 throw new InvalidOperationException($"Session with id {sessionId} not found.");
             }
 
-            var messages = session.Messages
+            var messages = session.Conversations!
                             .Where(x => x.Role != ChatRole.System)
                             .Select(x => new SessionMessageDto() 
                             { 
-                                Text = x.Text ?? string.Empty,
+                                Text = x.Content ?? string.Empty,
                                 Role = x.Role == ChatRole.User ? ChatRoleType.User : ChatRoleType.System
                             })
                             .ToList();
             if (messages == null || messages.Count == 0)
             {
                 _logger.LogError("Session with id {id} does not contain any messages.", sessionId);
-                throw new InvalidOperationException($"Session with id {sessionId} does not contain any messages.");
             }
 
             await Task.CompletedTask;
-            return new() { Id = sessionId, Name = session.Name, Messages = messages };
+            return new() { Id = sessionId, Name = session.Name!, Messages = messages! };
         }
 
         

@@ -222,47 +222,31 @@ namespace RR.AI_Chat.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Conversations")
+                        .HasColumnType("jsonb");
+
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("DateDeactivated")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("InputTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("OutputTokens")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.ToTable("Session", "AI");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.SessionDetail", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DateDeactivated")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ModelId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<Guid>("SessionId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModelId");
-
-                    b.HasIndex("SessionId");
-
-                    b.ToTable("SessionDetail", "AI");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.Document", b =>
@@ -296,25 +280,6 @@ namespace RR.AI_Chat.Repository.Migrations
                         .IsRequired();
 
                     b.Navigation("AIService");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.SessionDetail", b =>
-                {
-                    b.HasOne("RR.AI_Chat.Entity.Model", "Model")
-                        .WithMany()
-                        .HasForeignKey("ModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RR.AI_Chat.Entity.Session", "Session")
-                        .WithMany()
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Model");
-
-                    b.Navigation("Session");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.Document", b =>

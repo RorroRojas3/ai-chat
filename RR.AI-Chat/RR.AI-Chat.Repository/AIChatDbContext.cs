@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository.Configurations;
+using System.Text.Json;
 
 namespace RR.AI_Chat.Repository
 {
@@ -16,8 +18,6 @@ namespace RR.AI_Chat.Repository
         public virtual DbSet<Model> Models { get; set; }
 
         public virtual DbSet<Session> Sessions { get; set; }
-
-        public virtual DbSet<SessionDetail> SessionDetails { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -31,6 +31,17 @@ namespace RR.AI_Chat.Repository
                .HasOperators("vector_cosine_ops")
                .HasStorageParameter("m", 16)
                .HasStorageParameter("ef_construction", 64);
+
+            modelBuilder.Entity<Session>(entity =>
+            {
+                // EF Core will handle ChatMessage serialization automatically
+                entity.Property(e => e.Conversations)
+                      .HasColumnType("jsonb") // PostgreSQL (use "json" for SQL Server)
+                      .HasConversion(
+                      v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                      v => JsonSerializer.Deserialize<List<Conversation>>(v, (JsonSerializerOptions?)null) ?? new());
+
+            });
 
             modelBuilder.ApplyConfiguration(new AIServiceConfiguration());
             modelBuilder.ApplyConfiguration(new ModelConfiguration());
