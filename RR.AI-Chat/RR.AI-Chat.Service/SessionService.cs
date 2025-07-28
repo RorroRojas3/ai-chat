@@ -167,7 +167,7 @@ namespace RR.AI_Chat.Service
 
             var sessions = await _ctx.Sessions.AsNoTracking()
                 .Where(x => !string.IsNullOrWhiteSpace(x.Name) &&
-                            EF.Functions.ILike(x.Name, $"%{query}%"))
+                            EF.Functions.Like(x.Name, $"%{query}%"))
                 .Take(10)
                 .Select(s => new SessionDto { Id = s.Id, Name = s.Name! })
                 .ToListAsync();

@@ -2,8 +2,6 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Pgvector;
-using Pgvector.EntityFrameworkCore;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
@@ -117,15 +115,33 @@ namespace RR.AI_Chat.Service
                 "1. Main topics covered, 2. Key insights, 3. Important details, 4. Overall summary. " +
                 "Return in that format."),
                 new ChatMessage(ChatRole.User, JsonSerializer.Serialize(documentText)),
-            ], new ChatOptions() { ModelId = context.Options.ModelId}, cancellationToken);
+            ], new ChatOptions() { ModelId = context!.Options!.ModelId}, cancellationToken);
 
             return response.Messages.Last().Text;
         }
 
+        /// <summary>
+        /// Searches for information within documents in the specified session using vector similarity search.
+        /// Performs semantic search by generating embeddings for the search prompt and comparing against 
+        /// document page embeddings using cosine distance.
+        /// </summary>
+        /// <param name="sessionId">The unique identifier of the session to search within. Must be a valid GUID.</param>
+        /// <param name="prompt">The search query describing what the user is looking for in the documents.</param>
+        /// <param name="cancellationToken">A cancellation token to cancel the operation if needed.</param>
+        /// <returns>
+        /// A list of documents containing pages that match the search criteria, ordered by relevance.
+        /// Each document includes its most relevant pages (up to 10 total pages across all documents).
+        /// Returns an empty list if the session ID is invalid or no matching content is found.
+        /// </returns>
+        /// <remarks>
+        /// This method uses vector embeddings to perform semantic search rather than simple text matching.
+        /// Results are filtered by a cosine distance threshold of 0.5 and limited to the top 10 most relevant pages.
+        /// Pages within each document are ordered by their similarity score to the search prompt.
+        /// </remarks>
         [Description("Searches for information in the document if no overiew or summary is asked.")]
         public async Task<List<Document>> SearchDocumentsAsync([Description("sessionId")] string sessionId, [Description("What the user is looking for in document")] string prompt, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(sessionId))
+            if (string.IsNullOrWhiteSpace(sessionId))
             {
                 return [];
             }
@@ -136,14 +152,14 @@ namespace RR.AI_Chat.Service
             }
 
             var embedding = await _embeddingGenerator.GenerateVectorAsync(prompt);
-            var vector = new Vector(embedding);
+            var vector = embedding.ToArray();
 
             var docPages = await _ctx.DocumentPages
                 .AsNoTracking()
                 .Include(p => p.Document)
                 .Where(p => p.Document.SessionId == Guid.Parse(sessionId))
-                .Where(p => p.Embedding.CosineDistance(vector) <= _cosineDistanceThreshold)
-                .OrderBy(p => p.Embedding.CosineDistance(vector))
+                .Where(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector) <= _cosineDistanceThreshold)
+                .OrderBy(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector))
                 .Take(10)
                 .GroupBy(p => p.Document)
                 .Select(g => new Document
@@ -152,7 +168,7 @@ namespace RR.AI_Chat.Service
                     Name = g.Key.Name,
                     Extension = g.Key.Extension,
                     DateCreated = g.Key.DateCreated,
-                    Pages = g.OrderBy(p => p.Embedding.CosineDistance(vector))
+                    Pages = g.OrderBy(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector))
                            .Select(p => new DocumentPage
                            {
                                Id = p.Id,
@@ -169,7 +185,8 @@ namespace RR.AI_Chat.Service
         {
             IList<AITool> functions = [
                 AIFunctionFactory.Create(GetSessionDocumentsAsync),
-                AIFunctionFactory.Create(GetDocumentOverviewAsync)];
+                AIFunctionFactory.Create(GetDocumentOverviewAsync),
+                AIFunctionFactory.Create(SearchDocumentsAsync)];
 
             return functions;
         }

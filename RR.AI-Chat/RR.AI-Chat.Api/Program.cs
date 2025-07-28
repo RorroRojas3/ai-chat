@@ -15,10 +15,6 @@ builder.Services.AddControllers();
 
 builder.Services.AddHttpContextAccessor();
 
-//builder.Services.AddDbContext<AIChatDbContext>(options =>
-//    options.UseNpgsql(
-//        builder.Configuration.GetConnectionString("DefaultConnection"), x => x.UseVector()));
-
 builder.Services.AddDbContext<AIChatDbContext>(options =>
   options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), o => o.UseVectorSearch()));
 

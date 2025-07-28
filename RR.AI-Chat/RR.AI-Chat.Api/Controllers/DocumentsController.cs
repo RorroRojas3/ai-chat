@@ -16,12 +16,5 @@ namespace RR.AI_Chat.Api.Controllers
             var document = await _service.CreateDocumentAsync(file, sessionId);
             return Created($"api/documents/{document.Id}", document);
         }
-
-        [HttpPost("search")]
-        public async Task<IActionResult> SearchDocumentsAsync(SearchDocumentRequestDto request, CancellationToken cancellationToken)
-        {
-            var documents = await _service.SearchDocumentsAsync(request.SessionId, request, cancellationToken);
-            return Ok(documents);
-        }
     }
 }
