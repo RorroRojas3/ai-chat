@@ -12,7 +12,7 @@ using RR.AI_Chat.Repository;
 namespace RR.AI_Chat.Repository.Migrations
 {
     [DbContext(typeof(AIChatDbContext))]
-    [Migration("20250728213649_Initial")]
+    [Migration("20250728214751_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
