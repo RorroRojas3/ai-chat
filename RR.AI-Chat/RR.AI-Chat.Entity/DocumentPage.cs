@@ -1,5 +1,4 @@
-﻿using Pgvector;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RR.AI_Chat.Entity
 {
@@ -13,8 +12,7 @@ namespace RR.AI_Chat.Entity
 
         public string Text { get; set; } = null!;
 
-        [Column(TypeName = "vector(768)")]
-        public Vector Embedding { get; set; } = null!;
+        public float[] Embedding { get; set; } = null!;
 
         public Document Document { get; set; } = null!;
     }
