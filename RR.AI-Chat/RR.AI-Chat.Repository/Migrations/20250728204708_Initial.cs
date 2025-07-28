@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Pgvector;
 
 #nullable disable
 
@@ -20,18 +19,15 @@ namespace RR.AI_Chat.Repository.Migrations
             migrationBuilder.EnsureSchema(
                 name: "AI");
 
-            migrationBuilder.AlterDatabase()
-                .Annotation("Npgsql:PostgresExtension:vector", ",,");
-
             migrationBuilder.CreateTable(
                 name: "AIService",
                 schema: "AI.Ref",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(25)", maxLength: 25, nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateDeactivated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -43,14 +39,14 @@ namespace RR.AI_Chat.Repository.Migrations
                 schema: "AI",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    Conversations = table.Column<string>(type: "jsonb", nullable: true),
-                    InputTokens = table.Column<int>(type: "integer", nullable: false),
-                    OutputTokens = table.Column<int>(type: "integer", nullable: false),
-                    DateModified = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateDeactivated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Conversations = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    InputTokens = table.Column<int>(type: "int", nullable: false),
+                    OutputTokens = table.Column<int>(type: "int", nullable: false),
+                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -62,12 +58,12 @@ namespace RR.AI_Chat.Repository.Migrations
                 schema: "AI.Ref",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    AIServiceId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(25)", maxLength: 25, nullable: false),
-                    IsToolEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateDeactivated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AIServiceId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: false),
+                    IsToolEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -86,12 +82,12 @@ namespace RR.AI_Chat.Repository.Migrations
                 schema: "AI",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    SessionId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Extension = table.Column<string>(type: "text", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateDeactivated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SessionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Extension = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -110,13 +106,13 @@ namespace RR.AI_Chat.Repository.Migrations
                 schema: "AI",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    DocumentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Number = table.Column<int>(type: "integer", nullable: false),
-                    Text = table.Column<string>(type: "text", nullable: false),
-                    Embedding = table.Column<Vector>(type: "vector(768)", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DateDeactivated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DocumentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Number = table.Column<int>(type: "int", nullable: false),
+                    Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Embedding = table.Column<string>(type: "vector(768)", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -166,16 +162,6 @@ namespace RR.AI_Chat.Repository.Migrations
                 schema: "AI",
                 table: "DocumentPage",
                 column: "DocumentId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DocumentPage_Embedding",
-                schema: "AI",
-                table: "DocumentPage",
-                column: "Embedding")
-                .Annotation("Npgsql:IndexMethod", "hnsw")
-                .Annotation("Npgsql:IndexOperators", new[] { "vector_cosine_ops" })
-                .Annotation("Npgsql:StorageParameter:ef_construction", 64)
-                .Annotation("Npgsql:StorageParameter:m", 16);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Model_AIServiceId",

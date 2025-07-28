@@ -169,8 +169,7 @@ namespace RR.AI_Chat.Service
         {
             IList<AITool> functions = [
                 AIFunctionFactory.Create(GetSessionDocumentsAsync),
-                AIFunctionFactory.Create(GetDocumentOverviewAsync),
-                AIFunctionFactory.Create(SearchDocumentsAsync)];
+                AIFunctionFactory.Create(GetDocumentOverviewAsync)];
 
             return functions;
         }

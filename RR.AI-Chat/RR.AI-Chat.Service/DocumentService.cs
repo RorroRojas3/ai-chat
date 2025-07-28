@@ -58,7 +58,7 @@ namespace RR.AI_Chat.Service
                 documentPages.Add(new DocumentPage 
                 { 
                     Number = documentExtractor.PageNumber,
-                    Embedding = new Vector(embedding), 
+                    Embedding = embedding.ToArray(), 
                     Text = documentExtractor.PageText, 
                     DateCreated = date 
                 });

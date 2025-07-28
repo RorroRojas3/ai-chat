@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.Extensions.AI;
 
 namespace RR.AI_Chat.Entity
 {
@@ -10,7 +9,6 @@ namespace RR.AI_Chat.Entity
         [StringLength(100)]
         public string? Name { get; set; }
 
-        [Column(TypeName = "jsonb")]
         public List<Conversation>? Conversations { get; set; } = [];
 
         public int InputTokens { get; set; }
