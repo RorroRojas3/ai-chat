@@ -109,7 +109,7 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<Guid>("DocumentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Embedding")
+                    b.PrimitiveCollection<string>("Embedding")
                         .IsRequired()
                         .HasColumnType("vector(768)");
 
