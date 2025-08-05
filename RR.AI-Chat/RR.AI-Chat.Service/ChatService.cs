@@ -89,10 +89,16 @@ namespace RR.AI_Chat.Service
             var chatClient = GetChatClient(request.ServiceId);
             var chatOptions = CreateChatOptions(sessionId, model);
             StringBuilder sb = new();
+            long totalInputTokens = 0, totalOutputTokens = 0;
             await foreach (var message in chatClient.GetStreamingResponseAsync(session.Conversations.Select(x => new ChatMessage(x.Role, x.Content)) ?? [], chatOptions, cancellationToken))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                sb.Append(message.Text);
+
+                if (!string.IsNullOrEmpty(message.Text))
+                {
+                    sb.Append(message.Text);
+                }
+
                 if (message.Contents != null && 
                     message.Contents.Count > 0)
                 {
@@ -100,13 +106,16 @@ namespace RR.AI_Chat.Service
                     var usageContent = message.Contents.OfType<UsageContent>().FirstOrDefault();
                     if (usageContent != null)
                     {
-                        // Update session token tracking if needed
-                        session.InputTokens += usageContent.Details.InputTokenCount ?? 0;
-                        session.OutputTokens += usageContent.Details?.OutputTokenCount ?? 0;
+                        totalInputTokens += usageContent.Details?.InputTokenCount ?? 0;
+                        totalOutputTokens += usageContent.Details?.OutputTokenCount ?? 0;
                     }
                 }
                 yield return message.Text;
             }
+
+            // Update token counts once at the end
+            session.InputTokens += totalInputTokens;
+            session.OutputTokens += totalOutputTokens;
 
             session.Conversations?.Add(new Conversation(ChatRole.Assistant, sb.ToString()));
             session.DateModified = DateTime.UtcNow;
