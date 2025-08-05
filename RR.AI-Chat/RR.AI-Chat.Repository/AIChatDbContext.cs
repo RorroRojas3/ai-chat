@@ -26,7 +26,7 @@ namespace RR.AI_Chat.Repository
             {
                 // EF Core will handle ChatMessage serialization automatically
                 entity.Property(e => e.Conversations)
-                      .HasColumnType("nvarchar(max)") // PostgreSQL (use "json" for SQL Server)
+                      .HasColumnType("nvarchar(max)") 
                       .HasConversion(
                       v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                       v => JsonSerializer.Deserialize<List<Conversation>>(v, (JsonSerializerOptions?)null) ?? new());
