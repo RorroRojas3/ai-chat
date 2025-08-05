@@ -11,11 +11,11 @@ namespace RR.AI_Chat.Entity
 
         public List<Conversation>? Conversations { get; set; } = [];
 
-        public int InputTokens { get; set; }
+        public long InputTokens { get; set; }
 
-        public int OutputTokens { get; set; }
+        public long OutputTokens { get; set; }
 
-        public int TotalTokens => InputTokens + OutputTokens;
+        public long TotalTokens => InputTokens + OutputTokens;
 
         public DateTime DateModified { get; set; } 
     }
