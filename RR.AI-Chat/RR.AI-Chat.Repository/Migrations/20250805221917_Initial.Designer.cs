@@ -12,7 +12,7 @@ using RR.AI_Chat.Repository;
 namespace RR.AI_Chat.Repository.Migrations
 {
     [DbContext(typeof(AIChatDbContext))]
-    [Migration("20250728214751_Initial")]
+    [Migration("20250805221917_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -228,15 +228,15 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<DateTime>("DateModified")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("InputTokens")
-                        .HasColumnType("int");
+                    b.Property<long>("InputTokens")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Name")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("OutputTokens")
-                        .HasColumnType("int");
+                    b.Property<long>("OutputTokens")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 

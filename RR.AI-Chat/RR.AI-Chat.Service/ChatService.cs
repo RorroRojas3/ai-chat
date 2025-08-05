@@ -93,6 +93,18 @@ namespace RR.AI_Chat.Service
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 sb.Append(message.Text);
+                if (message.Contents != null && 
+                    message.Contents.Count > 0)
+                {
+                    // Check for usage content to track token consumption during streaming
+                    var usageContent = message.Contents.OfType<UsageContent>().FirstOrDefault();
+                    if (usageContent != null)
+                    {
+                        // Update session token tracking if needed
+                        session.InputTokens += usageContent.Details.InputTokenCount ?? 0;
+                        session.OutputTokens += usageContent.Details?.OutputTokenCount ?? 0;
+                    }
+                }
                 yield return message.Text;
             }
 

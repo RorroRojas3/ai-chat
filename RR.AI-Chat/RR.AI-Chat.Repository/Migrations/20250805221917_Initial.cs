@@ -42,8 +42,8 @@ namespace RR.AI_Chat.Repository.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     Conversations = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    InputTokens = table.Column<int>(type: "int", nullable: false),
-                    OutputTokens = table.Column<int>(type: "int", nullable: false),
+                    InputTokens = table.Column<long>(type: "bigint", nullable: false),
+                    OutputTokens = table.Column<long>(type: "bigint", nullable: false),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
