@@ -279,8 +279,10 @@ export class PromptBoxComponent implements OnDestroy {
         return 'bi bi-robot'; // Robot icon for Ollama
       case AiServiceType.OpenAI:
         return 'bi bi-openai'; // Lightning charge icon for OpenAI
-      case AiServiceType.AzureOpenAI:
-        return 'bi bi-microsoft'; // Cloud icon for Azure OpenAI
+      case AiServiceType.AzureAIFoundry:
+        return 'bi bi-microsoft';
+      case AiServiceType.Claude:
+        return 'bi bi-claude';
       default:
         return 'bi bi-question-circle'; // Question circle for unknown services
     }

@@ -64,7 +64,7 @@ namespace RR.AI_Chat.Service
             return result;
         }
 
-        [Description("Creates a detailed overview of the document. Do not call if asked for summary. For the output leave it as is returned.")]
+        [Description("Returns the complete text content of the document for AI processing. Use when full document content is needed.")]
         public async Task<string> GetDocumentOverviewAsync(
             [Description("The session ID")] string sessionId,
             [Description("The document ID")] string documentId,
@@ -105,19 +105,9 @@ namespace RR.AI_Chat.Service
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            var documentText = string.Join("\n\n", documentPages.Select(p =>
-           $"Page {p.Number}: {p.Text}"));
+            var documentText = string.Join("\n\n", documentPages.Select(p => p.Text));
 
-            var context = FunctionInvokingChatClient.CurrentContext;
-            var response = await _chatClient.GetResponseAsync([
-                new ChatMessage(ChatRole.System, "You are an AI assistant that creates comprehensive document overviews. " +
-                "Analyze the provided document content and create a structured overview including: " +
-                "1. Main topics covered, 2. Key insights, 3. Important details, 4. Overall summary. " +
-                "Return in that format."),
-                new ChatMessage(ChatRole.User, JsonSerializer.Serialize(documentText)),
-            ], new ChatOptions() { ModelId = context!.Options!.ModelId}, cancellationToken);
-
-            return response.Messages.Last().Text;
+            return documentText;
         }
 
         /// <summary>
@@ -151,7 +141,20 @@ namespace RR.AI_Chat.Service
                 return [];
             }
 
-            var embedding = await _embeddingGenerator.GenerateVectorAsync(prompt);
+            if (string.IsNullOrWhiteSpace(prompt))
+            {
+                return [];
+            }
+
+            var anyDocuments = await _ctx.Documents
+                .AsNoTracking()
+                .AnyAsync(d => d.SessionId == sessionGuid && !d.DateDeactivated.HasValue, cancellationToken);   
+            if (!anyDocuments)
+            {
+                return [];
+            }
+
+            var embedding = await _embeddingGenerator.GenerateVectorAsync(prompt, null, cancellationToken);
             var vector = embedding.ToArray();
 
             var docPages = await _ctx.DocumentPages
