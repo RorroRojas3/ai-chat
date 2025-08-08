@@ -151,7 +151,20 @@ namespace RR.AI_Chat.Service
                 return [];
             }
 
-            var embedding = await _embeddingGenerator.GenerateVectorAsync(prompt);
+            if (string.IsNullOrWhiteSpace(prompt))
+            {
+                return [];
+            }
+
+            var anyDocuments = await _ctx.Documents
+                .AsNoTracking()
+                .AnyAsync(d => d.SessionId == sessionGuid && !d.DateDeactivated.HasValue, cancellationToken);   
+            if (!anyDocuments)
+            {
+                return [];
+            }
+
+            var embedding = await _embeddingGenerator.GenerateVectorAsync(prompt, null, cancellationToken);
             var vector = embedding.ToArray();
 
             var docPages = await _ctx.DocumentPages

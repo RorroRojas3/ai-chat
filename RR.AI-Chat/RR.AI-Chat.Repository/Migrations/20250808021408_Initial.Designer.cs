@@ -12,7 +12,7 @@ using RR.AI_Chat.Repository;
 namespace RR.AI_Chat.Repository.Migrations
 {
     [DbContext(typeof(AIChatDbContext))]
-    [Migration("20250805221917_Initial")]
+    [Migration("20250808021408_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -61,9 +61,15 @@ namespace RR.AI_Chat.Repository.Migrations
                         },
                         new
                         {
-                            Id = new Guid("9f29b328-8e63-4b87-a78d-51e96a660135"),
+                            Id = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "AzureOpenAI"
+                            Name = "AzureAIFoundry"
+                        },
+                        new
+                        {
+                            Id = new Guid("1d094036-4235-4308-81b8-185b1bc9d3b1"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Claude"
                         });
                 });
 
@@ -114,7 +120,7 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.PrimitiveCollection<string>("Embedding")
                         .IsRequired()
-                        .HasColumnType("vector(768)");
+                        .HasColumnType("vector(1536)");
 
                     b.Property<int>("Number")
                         .HasColumnType("int");
@@ -194,6 +200,30 @@ namespace RR.AI_Chat.Repository.Migrations
                         },
                         new
                         {
+                            Id = new Guid("0b1169ca-f92a-4e3c-9441-6e89efc66424"),
+                            AIServiceId = new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "gpt-5-nano"
+                        },
+                        new
+                        {
+                            Id = new Guid("ebcfd808-9e43-4fe4-a88d-e09b397e05a6"),
+                            AIServiceId = new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "gpt-5-mini"
+                        },
+                        new
+                        {
+                            Id = new Guid("868283a7-8ba2-4807-80e8-67b801c3417e"),
+                            AIServiceId = new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "gpt-5"
+                        },
+                        new
+                        {
                             Id = new Guid("e9bc0791-2d15-43c8-9299-5c86039786f9"),
                             AIServiceId = new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"),
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -203,10 +233,66 @@ namespace RR.AI_Chat.Repository.Migrations
                         new
                         {
                             Id = new Guid("a24fcce0-02e7-4ecb-88d7-27f33e47fecf"),
-                            AIServiceId = new Guid("9f29b328-8e63-4b87-a78d-51e96a660135"),
+                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsToolEnabled = true,
                             Name = "gpt-4.1-nano"
+                        },
+                        new
+                        {
+                            Id = new Guid("e2034bfc-5ae5-48c3-a140-5bc8386ede41"),
+                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "gpt-4.1-mini"
+                        },
+                        new
+                        {
+                            Id = new Guid("c36e22ed-262a-47a1-b2ba-06a38355ae0f"),
+                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "gpt-5-mini"
+                        },
+                        new
+                        {
+                            Id = new Guid("fd01b615-1e9f-46af-957f-e4eaeff02766"),
+                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "gpt-5-nano"
+                        },
+                        new
+                        {
+                            Id = new Guid("2f461194-2932-4185-bc69-5f9ae69effbc"),
+                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "DeepSeek-V3-0324"
+                        },
+                        new
+                        {
+                            Id = new Guid("f35b51d7-c8d3-4040-8bff-8de67b4d3c25"),
+                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "grok-3-mini"
+                        },
+                        new
+                        {
+                            Id = new Guid("98591f36-58b1-4941-834e-0aa09f9f4243"),
+                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "grok-3"
+                        },
+                        new
+                        {
+                            Id = new Guid("169b6b77-4949-442e-b27f-a7bfb1cd3370"),
+                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "gpt-5-chat"
                         });
                 });
 

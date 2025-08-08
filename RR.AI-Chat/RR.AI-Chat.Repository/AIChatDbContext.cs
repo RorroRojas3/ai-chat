@@ -33,7 +33,7 @@ namespace RR.AI_Chat.Repository
 
             });
 
-            modelBuilder.Entity<DocumentPage>().Property(p => p.Embedding).HasColumnType("vector(768)");
+            modelBuilder.Entity<DocumentPage>().Property(p => p.Embedding).HasColumnType("vector(1536)");
 
             modelBuilder.ApplyConfiguration(new AIServiceConfiguration());
             modelBuilder.ApplyConfiguration(new ModelConfiguration());

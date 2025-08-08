@@ -15,9 +15,8 @@
         /// </summary>
         public static readonly Guid OpenAI = new("3ad5a77e-515a-4b72-920b-7e4f1d183dfe");
 
-        /// <summary>
-        /// Unique identifier for the Azure OpenAI service.
-        /// </summary>
-        public static readonly Guid AzureOpenAI = new("9f29b328-8e63-4b87-a78d-51e96a660135");
+        public static readonly Guid AzureAIFoundry = new("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0");
+
+        public static readonly Guid Claude = new("1d094036-4235-4308-81b8-185b1bc9d3b1");
     }
 }

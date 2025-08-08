@@ -25,8 +25,14 @@ namespace RR.AI_Chat.Repository.Configurations
                 },
                 new AIService
                 {
-                    Id = AIServiceType.AzureOpenAI,
-                    Name = nameof(AIServiceType.AzureOpenAI),
+                    Id = AIServiceType.AzureAIFoundry,
+                    Name = nameof(AIServiceType.AzureAIFoundry),
+                    DateCreated = date,
+                },
+                new AIService
+                {
+                    Id = AIServiceType.Claude,
+                    Name = nameof(AIServiceType.Claude),
                     DateCreated = date,
                 }
             );

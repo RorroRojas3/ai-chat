@@ -6,6 +6,7 @@ using OllamaSharp;
 using OpenAI;
 using RR.AI_Chat.Repository;
 using RR.AI_Chat.Service;
+using System.ClientModel;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,7 +44,7 @@ var openAiKey = builder.Configuration.GetValue<string>("OpenAI:ApiKey") ?? strin
 builder.Services.AddKeyedChatClient(
         "openai",
         sp => new OpenAIClient(openAiKey)
-                  .GetChatClient("gpt-4.1-nano")
+                  .GetChatClient("gpt-5-nano")
                   .AsIChatClient()
     )
     .UseOpenTelemetry()                          
@@ -56,12 +57,12 @@ builder.Services.AddKeyedChatClient(
     });
 
 // 3) Azure OpenAI under key "azureopenai"
-var azureOpenAiUrl = builder.Configuration.GetValue<string>("AzureOpenAI:Url") ?? string.Empty;
-var azureOpenAiKey = builder.Configuration.GetValue<string>("AzureOpenAI:ApiKey") ?? string.Empty;
+var azureAIFoundryUrl = builder.Configuration.GetValue<string>("AzureAIFoundry:Url") ?? string.Empty;
+var azureAIFoundryKey = builder.Configuration.GetValue<string>("AzureAIFoundry:ApiKey") ?? string.Empty;
 builder.Services.AddKeyedChatClient(
-        "azureopenai",
-        sp => new AzureOpenAIClient(new Uri(azureOpenAiUrl), new System.ClientModel.ApiKeyCredential(azureOpenAiKey))
-                  .GetChatClient("gpt-4.1-nano")
+        "azureaifoundry",
+        sp => new AzureOpenAIClient(new Uri(azureAIFoundryUrl), new ApiKeyCredential(azureAIFoundryKey))
+                  .GetChatClient("gpt-5-nano")
                   .AsIChatClient()
     )
     .UseOpenTelemetry()
@@ -75,8 +76,11 @@ builder.Services.AddKeyedChatClient(
 
 
 // AI Embedding Generators
+var embeddingModel = builder.Configuration.GetValue<string>("AzureAIFoundry:EmbeddingModel") ?? string.Empty;
 IEmbeddingGenerator<string, Embedding<float>> ollamaGenerator =
-    new OllamaApiClient(new Uri("http://localhost:11434/"), "nomic-embed-text");
+    new AzureOpenAIClient(new Uri(azureAIFoundryUrl), new ApiKeyCredential(azureAIFoundryKey))
+        .GetEmbeddingClient(embeddingModel)
+        .AsIEmbeddingGenerator();
 builder.Services.AddEmbeddingGenerator(ollamaGenerator);
 
 builder.Services.AddTransient<IChatService, ChatService>();

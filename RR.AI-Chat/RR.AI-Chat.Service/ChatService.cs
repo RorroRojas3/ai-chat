@@ -27,7 +27,7 @@ namespace RR.AI_Chat.Service
         IModelService modelService,
         [FromKeyedServices("ollama")] IChatClient ollamaClient,
         [FromKeyedServices("openai")] IChatClient openAiClient,
-        [FromKeyedServices("azureopenai")] IChatClient azureOpenAiClient,
+        [FromKeyedServices("azureaifoundry")] IChatClient azureOpenAiClient,
         AIChatDbContext ctx) : IChatService
     {
         private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -263,7 +263,7 @@ namespace RR.AI_Chat.Service
             {
                 return _openAiClient;
             }
-            else if (AIServiceType.AzureOpenAI == serviceId)
+            else if (AIServiceType.AzureAIFoundry == serviceId)
             {
                 return _azureOpenAiClient;
             }

@@ -18,7 +18,7 @@ namespace RR.AI_Chat.Service
     }
 
     public class SessionService(ILogger<SessionService> logger,
-        [FromKeyedServices("azureopenai")] IChatClient openAiClient,
+        [FromKeyedServices("azureaifoundry")] IChatClient openAiClient,
         AIChatDbContext ctx) : ISessionService
     {
         private readonly ILogger<SessionService> _logger = logger;
