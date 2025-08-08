@@ -48,16 +48,45 @@ namespace RR.AI_Chat.Service
             List<DocumentPage> documentPages = [];
             var date = DateTime.UtcNow;
 
+            var tasks = new List<Task<(int PageNumber, ReadOnlyMemory<float> Embedding, string PageText)>>();
+
             foreach (var documentExtractor in documentExtractors)
             {
-                var embedding = await _embeddingGenerator.GenerateVectorAsync(documentExtractor.PageText);
-                documentPages.Add(new DocumentPage 
-                { 
-                    Number = documentExtractor.PageNumber,
-                    Embedding = embedding.ToArray(), 
-                    Text = documentExtractor.PageText, 
-                    DateCreated = date 
-                });
+                var task = GenerateEmbeddingForPageAsync(documentExtractor);
+                tasks.Add(task);
+
+                // Process in batches of 10
+                if (tasks.Count == 10)
+                {
+                    var completedTasks = await Task.WhenAll(tasks);
+                    foreach (var result in completedTasks)
+                    {
+                        documentPages.Add(new DocumentPage
+                        {
+                            Number = result.PageNumber,
+                            Embedding = result.Embedding.ToArray(),
+                            Text = result.PageText,
+                            DateCreated = date
+                        });
+                    }
+                    tasks.Clear();
+                }
+            }
+
+            // Process remaining tasks (less than 10)
+            if (tasks.Count > 0)
+            {
+                var completedTasks = await Task.WhenAll(tasks);
+                foreach (var result in completedTasks)
+                {
+                    documentPages.Add(new DocumentPage
+                    {
+                        Number = result.PageNumber,
+                        Embedding = result.Embedding.ToArray(),
+                        Text = result.PageText,
+                        DateCreated = date
+                    });
+                }
             }
 
             var document = new Document
@@ -138,6 +167,13 @@ namespace RR.AI_Chat.Service
             }
 
             return dto;
+        }
+
+        // Add this helper method to the DocumentService class
+        private async Task<(int PageNumber, ReadOnlyMemory<float> Embedding, string PageText)> GenerateEmbeddingForPageAsync(DocumentExtractorDto documentExtractor)
+        {
+            var embedding = await _embeddingGenerator.GenerateVectorAsync(documentExtractor.PageText);
+            return (documentExtractor.PageNumber, embedding, documentExtractor.PageText);
         }
     }
 }

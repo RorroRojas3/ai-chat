@@ -19,6 +19,8 @@ namespace RR.AI_Chat.Service
         IList<AITool> GetTools();
 
         Task<List<Document>> SearchDocumentsAsync(string sessionId, string prompt, CancellationToken cancellationToken = default);
+
+        Task<string> CompareDocumentsAsync(string sessionId, string firstDocumentId, string secondDocumentId, CancellationToken cancellationToken = default);
     }
 
     public class DocumentToolService(ILogger<DocumentToolService> logger,
@@ -64,7 +66,7 @@ namespace RR.AI_Chat.Service
             return result;
         }
 
-        [Description("Returns the complete text content of the document for AI processing. Use when full document content is needed.")]
+        [Description("Returns the complete text content of the document for AI processing. Use when full document content is needed. Do not use for comparison.")]
         public async Task<string> GetDocumentOverviewAsync(
             [Description("The session ID")] string sessionId,
             [Description("The document ID")] string documentId,
@@ -184,12 +186,121 @@ namespace RR.AI_Chat.Service
             return docPages;
         }
 
+        [Description("Compares two documents and provides detailed analysis of similarities and differences. " +
+            "Use when user requests document comparison. " +
+            "Return the output exactly as provided.")]
+        public async Task<string> CompareDocumentsAsync(
+            [Description("The session ID")] string sessionId,
+            [Description("The ID of the first document to compare")] string firstDocumentId,
+            [Description("The ID of the second document to compare")] string secondDocumentId,
+            CancellationToken cancellationToken = default)
+        {
+            // Validate session ID
+            if (string.IsNullOrWhiteSpace(sessionId) || !Guid.TryParse(sessionId, out var sessionGuid))
+            {
+                return "The session ID is not a valid.";
+            }
+
+            // Validate first document ID
+            if (string.IsNullOrWhiteSpace(firstDocumentId) || !Guid.TryParse(firstDocumentId, out var firstDocGuid))
+            {
+                return "The first document ID is not a valid.";
+            }
+
+            // Validate second document ID
+            if (string.IsNullOrEmpty(secondDocumentId) || !Guid.TryParse(secondDocumentId, out var secondDocGuid))
+            {
+                return "The second document ID is not a valid.";
+            }
+
+
+            // Retrieve first document content
+            var firstDocumentText = await GetDocumentContentAsync(sessionGuid, firstDocGuid, cancellationToken);
+            if (string.IsNullOrEmpty(firstDocumentText))
+            {
+                return "First document not found or has no content. Continue with your work without mentioning it.";
+            }
+
+            // Retrieve second document content
+            var secondDocumentText = await GetDocumentContentAsync(sessionGuid, secondDocGuid, cancellationToken);
+            if (string.IsNullOrEmpty(secondDocumentText))
+            {
+                return "Second document not found or has no content. Continue with your work without mentioning it.";
+            }
+
+            // Create detailed system prompt for comparison
+            var systemPrompt = $@"You are an expert document analyst. Your task is to perform a comprehensive comparison between two documents and provide a detailed analysis.
+
+                COMPARISON REQUIREMENTS:
+                1. **Structural Analysis**: Compare document organization, sections, headings, formatting patterns
+                2. **Content Analysis**: Identify shared themes, topics, concepts, and subject matter
+                3. **Similarities**: Highlight common elements, shared information, parallel sections, similar language or terminology
+                4. **Differences**: Point out contrasting viewpoints, unique content, different approaches, varying details
+                5. **Key Insights**: Provide analytical insights about the relationship between documents
+                6. **Quantitative Assessment**: Estimate percentage of content overlap where applicable
+                7. **Qualitative Assessment**: Describe the nature and significance of differences
+
+                ANALYSIS STRUCTURE:
+                - Executive Summary
+                - Detailed Similarities 
+                - Detailed Differences
+                - Structural Comparison
+                - Content Themes Analysis
+                - Recommendations or Conclusions
+
+                Be thorough, objective, and provide specific examples from both documents to support your analysis.";
+
+            var userPrompt = $@"Please compare the following two documents:
+
+                === DOCUMENT 1 ===
+                {firstDocumentText}
+
+                === DOCUMENT 2 ===
+                {secondDocumentText}
+
+                Provide a comprehensive comparison analysis following the requirements specified in the system prompt.";
+
+            try
+            {
+                // Use IChatClient to get comparison analysis
+                var messages = new List<ChatMessage>
+                {
+                    new(ChatRole.System, systemPrompt),
+                    new(ChatRole.User, userPrompt)
+                };
+
+                var response = await _chatClient.GetResponseAsync(messages, null, cancellationToken).ConfigureAwait(false);
+                return response.Messages.LastOrDefault()?.Text ?? "Failed to generate comparison analysis.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while comparing documents {firstDocId} and {secondDocId} in session {sessionId}",
+                    firstDocumentId, secondDocumentId, sessionId);
+                return "An error occurred while comparing the documents. Please try again.";
+            }
+        }
+
+        private async Task<string?> GetDocumentContentAsync(Guid sessionId, Guid documentId, CancellationToken cancellationToken)
+        {
+            var documentPages = await _ctx.DocumentPages.AsNoTracking()
+                .Include(x => x.Document)
+                .Where(x => x.DocumentId == documentId &&
+                        x.Document.SessionId == sessionId &&
+                        !x.DateDeactivated.HasValue)
+                .OrderBy(x => x.Number)
+                .Select(x => x.Text)
+                .ToListAsync(cancellationToken);
+
+            return documentPages.Count > 0 ? string.Join("\n\n", documentPages) : null;
+        }
+
         public IList<AITool> GetTools()
         {
             IList<AITool> functions = [
                 AIFunctionFactory.Create(GetSessionDocumentsAsync),
                 AIFunctionFactory.Create(GetDocumentOverviewAsync),
-                AIFunctionFactory.Create(SearchDocumentsAsync)];
+                AIFunctionFactory.Create(SearchDocumentsAsync),
+                AIFunctionFactory.Create(CompareDocumentsAsync)];
 
             return functions;
         }

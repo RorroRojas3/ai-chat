@@ -322,9 +322,13 @@ namespace RR.AI_Chat.Service
             {
                 Tools = model.IsToolEnabled ? documentTools : [],
                 AllowMultipleToolCalls = true,
-                ToolMode = ChatToolMode.RequireAny,
+                ToolMode = model.IsToolEnabled ? ChatToolMode.Auto : ChatToolMode.None,
                 ModelId = model.Name,
                 ConversationId = sessionId.ToString(),
+                AdditionalProperties = new AdditionalPropertiesDictionary
+                {
+                    { "max_completion_tokens", 30_000},
+                }
             };
 
             return chatOptions;
