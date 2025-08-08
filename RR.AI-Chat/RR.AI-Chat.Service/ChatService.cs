@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.AI;
+﻿using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
@@ -28,6 +27,7 @@ namespace RR.AI_Chat.Service
         [FromKeyedServices("ollama")] IChatClient ollamaClient,
         [FromKeyedServices("openai")] IChatClient openAiClient,
         [FromKeyedServices("azureaifoundry")] IChatClient azureOpenAiClient,
+        [FromKeyedServices("anthropic")] IChatClient anthropic,
         AIChatDbContext ctx) : IChatService
     {
         private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -37,6 +37,7 @@ namespace RR.AI_Chat.Service
         private readonly IDocumentToolService _documentToolService = documentToolService ?? throw new ArgumentNullException(nameof(documentToolService));
         private readonly ISessionService _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
         private readonly IModelService _modelService = modelService ?? throw new ArgumentNullException(nameof(modelService));
+        private readonly IChatClient _anthropic = anthropic ?? throw new ArgumentNullException(nameof(anthropic));
         private readonly AIChatDbContext _ctx = ctx;
 
         /// <summary>
@@ -267,6 +268,11 @@ namespace RR.AI_Chat.Service
             {
                 return _azureOpenAiClient;
             }
+            else if (AIServiceType.Anthropic == serviceId)
+            {
+                // Assuming you have an Anthropic client registered similarly
+                return _anthropic;
+            }
             else
             {
                 throw new InvalidOperationException($"Unsupported AI service type: {serviceId}");
@@ -327,9 +333,11 @@ namespace RR.AI_Chat.Service
                 ConversationId = sessionId.ToString(),
                 AdditionalProperties = new AdditionalPropertiesDictionary
                 {
-                    { "max_completion_tokens", 30_000},
+                    { "max_completion_tokens", 10_000},
                 }
             };
+
+            chatOptions.MaxOutputTokens = model.Name.Contains("gpt") ? null : 10_000;
 
             return chatOptions;
         }

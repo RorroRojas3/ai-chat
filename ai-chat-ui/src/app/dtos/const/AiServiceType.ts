@@ -11,5 +11,5 @@ export const AiServiceType = {
 
   AzureAIFoundry: '3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0',
 
-  Claude: '1d094036-4235-4308-81b8-185b1bc9d3b1',
+  Anthropic: '1d094036-4235-4308-81b8-185b1bc9d3b1',
 } as const;

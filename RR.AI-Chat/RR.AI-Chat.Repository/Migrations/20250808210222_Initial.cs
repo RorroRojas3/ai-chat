@@ -132,7 +132,7 @@ namespace RR.AI_Chat.Repository.Migrations
                 columns: new[] { "Id", "DateCreated", "DateDeactivated", "Name" },
                 values: new object[,]
                 {
-                    { new Guid("1d094036-4235-4308-81b8-185b1bc9d3b1"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "Claude" },
+                    { new Guid("1d094036-4235-4308-81b8-185b1bc9d3b1"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "Anthropic" },
                     { new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "OpenAI" },
                     { new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "AzureAIFoundry" },
                     { new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "Ollama" }
@@ -158,6 +158,7 @@ namespace RR.AI_Chat.Repository.Migrations
                     { new Guid("e2034bfc-5ae5-48c3-a140-5bc8386ede41"), new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "gpt-4.1-mini" },
                     { new Guid("e9bc0791-2d15-43c8-9299-5c86039786f9"), new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "gpt-4.1-mini" },
                     { new Guid("ebcfd808-9e43-4fe4-a88d-e09b397e05a6"), new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "gpt-5-mini" },
+                    { new Guid("eda0cb7d-fc3f-41de-b778-f483eb64a8aa"), new Guid("1d094036-4235-4308-81b8-185b1bc9d3b1"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "claude-sonnet-4-20250514" },
                     { new Guid("f35b51d7-c8d3-4040-8bff-8de67b4d3c25"), new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "grok-3-mini" },
                     { new Guid("fd01b615-1e9f-46af-957f-e4eaeff02766"), new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, true, "gpt-5-nano" }
                 });

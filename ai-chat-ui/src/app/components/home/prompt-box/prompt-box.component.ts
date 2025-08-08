@@ -281,8 +281,8 @@ export class PromptBoxComponent implements OnDestroy {
         return 'bi bi-openai'; // Lightning charge icon for OpenAI
       case AiServiceType.AzureAIFoundry:
         return 'bi bi-microsoft';
-      case AiServiceType.Claude:
-        return 'bi bi-claude';
+      case AiServiceType.Anthropic:
+        return 'bi bi-anthropic';
       default:
         return 'bi bi-question-circle'; // Question circle for unknown services
     }

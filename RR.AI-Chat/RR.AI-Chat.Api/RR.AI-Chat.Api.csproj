@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Anthropic.SDK" Version="5.5.0" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
     <PackageReference Include="EFCore.SqlServer.VectorSearch" Version="9.0.0-preview.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
