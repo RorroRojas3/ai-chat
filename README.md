@@ -2,10 +2,6 @@
 
 A full-stack AI chat application built with .NET 9 Web API backend and Angular 19 frontend. The application supports multiple AI service providers including Ollama, OpenAI, Azure AI Foundry, and Anthropic, with document management and vector search capabilities.
 
-## 📚 Documentation
-- [🚀 Quick Start Guide](QUICK_START.md) - Get running fast
-- [🔧 Development Guide](DEVELOPMENT.md) - Developer tips and best practices
-
 ## 📋 Table of Contents
 - [Features](#-features)
 - [Architecture](#️-architecture)
