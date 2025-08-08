@@ -2,6 +2,23 @@
 
 A full-stack AI chat application built with .NET 9 Web API backend and Angular 19 frontend. The application supports multiple AI service providers including Ollama, OpenAI, Azure AI Foundry, and Anthropic, with document management and vector search capabilities.
 
+## 📚 Documentation
+- [🚀 Quick Start Guide](QUICK_START.md) - Get running fast
+- [🔧 Development Guide](DEVELOPMENT.md) - Developer tips and best practices
+
+## 📋 Table of Contents
+- [Features](#-features)
+- [Architecture](#️-architecture)
+- [Tech Stack](#️-tech-stack)
+- [Prerequisites](#-prerequisites)
+- [Quick Start](#-quick-start)
+- [Configuration](#-configuration)
+- [Database Setup](#-database-setup)
+- [API Endpoints](#-api-endpoints)
+- [Development](#-development)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
+
 ## 🚀 Features
 
 - **Multi-AI Provider Support**: Integrate with Ollama, OpenAI, Azure AI Foundry, and Anthropic
@@ -67,6 +84,8 @@ ai-chat/
 - **Anthropic API Key** - For Claude models
 
 ## 🚀 Quick Start
+
+> **New to the project?** Check out our [Quick Start Guide](QUICK_START.md) for the fastest way to get running!
 
 ### 1. Clone the Repository
 ```bash
@@ -208,6 +227,8 @@ The application uses Entity Framework migrations. To set up the database:
 - `GET /api/models` - Get available AI models
 
 ## 🔧 Development
+
+> **Contributing?** See our [Development Guide](DEVELOPMENT.md) for detailed development tips and best practices.
 
 ### Running Tests
 
