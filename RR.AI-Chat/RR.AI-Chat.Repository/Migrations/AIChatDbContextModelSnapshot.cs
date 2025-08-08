@@ -17,7 +17,7 @@ namespace RR.AI_Chat.Repository.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.7")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -66,7 +66,7 @@ namespace RR.AI_Chat.Repository.Migrations
                         {
                             Id = new Guid("1d094036-4235-4308-81b8-185b1bc9d3b1"),
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Claude"
+                            Name = "Anthropic"
                         });
                 });
 
@@ -290,6 +290,14 @@ namespace RR.AI_Chat.Repository.Migrations
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsToolEnabled = true,
                             Name = "gpt-5-chat"
+                        },
+                        new
+                        {
+                            Id = new Guid("eda0cb7d-fc3f-41de-b778-f483eb64a8aa"),
+                            AIServiceId = new Guid("1d094036-4235-4308-81b8-185b1bc9d3b1"),
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsToolEnabled = true,
+                            Name = "claude-sonnet-4-20250514"
                         });
                 });
 

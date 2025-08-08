@@ -1,4 +1,6 @@
-﻿using Azure.AI.OpenAI;
+﻿using Anthropic.SDK;
+using Anthropic.SDK.Constants;
+using Azure.AI.OpenAI;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using OllamaSharp;
@@ -55,7 +57,7 @@ builder.Services.AddKeyedChatClient(
         x.MaximumConsecutiveErrorsPerRequest = 5;
     });
 
-// 3) Azure OpenAI under key "azureopenai"
+// 3) Azure AI Foundry under key "azureaifoundry"
 var azureAIFoundryUrl = builder.Configuration.GetValue<string>("AzureAIFoundry:Url") ?? string.Empty;
 var azureAIFoundryKey = builder.Configuration.GetValue<string>("AzureAIFoundry:ApiKey") ?? string.Empty;
 builder.Services.AddKeyedChatClient(
@@ -73,6 +75,20 @@ builder.Services.AddKeyedChatClient(
         x.MaximumConsecutiveErrorsPerRequest = 5;
     });
 
+// 4) Anthropic
+var anthropicKey = builder.Configuration.GetValue<string>("Anthropic:ApiKey") ?? string.Empty;
+builder.Services.AddKeyedChatClient("anthropic",
+        sp => new AnthropicClient(anthropicKey).Messages
+    .AsBuilder()
+    .UseOpenTelemetry()
+    .UseFunctionInvocation(null, x =>
+    {
+        x.AllowConcurrentInvocation = false;
+        x.IncludeDetailedErrors = true;
+        x.MaximumIterationsPerRequest = 5;
+        x.MaximumConsecutiveErrorsPerRequest = 5;
+    })
+    .Build());
 
 // AI Embedding Generators
 var embeddingModel = builder.Configuration.GetValue<string>("AzureAIFoundry:EmbeddingModel") ?? string.Empty;

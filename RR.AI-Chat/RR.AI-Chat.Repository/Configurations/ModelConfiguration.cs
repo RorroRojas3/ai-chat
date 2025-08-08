@@ -138,6 +138,14 @@ namespace RR.AI_Chat.Repository.Configurations
                     Name = "gpt-5-chat",
                     IsToolEnabled = true,
                     DateCreated = dateCreated
+                },
+                new Model
+                {
+                    Id = new("eda0cb7d-fc3f-41de-b778-f483eb64a8aa"),
+                    AIServiceId = AIServiceType.Anthropic,
+                    Name = "claude-sonnet-4-20250514",
+                    IsToolEnabled= true,
+                    DateCreated = dateCreated
                 }
             );
         }

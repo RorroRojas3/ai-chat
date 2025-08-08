@@ -31,8 +31,8 @@ namespace RR.AI_Chat.Repository.Configurations
                 },
                 new AIService
                 {
-                    Id = AIServiceType.Claude,
-                    Name = nameof(AIServiceType.Claude),
+                    Id = AIServiceType.Anthropic,
+                    Name = nameof(AIServiceType.Anthropic),
                     DateCreated = date,
                 }
             );
