@@ -1,0 +1,69 @@
+# Docker configuration for AI Chat Application
+# This docker-compose.yml sets up the entire application stack
+
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ai-chat-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd123
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - ai-chat-network
+
+  # .NET API
+  api:
+    build:
+      context: ./RR.AI-Chat
+      dockerfile: Dockerfile
+    container_name: ai-chat-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=aichat;User Id=sa;Password=YourStrong@Passw0rd123;Encrypt=true;TrustServerCertificate=true;
+    ports:
+      - "5000:80"
+    depends_on:
+      - sqlserver
+    networks:
+      - ai-chat-network
+
+  # Angular UI
+  ui:
+    build:
+      context: ./ai-chat-ui
+      dockerfile: Dockerfile
+    container_name: ai-chat-ui
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+    networks:
+      - ai-chat-network
+
+  # Ollama (Optional - for local AI models)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ai-chat-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - ai-chat-network
+
+volumes:
+  sqlserver_data:
+  ollama_data:
+
+networks:
+  ai-chat-network:
+    driver: bridge

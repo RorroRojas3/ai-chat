@@ -1,0 +1,106 @@
+# AI Chat Application - Global .gitignore
+
+# .NET Core
+bin/
+obj/
+out/
+*.user
+*.userosscache
+*.sln.docstates
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+msbuild.log
+msbuild.err
+msbuild.wrn
+*.dll
+*.exe
+*.pdb
+*.cache
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userprefs
+
+# Visual Studio
+.vs/
+.vscode/
+
+# .NET Core user secrets
+appsettings.local.json
+appsettings.*.local.json
+
+# Entity Framework
+Migrations/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Angular
+dist/
+tmp/
+.angular/
+.sass-cache/
+connect.lock
+coverage/
+libpeerconnection.log
+testem.log
+typings/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Docker
+Dockerfile.prod
+
+# IDE
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Database
+*.db
+*.sqlite
+
+# AI Service Configuration (to prevent accidental commits of API keys)
+secrets.json
+appsettings.Production.json
+appsettings.Staging.json
