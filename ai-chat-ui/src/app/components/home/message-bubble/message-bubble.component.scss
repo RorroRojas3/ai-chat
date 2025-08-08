@@ -2,6 +2,15 @@
   max-width: 75%;
   position: relative;
   margin: 4px 0;
+
+  // Use more width on smaller screens
+  @media (max-width: 768px) {
+    max-width: 99%;
+  }
+
+  @media (max-width: 480px) {
+    max-width: 99%;
+  }
 }
 
 .message-content {
