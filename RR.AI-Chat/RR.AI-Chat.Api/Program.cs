@@ -1,5 +1,4 @@
 ﻿using Azure.AI.OpenAI;
-using Azure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using OllamaSharp;
