@@ -90,7 +90,7 @@ namespace RR.AI_Chat.Service
 
             var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId);
             var chatClient = GetChatClient(request.ServiceId);
-            var chatOptions = await CreateChatOptions(sessionId, model);
+            var chatOptions = await CreateChatOptions(sessionId, model).ConfigureAwait(false);
             StringBuilder sb = new();
             long totalInputTokens = 0, totalOutputTokens = 0;
             await foreach (var message in chatClient.GetStreamingResponseAsync(session.Conversations.Select(x => new ChatMessage(x.Role, x.Content)) ?? [], chatOptions, cancellationToken))
