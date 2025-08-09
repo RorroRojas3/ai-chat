@@ -12,7 +12,7 @@ using RR.AI_Chat.Repository;
 namespace RR.AI_Chat.Repository.Migrations
 {
     [DbContext(typeof(AIChatDbContext))]
-    [Migration("20250808210222_Initial")]
+    [Migration("20250809163328_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -134,6 +134,52 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.HasIndex("DocumentId");
 
                     b.ToTable("DocumentPage", "AI");
+                });
+
+            modelBuilder.Entity("RR.AI_Chat.Entity.McpServer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Arguments")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Command")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateDeactivated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("WorkingDirectory")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("McpServer", "AI");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0a515abd-7d7d-48f5-9037-531745843548"),
+                            Arguments = "[\"run\",\"--project\",\"C:\\\\Users\\\\Rorro\\\\source\\\\repos\\\\RR.MCPServer\\\\RR.MCPServer\\\\RR.MCPServer.csproj\",\"--configuration\",\"Release\"]",
+                            Command = "dotnet",
+                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Test MCP Server",
+                            WorkingDirectory = "C:\\Users\\Rorro\\source\\repos\\RR.MCPServer\\RR.MCPServer"
+                        });
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.Model", b =>

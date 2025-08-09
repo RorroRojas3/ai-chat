@@ -28,6 +28,7 @@ namespace RR.AI_Chat.Service
         [FromKeyedServices("openai")] IChatClient openAiClient,
         [FromKeyedServices("azureaifoundry")] IChatClient azureOpenAiClient,
         [FromKeyedServices("anthropic")] IChatClient anthropic,
+        IMcpServerService mcpServerService,
         AIChatDbContext ctx) : IChatService
     {
         private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -38,6 +39,7 @@ namespace RR.AI_Chat.Service
         private readonly ISessionService _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
         private readonly IModelService _modelService = modelService ?? throw new ArgumentNullException(nameof(modelService));
         private readonly IChatClient _anthropic = anthropic ?? throw new ArgumentNullException(nameof(anthropic));
+        private readonly IMcpServerService _mcpServerService = mcpServerService ?? throw new ArgumentNullException(nameof(mcpServerService));
         private readonly AIChatDbContext _ctx = ctx;
 
         /// <summary>
@@ -88,7 +90,7 @@ namespace RR.AI_Chat.Service
 
             var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId);
             var chatClient = GetChatClient(request.ServiceId);
-            var chatOptions = CreateChatOptions(sessionId, model);
+            var chatOptions = await CreateChatOptions(sessionId, model);
             StringBuilder sb = new();
             long totalInputTokens = 0, totalOutputTokens = 0;
             await foreach (var message in chatClient.GetStreamingResponseAsync(session.Conversations.Select(x => new ChatMessage(x.Role, x.Content)) ?? [], chatOptions, cancellationToken))
@@ -279,66 +281,42 @@ namespace RR.AI_Chat.Service
             }
         }
 
-
         /// <summary>
-        /// Creates and configures a ChatOptions instance for AI chat interactions based on the specified session and model parameters.
-        /// This method sets up the necessary options including tools, model configuration, and conversation context for the chat client.
+        /// Creates chat options configured for the specified model and session.
         /// </summary>
-        /// <param name="sessionId">
-        /// The unique identifier of the chat session. This value is converted to a string and used as the conversation ID
-        /// to maintain context continuity across multiple chat interactions within the same session.
-        /// </param>
-        /// <param name="model">
-        /// The model configuration data transfer object containing model-specific settings such as name and tool enablement.
-        /// This parameter determines which AI model to use and whether additional tools should be available during the chat.
-        /// </param>
-        /// <returns>
-        /// A fully configured <see cref="ChatOptions"/> instance ready for use with the AI chat client. The returned object
-        /// includes tool configuration, model identification, conversation context, and interaction mode settings.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown when the <paramref name="model"/> parameter is null. A valid model configuration is required
-        /// to properly initialize the chat options.
-        /// </exception>
-        /// <remarks>
-        /// This method configures the following ChatOptions properties:
-        /// <list type="bullet">
-        /// <item><description><strong>Tools:</strong> Includes document tools if the model supports tool usage (based on <see cref="ModelDto.IsToolEnabled"/>), otherwise an empty collection</description></item>
-        /// <item><description><strong>AllowMultipleToolCalls:</strong> Set to true to enable multiple tool invocations within a single chat interaction</description></item>
-        /// <item><description><strong>ToolMode:</strong> Set to <see cref="ChatToolMode.RequireAny"/> to allow flexible tool usage</description></item>
-        /// <item><description><strong>ModelId:</strong> Set to the model name from the provided model configuration</description></item>
-        /// <item><description><strong>ConversationId:</strong> Set to the string representation of the session ID to maintain conversation context</description></item>
-        /// </list>
-        /// <para>
-        /// The document tools are retrieved from the injected <see cref="IDocumentToolService"/> and are only included
-        /// when the model explicitly supports tool functionality. This allows for enhanced AI capabilities such as
-        /// document search, analysis, and retrieval operations during chat interactions.
-        /// </para>
-        /// </remarks>
-        private ChatOptions CreateChatOptions(Guid sessionId, ModelDto model)
+        /// <param name="sessionId">The session identifier for conversation tracking.</param>
+        /// <param name="model">The model configuration containing name and tool enablement settings.</param>
+        /// <returns>A configured <see cref="ChatOptions"/> instance with model-specific settings and optional tools.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="model"/> is null.</exception>
+        private async Task<ChatOptions> CreateChatOptions(Guid sessionId, ModelDto model)
         {
             if (model == null)
             {
                 throw new ArgumentNullException(nameof(model), "Model cannot be null.");
             }
 
-            var documentTools = _documentToolService.GetTools();
-
-            var chatOptions = new ChatOptions
+            ChatOptions chatOptions = new()
             {
-                Tools = model.IsToolEnabled ? documentTools : [],
                 AllowMultipleToolCalls = true,
-                ToolMode = model.IsToolEnabled ? ChatToolMode.Auto : ChatToolMode.None,
                 ModelId = model.Name,
                 ConversationId = sessionId.ToString(),
                 AdditionalProperties = new AdditionalPropertiesDictionary
                 {
-                    { "max_completion_tokens", 10_000},
-                }
+                    { "max_completion_tokens", 6_000},
+                },
+                MaxOutputTokens = model.Name.Contains("gpt") ? null : 6_000
             };
-
-            chatOptions.MaxOutputTokens = model.Name.Contains("gpt") ? null : 10_000;
-
+            if (model.IsToolEnabled)
+            {
+                List<AITool> tools = [];
+                var documentTools = _documentToolService.GetTools();
+                var mcpTools = await _mcpServerService.GetToolsAsync().ConfigureAwait(false);
+                tools.AddRange(documentTools);
+                tools.AddRange(mcpTools);
+                chatOptions.Tools = tools;
+                chatOptions.AllowMultipleToolCalls = true;
+            }
+            
             return chatOptions;
         }
     }
