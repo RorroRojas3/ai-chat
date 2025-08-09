@@ -35,6 +35,24 @@ namespace RR.AI_Chat.Repository.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "McpServer",
+                schema: "AI",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
+                    Command = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
+                    Arguments = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    WorkingDirectory = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_McpServer", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Session",
                 schema: "AI",
                 columns: table => new
@@ -139,6 +157,12 @@ namespace RR.AI_Chat.Repository.Migrations
                 });
 
             migrationBuilder.InsertData(
+                schema: "AI",
+                table: "McpServer",
+                columns: new[] { "Id", "Arguments", "Command", "DateCreated", "DateDeactivated", "Name", "WorkingDirectory" },
+                values: new object[] { new Guid("0a515abd-7d7d-48f5-9037-531745843548"), "[\"run\",\"--project\",\"C:\\\\Users\\\\Rorro\\\\source\\\\repos\\\\RR.MCPServer\\\\RR.MCPServer\\\\RR.MCPServer.csproj\",\"--configuration\",\"Release\"]", "dotnet", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "Test MCP Server", "C:\\Users\\Rorro\\source\\repos\\RR.MCPServer\\RR.MCPServer" });
+
+            migrationBuilder.InsertData(
                 schema: "AI.Ref",
                 table: "Model",
                 columns: new[] { "Id", "AIServiceId", "DateCreated", "DateDeactivated", "IsToolEnabled", "Name" },
@@ -187,6 +211,10 @@ namespace RR.AI_Chat.Repository.Migrations
         {
             migrationBuilder.DropTable(
                 name: "DocumentPage",
+                schema: "AI");
+
+            migrationBuilder.DropTable(
+                name: "McpServer",
                 schema: "AI");
 
             migrationBuilder.DropTable(

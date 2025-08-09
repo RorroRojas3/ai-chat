@@ -104,6 +104,7 @@ builder.Services.AddTransient<IDocumentService, DocumentService>();
 builder.Services.AddTransient<IDocumentToolService, DocumentToolService>();
 builder.Services.AddTransient<ISessionService, SessionService>();
 builder.Services.AddTransient<IModelService, ModelService>();
+builder.Services.AddTransient<IMcpServerService, McpServerService>();
 
 var app = builder.Build();
 
