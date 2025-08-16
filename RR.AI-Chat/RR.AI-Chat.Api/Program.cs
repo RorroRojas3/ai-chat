@@ -1,6 +1,9 @@
 ﻿using Anthropic.SDK;
 using Anthropic.SDK.Constants;
 using Azure.AI.OpenAI;
+using Hangfire;
+using Hangfire.SqlServer;
+using Hangfire.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using OllamaSharp;
@@ -98,6 +101,30 @@ IEmbeddingGenerator<string, Embedding<float>> ollamaGenerator =
         .AsIEmbeddingGenerator();
 builder.Services.AddEmbeddingGenerator(ollamaGenerator);
 
+// Add Hangfire services
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection"), new SqlServerStorageOptions
+    {
+        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
+        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
+        QueuePollInterval = TimeSpan.Zero,
+        UseRecommendedIsolationLevel = true,
+        DisableGlobalLocks = true,
+    }));
+
+// Add the processing server as IHostedService
+builder.Services.AddHangfireServer(options =>
+{
+    options.WorkerCount = Environment.ProcessorCount * 2;
+});
+
+// Register IStorageConnection for dependency injection
+builder.Services.AddScoped(provider => JobStorage.Current.GetConnection());
+
+
 builder.Services.AddTransient<IChatService, ChatService>();
 builder.Services.AddSingleton<DocumentStore>();
 builder.Services.AddTransient<IDocumentService, DocumentService>();
@@ -114,6 +141,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Add Hangfire Dashboard
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    //Authorization = new[] { new HangfireAuthorizationFilter() }
+});
 
 app.UseHttpsRedirection();
 

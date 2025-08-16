@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Hangfire.Server;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
+using RR.AI_Chat.Dto.Enums;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
 using UglyToad.PdfPig;
@@ -12,7 +14,7 @@ namespace RR.AI_Chat.Service
 {
     public interface IDocumentService 
     {
-        Task<DocumentDto> CreateDocumentAsync(IFormFile formFile, Guid sessionId);
+        Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid sessionId,CancellationToken cancellation = default);
     }
 
     public class DocumentService(ILogger<DocumentService> logger, 
@@ -39,12 +41,24 @@ namespace RR.AI_Chat.Service
         /// 4. Creates document page entities with embeddings
         /// 5. Saves the document and all pages to the database
         /// </remarks>
-        public async Task<DocumentDto> CreateDocumentAsync(IFormFile formFile, Guid sessionId)
+        public async Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid sessionId, CancellationToken cancellation = default)
         {
-            ArgumentNullException.ThrowIfNull(formFile, nameof(formFile));
+            ArgumentNullException.ThrowIfNull(context, nameof(context));
+            ArgumentNullException.ThrowIfNull(fileDataDto, nameof(fileDataDto));
 
-            var bytes = await ReadAllBytesAsync(formFile.OpenReadStream());
-            var documentExtractors = ExtractTextFromPdfFileAsync(bytes);
+            var jobId = context.BackgroundJob.Id;
+            context.SetJobParameter(JobName.Status.ToString(), JobStatus.Queued.ToString());
+            context.SetJobParameter(JobName.Progress.ToString(), "0%");
+            _logger.LogInformation("Starting document creation. Job ID: {JobId}, Session ID: {SessionId}, File Name: {FileName}", jobId, sessionId, fileDataDto.FileName);
+
+
+            context.SetJobParameter(JobName.Status.ToString(), JobStatus.Reading.ToString());
+            context.SetJobParameter(JobName.Progress.ToString(), "25%");
+
+            var documentExtractors = ExtractTextFromPdfFileAsync(fileDataDto.Content);
+            context.SetJobParameter(JobName.Status.ToString(), JobStatus.Extracting.ToString());
+            context.SetJobParameter(JobName.Progress.ToString(), "50%");
+
             List<DocumentPage> documentPages = [];
             var date = DateTime.UtcNow;
 
@@ -88,18 +102,23 @@ namespace RR.AI_Chat.Service
                     });
                 }
             }
+            context.SetJobParameter(JobName.Status.ToString(), JobStatus.Embedding.ToString());
+            context.SetJobParameter(JobName.Progress.ToString(), "75%");
 
             var document = new Document
             {
                 SessionId = sessionId,
-                Name = formFile.FileName,
-                Extension = GetFileExtension(formFile.FileName),
+                Name = fileDataDto.FileName,
+                Extension = GetFileExtension(fileDataDto.FileName),
                 Pages = documentPages,
                 DateCreated = date
             };
 
             await _ctx.AddAsync(document);
             await _ctx.SaveChangesAsync();
+
+            context.SetJobParameter(JobName.Status.ToString(), JobStatus.Processed.ToString());
+            context.SetJobParameter(JobName.Progress.ToString(), "100%");
 
             return new()
             {
