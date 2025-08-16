@@ -48,16 +48,16 @@ namespace RR.AI_Chat.Service
 
             var jobId = context.BackgroundJob.Id;
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Queued.ToString());
-            context.SetJobParameter(JobName.Progress.ToString(), "0%");
+            context.SetJobParameter(JobName.Progress.ToString(), 0);
             _logger.LogInformation("Starting document creation. Job ID: {JobId}, Session ID: {SessionId}, File Name: {FileName}", jobId, sessionId, fileDataDto.FileName);
 
 
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Reading.ToString());
-            context.SetJobParameter(JobName.Progress.ToString(), "25%");
+            context.SetJobParameter(JobName.Progress.ToString(), 25);
 
             var documentExtractors = ExtractTextFromPdfFileAsync(fileDataDto.Content);
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Extracting.ToString());
-            context.SetJobParameter(JobName.Progress.ToString(), "50%");
+            context.SetJobParameter(JobName.Progress.ToString(), 50);
 
             List<DocumentPage> documentPages = [];
             var date = DateTime.UtcNow;
@@ -103,7 +103,7 @@ namespace RR.AI_Chat.Service
                 }
             }
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Embedding.ToString());
-            context.SetJobParameter(JobName.Progress.ToString(), "75%");
+            context.SetJobParameter(JobName.Progress.ToString(), 75);
 
             var document = new Document
             {
@@ -118,7 +118,7 @@ namespace RR.AI_Chat.Service
             await _ctx.SaveChangesAsync();
 
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Processed.ToString());
-            context.SetJobParameter(JobName.Progress.ToString(), "100%");
+            context.SetJobParameter(JobName.Progress.ToString(), 100);
 
             return new()
             {
@@ -191,7 +191,7 @@ namespace RR.AI_Chat.Service
         // Add this helper method to the DocumentService class
         private async Task<(int PageNumber, ReadOnlyMemory<float> Embedding, string PageText)> GenerateEmbeddingForPageAsync(DocumentExtractorDto documentExtractor)
         {
-            var embedding = await _embeddingGenerator.GenerateVectorAsync(documentExtractor.PageText);
+            var embedding = await _embeddingGenerator.GenerateVectorAsync(string.IsNullOrWhiteSpace(documentExtractor.PageText) ? "EMPTY PAGE" : documentExtractor.PageText);
             return (documentExtractor.PageNumber, embedding, documentExtractor.PageText);
         }
     }

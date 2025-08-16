@@ -2,7 +2,15 @@ import { Component, EventEmitter, OnDestroy, Output } from '@angular/core';
 import { StoreService } from '../../../store/store.service';
 import { ChatService } from '../../../services/chat.service';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom, Subject, Subscription } from 'rxjs';
+import {
+  firstValueFrom,
+  Subject,
+  Subscription,
+  interval,
+  takeUntil,
+  switchMap,
+  takeWhile,
+} from 'rxjs';
 import markdownit from 'markdown-it';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MessageDto } from '../../../dtos/MessageDto';
@@ -12,12 +20,16 @@ import { SessionService } from '../../../services/session.service';
 import { DocumentService } from '../../../services/document.service';
 import { ModelDto } from '../../../dtos/ModelDto';
 import { AiServiceType } from '../../../dtos/const/AiServiceType';
+import { JobDto } from '../../../dtos/JobDto';
+import { JobStatusDto } from '../../../dtos/JobStatusDto';
 
 interface AttachedFile {
   id: string;
   name: string;
   size: number;
   file: File;
+  uploadStatus?: 'uploading' | 'processing' | 'succeeded' | 'failed';
+  progress?: number;
 }
 
 @Component({
@@ -53,6 +65,7 @@ export class PromptBoxComponent implements OnDestroy {
   attachedFiles: AttachedFile[] = [];
   private fileIdCounter: number = 0;
   isDragOver: boolean = false;
+  private jobPollingSubscriptions: Map<string, Subscription> = new Map();
 
   async onClickCreateSession(): Promise<void> {
     if (!this.prompt.trim() || this.storeService.disablePromptButton()) {
@@ -72,7 +85,10 @@ export class PromptBoxComponent implements OnDestroy {
 
       // Upload attached files to the session
       if (this.attachedFiles.length > 0) {
-        await this.uploadAttachedFiles();
+        const jobs = await this.uploadAttachedFiles();
+        // Start polling for job status
+        await this.pollJobStatuses(jobs);
+        this.clearAllFiles();
       }
 
       this.storeService.messages.update((messages) => [
@@ -125,14 +141,13 @@ export class PromptBoxComponent implements OnDestroy {
             );
           },
         });
-
-      this.prompt = '';
-      // Clear attached files after sending
-      this.clearAllFiles();
     } catch (error) {
       // Handle errors appropriately
       console.error('Error in session creation:', error);
       // You might want to show an error message to the user
+    } finally {
+      this.prompt = '';
+      this.clearAllFiles();
     }
   }
 
@@ -168,6 +183,8 @@ export class PromptBoxComponent implements OnDestroy {
           name: file.name,
           size: file.size,
           file: file,
+          uploadStatus: undefined,
+          progress: 0,
         };
         this.attachedFiles.push(attachedFile);
       } else {
@@ -182,6 +199,13 @@ export class PromptBoxComponent implements OnDestroy {
 
   // Remove a specific file
   removeFile(fileId: string): void {
+    // Cancel any ongoing polling for this file
+    const subscription = this.jobPollingSubscriptions.get(fileId);
+    if (subscription) {
+      subscription.unsubscribe();
+      this.jobPollingSubscriptions.delete(fileId);
+    }
+
     this.attachedFiles = this.attachedFiles.filter(
       (file) => file.id !== fileId
     );
@@ -189,6 +213,12 @@ export class PromptBoxComponent implements OnDestroy {
 
   // Clear all attached files
   clearAllFiles(): void {
+    // Cancel all ongoing polling subscriptions
+    this.jobPollingSubscriptions.forEach((subscription) =>
+      subscription.unsubscribe()
+    );
+    this.jobPollingSubscriptions.clear();
+
     this.attachedFiles = [];
   }
 
@@ -207,11 +237,16 @@ export class PromptBoxComponent implements OnDestroy {
   }
 
   // Upload all attached files to the current session
-  private async uploadAttachedFiles(): Promise<void> {
+  private async uploadAttachedFiles(): Promise<JobDto[]> {
     const sessionId = this.storeService.sessionId();
     if (!sessionId) {
       throw new Error('No session ID available for file upload');
     }
+
+    // Update file status to uploading
+    this.attachedFiles.forEach((file) => {
+      file.uploadStatus = 'uploading';
+    });
 
     // Upload files sequentially and wait for each to complete
     const uploadPromises = this.attachedFiles.map((attachedFile) =>
@@ -220,7 +255,81 @@ export class PromptBoxComponent implements OnDestroy {
       )
     );
 
-    await Promise.all(uploadPromises);
+    const jobs = await Promise.all(uploadPromises);
+    return jobs;
+  }
+
+  // Poll job statuses for uploaded files
+  private async pollJobStatuses(jobs: JobDto[]): Promise<void> {
+    const pollingPromises = jobs.map((job, index) => {
+      const attachedFile = this.attachedFiles[index];
+      if (attachedFile) {
+        attachedFile.uploadStatus = 'processing';
+        return this.startJobPolling(job, attachedFile);
+      }
+      return Promise.resolve();
+    });
+
+    await Promise.all(pollingPromises);
+  }
+
+  // Start polling for a specific job
+  private startJobPolling(
+    job: JobDto,
+    attachedFile: AttachedFile
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const subscription = interval(5000) // Poll every 5 seconds
+        .pipe(
+          switchMap(() => this.documentService.getUploadStatus(job)),
+          takeUntil(this.destroy$),
+          takeWhile(
+            (status: JobStatusDto) =>
+              status.state !== 'Succeeded' && status.state !== 'Failed',
+            true
+          )
+        )
+        .subscribe({
+          next: (status: JobStatusDto) => {
+            // Update attached file status
+            attachedFile.progress = status.progress;
+
+            if (status.state === 'Succeeded') {
+              attachedFile.uploadStatus = 'succeeded';
+              console.log(`File ${attachedFile.name} upload succeeded`);
+              this.jobPollingSubscriptions.delete(attachedFile.id);
+              resolve();
+            } else if (status.state === 'Failed') {
+              attachedFile.uploadStatus = 'failed';
+              console.error(
+                `File ${attachedFile.name} upload failed: ${status.status}`
+              );
+              this.jobPollingSubscriptions.delete(attachedFile.id);
+              reject(new Error(`Upload failed: ${status.status}`));
+            } else {
+              attachedFile.uploadStatus = 'processing';
+              console.log(
+                `File ${attachedFile.name} processing: ${status.progress}%`
+              );
+            }
+          },
+          error: (error) => {
+            attachedFile.uploadStatus = 'failed';
+            console.error(
+              `Error polling status for file ${attachedFile.name}:`,
+              error
+            );
+            this.jobPollingSubscriptions.delete(attachedFile.id);
+            reject(error);
+          },
+          complete: () => {
+            this.jobPollingSubscriptions.delete(attachedFile.id);
+          },
+        });
+
+      // Store the subscription for cleanup
+      this.jobPollingSubscriptions.set(attachedFile.id, subscription);
+    });
   }
 
   // Drag and drop event handlers
@@ -293,8 +402,17 @@ export class PromptBoxComponent implements OnDestroy {
    * Cleans up the SSE (Server-Sent Events) subscription to prevent memory leaks.
    */
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+
     if (this.sseSubscription) {
       this.sseSubscription.unsubscribe();
     }
+
+    // Clean up all job polling subscriptions
+    this.jobPollingSubscriptions.forEach((subscription) =>
+      subscription.unsubscribe()
+    );
+    this.jobPollingSubscriptions.clear();
   }
 }

@@ -8,6 +8,6 @@
 
         public string Status { get; set; } = null!;
 
-        public string Progress { get; set; } = null!;
+        public int Progress { get; set; } = 0;
     }
 }
