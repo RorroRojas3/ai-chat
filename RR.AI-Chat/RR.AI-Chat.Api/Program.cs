@@ -1,9 +1,7 @@
 ﻿using Anthropic.SDK;
-using Anthropic.SDK.Constants;
 using Azure.AI.OpenAI;
 using Hangfire;
 using Hangfire.SqlServer;
-using Hangfire.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using OllamaSharp;
@@ -126,7 +124,6 @@ builder.Services.AddScoped(provider => JobStorage.Current.GetConnection());
 
 
 builder.Services.AddTransient<IChatService, ChatService>();
-builder.Services.AddSingleton<DocumentStore>();
 builder.Services.AddTransient<IDocumentService, DocumentService>();
 builder.Services.AddTransient<IDocumentToolService, DocumentToolService>();
 builder.Services.AddTransient<ISessionService, SessionService>();
