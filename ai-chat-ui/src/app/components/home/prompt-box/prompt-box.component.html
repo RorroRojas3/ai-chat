@@ -105,7 +105,7 @@
     </form>
 
     <!-- File cards display -->
-    @if (attachedFiles.length > 0) {
+    @if (attachedFiles.length > 0 && showAttachedFiles) {
     <div class="file-cards-container mt-1">
       <div class="file-cards-scroll">
         @for (file of attachedFiles; track file.id) {

@@ -1,0 +1,22 @@
+﻿using System.ComponentModel;
+
+namespace RR.AI_Chat.Dto.Enums
+{
+    public enum JobStatus
+    {
+        [Description(nameof(Queued))]   
+        Queued = 1,
+
+        [Description(nameof(Reading))]    
+        Reading = 2,
+
+        [Description(nameof(Extracting))]
+        Extracting = 3,
+
+        [Description(nameof(Embedding))]
+        Embedding = 4,
+
+        [Description(nameof(Processed))]
+        Processed = 5,
+    }
+}
