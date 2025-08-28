@@ -263,7 +263,8 @@ export class PromptBoxComponent implements OnDestroy {
           takeUntil(this.destroy$),
           takeWhile(
             (status: JobStatusDto) =>
-              status.state !== 'Succeeded' && status.state !== 'Failed',
+              status.state !== JobState.Succeeded &&
+              status.state !== JobState.Failed,
             true
           )
         )
@@ -273,12 +274,12 @@ export class PromptBoxComponent implements OnDestroy {
             attachedFile.progress = result.progress;
 
             if (result.state === JobState.Succeeded) {
-              attachedFile.status = 'succeeded';
+              attachedFile.status = JobState.Succeeded;
               console.log(`File ${attachedFile.name} upload succeeded`);
               this.jobPollingSubscriptions.delete(attachedFile.id);
               resolve();
             } else if (result.state === JobState.Failed) {
-              attachedFile.status = 'failed';
+              attachedFile.status = JobState.Failed;
               console.error(
                 `File ${attachedFile.name} upload failed: ${result.status}`
               );
