@@ -310,9 +310,9 @@ namespace RR.AI_Chat.Service
             {
                 List<AITool> tools = [];
                 var documentTools = _documentToolService.GetTools();
-                var mcpTools = await _mcpServerService.GetToolsAsync().ConfigureAwait(false);
+                //var mcpTools = await _mcpServerService.GetToolsAsync().ConfigureAwait(false);
                 tools.AddRange(documentTools);
-                tools.AddRange(mcpTools);
+                //tools.AddRange(mcpTools);
                 chatOptions.Tools = tools;
                 chatOptions.AllowMultipleToolCalls = true;
             }
