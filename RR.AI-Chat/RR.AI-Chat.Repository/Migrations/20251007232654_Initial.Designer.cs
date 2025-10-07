@@ -12,7 +12,7 @@ using RR.AI_Chat.Repository;
 namespace RR.AI_Chat.Repository.Migrations
 {
     [DbContext(typeof(AIChatDbContext))]
-    [Migration("20250809163328_Initial")]
+    [Migration("20251007232654_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace RR.AI_Chat.Repository.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -49,27 +49,9 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Ollama"
-                        },
-                        new
-                        {
-                            Id = new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "OpenAI"
-                        },
-                        new
-                        {
                             Id = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "AzureAIFoundry"
-                        },
-                        new
-                        {
-                            Id = new Guid("1d094036-4235-4308-81b8-185b1bc9d3b1"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Anthropic"
                         });
                 });
 
@@ -197,6 +179,11 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<DateTime?>("DateDeactivated")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Encoding")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
                     b.Property<bool>("IsToolEnabled")
                         .HasColumnType("bit");
 
@@ -214,89 +201,10 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("157b91cf-1880-4977-9b7a-7f80f548df04"),
-                            AIServiceId = new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = false,
-                            Name = "llama3.2"
-                        },
-                        new
-                        {
-                            Id = new Guid("9910ba5f-faca-4790-88a4-352e71e14724"),
-                            AIServiceId = new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = false,
-                            Name = "mistral"
-                        },
-                        new
-                        {
-                            Id = new Guid("1fe5381b-0262-469a-b63e-f4d0c4807a98"),
-                            AIServiceId = new Guid("89440e45-346f-453b-8e31-a249e4c6c0c5"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = false,
-                            Name = "gemma3"
-                        },
-                        new
-                        {
-                            Id = new Guid("1983e31e-627d-4617-9320-17ded79efa2b"),
-                            AIServiceId = new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = true,
-                            Name = "gpt-4.1-nano"
-                        },
-                        new
-                        {
-                            Id = new Guid("0b1169ca-f92a-4e3c-9441-6e89efc66424"),
-                            AIServiceId = new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = true,
-                            Name = "gpt-5-nano"
-                        },
-                        new
-                        {
-                            Id = new Guid("ebcfd808-9e43-4fe4-a88d-e09b397e05a6"),
-                            AIServiceId = new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = true,
-                            Name = "gpt-5-mini"
-                        },
-                        new
-                        {
-                            Id = new Guid("868283a7-8ba2-4807-80e8-67b801c3417e"),
-                            AIServiceId = new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = true,
-                            Name = "gpt-5"
-                        },
-                        new
-                        {
-                            Id = new Guid("e9bc0791-2d15-43c8-9299-5c86039786f9"),
-                            AIServiceId = new Guid("3ad5a77e-515a-4b72-920b-7e4f1d183dfe"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = true,
-                            Name = "gpt-4.1-mini"
-                        },
-                        new
-                        {
-                            Id = new Guid("a24fcce0-02e7-4ecb-88d7-27f33e47fecf"),
-                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = true,
-                            Name = "gpt-4.1-nano"
-                        },
-                        new
-                        {
-                            Id = new Guid("e2034bfc-5ae5-48c3-a140-5bc8386ede41"),
-                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = true,
-                            Name = "gpt-4.1-mini"
-                        },
-                        new
-                        {
                             Id = new Guid("c36e22ed-262a-47a1-b2ba-06a38355ae0f"),
                             AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Encoding = "o200k_harmony",
                             IsToolEnabled = true,
                             Name = "gpt-5-mini"
                         },
@@ -305,48 +213,18 @@ namespace RR.AI_Chat.Repository.Migrations
                             Id = new Guid("fd01b615-1e9f-46af-957f-e4eaeff02766"),
                             AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Encoding = "o200k_harmony",
                             IsToolEnabled = true,
                             Name = "gpt-5-nano"
                         },
                         new
                         {
-                            Id = new Guid("2f461194-2932-4185-bc69-5f9ae69effbc"),
+                            Id = new Guid("0b3948f5-70df-4697-a033-ae70971e1796"),
                             AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
                             DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = true,
-                            Name = "DeepSeek-V3-0324"
-                        },
-                        new
-                        {
-                            Id = new Guid("f35b51d7-c8d3-4040-8bff-8de67b4d3c25"),
-                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = true,
-                            Name = "grok-3-mini"
-                        },
-                        new
-                        {
-                            Id = new Guid("98591f36-58b1-4941-834e-0aa09f9f4243"),
-                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = true,
-                            Name = "grok-3"
-                        },
-                        new
-                        {
-                            Id = new Guid("169b6b77-4949-442e-b27f-a7bfb1cd3370"),
-                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Encoding = "o200k_harmony",
                             IsToolEnabled = true,
                             Name = "gpt-5-chat"
-                        },
-                        new
-                        {
-                            Id = new Guid("eda0cb7d-fc3f-41de-b778-f483eb64a8aa"),
-                            AIServiceId = new Guid("1d094036-4235-4308-81b8-185b1bc9d3b1"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsToolEnabled = true,
-                            Name = "claude-sonnet-4-20250514"
                         });
                 });
 

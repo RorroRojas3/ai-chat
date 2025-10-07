@@ -1,6 +1,4 @@
 ﻿using Hangfire.Server;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;

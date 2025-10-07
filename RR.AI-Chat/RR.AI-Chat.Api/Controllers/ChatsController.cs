@@ -24,13 +24,6 @@ namespace RR.AI_Chat.Api.Controllers
             }
         }
 
-        [HttpPost("sessions/{sessionId}/completion")]
-        public async Task<IActionResult> GetChatCompletionAsync(Guid sessionId, ChatCompletionRequestDto request, CancellationToken cancellationToken)
-        {
-            var response = await _chatService.GetChatCompletionAsync(sessionId, request, cancellationToken);
-            return Ok(response);
-        }
-
         [HttpGet("sessions/{sessionId}/conversations")]
         public async Task<IActionResult> GetSessionConversationAsync(Guid sessionId)
         {

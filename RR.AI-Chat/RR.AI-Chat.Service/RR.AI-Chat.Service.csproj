@@ -8,14 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EFCore.SqlServer.VectorSearch" Version="9.0.0-preview.2" />
+    <PackageReference Include="EFCore.SqlServer.VectorSearch" Version="9.0.0" />
     <PackageReference Include="Hangfire.Core" Version="1.8.21" />
-    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.8.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.8" />
-    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.9.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9" />
+    <PackageReference Include="ModelContextProtocol" Version="0.4.0-preview.1" />
     <PackageReference Include="PdfPig" Version="0.1.11" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
   </ItemGroup>
 
   <ItemGroup>

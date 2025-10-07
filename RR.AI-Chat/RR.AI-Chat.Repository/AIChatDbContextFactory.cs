@@ -11,7 +11,7 @@ namespace RR.AI_Chat.Repository
             
             // Get connection string from environment variable or use default
             var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") 
-                ?? "Server=sqlserver,1433;Database=aichat;User Id=sa;Password=DevPassword123!;TrustServerCertificate=true;";
+                ?? "Server=localhost;Database=aichat;Integrated Security=true;TrustServerCertificate=true;";
             
             optionsBuilder.UseSqlServer(connectionString, o => o.UseVectorSearch());
             
