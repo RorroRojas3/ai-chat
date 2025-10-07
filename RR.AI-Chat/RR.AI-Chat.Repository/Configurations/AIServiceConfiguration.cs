@@ -13,26 +13,8 @@ namespace RR.AI_Chat.Repository.Configurations
             builder.HasData(
                 new AIService
                 {
-                    Id = AIServiceType.Ollama,
-                    Name = nameof(AIServiceType.Ollama),
-                    DateCreated = date,
-                },
-                new AIService
-                {
-                    Id = AIServiceType.OpenAI,
-                    Name = nameof(AIServiceType.OpenAI),
-                    DateCreated = date,
-                },
-                new AIService
-                {
                     Id = AIServiceType.AzureAIFoundry,
                     Name = nameof(AIServiceType.AzureAIFoundry),
-                    DateCreated = date,
-                },
-                new AIService
-                {
-                    Id = AIServiceType.Anthropic,
-                    Name = nameof(AIServiceType.Anthropic),
                     DateCreated = date,
                 }
             );

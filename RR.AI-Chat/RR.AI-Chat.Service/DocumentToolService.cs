@@ -24,7 +24,7 @@ namespace RR.AI_Chat.Service
     }
 
     public class DocumentToolService(ILogger<DocumentToolService> logger,
-         [FromKeyedServices("openai")] IChatClient openAiClient,
+         [FromKeyedServices("azureaifoundry")] IChatClient openAiClient,
         IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
         AIChatDbContext ctx) : IDocumentToolService
     {
