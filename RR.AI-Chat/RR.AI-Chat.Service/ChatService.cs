@@ -16,6 +16,8 @@ namespace RR.AI_Chat.Service
         IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken);
 
         Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId);
+
+        bool IsSessionBusy(Guid sessionId);
     }
 
     public class ChatService(ILogger<ChatService> logger,
@@ -24,6 +26,7 @@ namespace RR.AI_Chat.Service
         IModelService modelService,
         [FromKeyedServices("azureaifoundry")] IChatClient azureAIFoundry,
         IMcpServerService mcpServerService,
+        ISessionLockService sessionLockService,
         AIChatDbContext ctx) : IChatService
     {
         private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -32,101 +35,77 @@ namespace RR.AI_Chat.Service
         private readonly ISessionService _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
         private readonly IModelService _modelService = modelService ?? throw new ArgumentNullException(nameof(modelService));
         private readonly IMcpServerService _mcpServerService = mcpServerService ?? throw new ArgumentNullException(nameof(mcpServerService));
+        private readonly ISessionLockService _sessionLockService = sessionLockService ?? throw new ArgumentNullException(nameof(sessionLockService));
         private readonly AIChatDbContext _ctx = ctx;
 
-        /// <summary>
-        /// Streams chat responses asynchronously for a given session and user prompt.
-        /// This method processes the user's message, sends it to the AI chat client, and yields streaming responses in real-time.
-        /// </summary>
-        /// <param name="sessionId">The unique identifier of the chat session to retrieve and update.</param>
-        /// <param name="request">The chat streaming request containing the user's prompt and model configuration.</param>
-        /// <param name="cancellationToken">A cancellation token that can be used to cancel the streaming operation.</param>
-        /// <returns>
-        /// An asynchronous enumerable that yields individual text chunks from the AI response as they become available.
-        /// Each yielded string represents a portion of the complete AI response.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the session with the specified <paramref name="sessionId"/> is not found in the chat store.
-        /// </exception>
-        /// <exception cref="OperationCanceledException">
-        /// Thrown when the operation is cancelled via the <paramref name="cancellationToken"/>.
-        /// </exception>
-        /// <remarks>
-        /// This method performs the following operations:
-        /// <list type="number">
-        /// <item>Validates that the session exists in the chat store</item>
-        /// <item>Creates a session name if this is the second message (after the initial system message)</item>
-        /// <item>Adds the user's prompt to the session message history</item>
-        /// <item>Streams the AI response in real-time, yielding each text chunk as it arrives</item>
-        /// <item>Accumulates the complete response and adds it to the session message history</item>
-        /// </list>
-        /// The method uses the "gpt-4.1-nano" model and includes document tools for enhanced AI capabilities.
-        /// Side effects include modifying the session's message history and potentially updating the session name.
-        /// </remarks>
+        public bool IsSessionBusy(Guid sessionId) => _sessionLockService.IsSessionBusy(sessionId);
+
         public async IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var session = await _ctx.Sessions.FindAsync(sessionId, cancellationToken);
-            if (session == null || session.Conversations == null)
+            var lockReleaser = await _sessionLockService.TryAcquireLockAsync(sessionId, cancellationToken);
+            if (lockReleaser == null)
             {
-                _logger.LogError("Session with id {id} not found.", sessionId);
-                throw new InvalidOperationException($"Session with id {sessionId} not found.");
+                _logger.LogWarning("Session {sessionId} is already being processed.", sessionId);
+                throw new InvalidOperationException($"Session {sessionId} is currently being processed. Please wait for the current request to complete.");
             }
 
-            if (session.Conversations.Count == 1)
+            using (lockReleaser)
             {
-                var sessionName = await _sessionService.CreateSessionNameAsync(sessionId, request);
-                session.Name = sessionName;
-            }
-
-            session.Conversations.Add(new Conversation(ChatRole.User, request.Prompt));
-
-            var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId);
-            var chatClient = _azureAIFoundry;
-            var chatOptions = await CreateChatOptions(sessionId, model).ConfigureAwait(false);
-            StringBuilder sb = new();
-            long totalInputTokens = 0, totalOutputTokens = 0;
-            await foreach (var message in chatClient.GetStreamingResponseAsync(session.Conversations.Select(x => new ChatMessage(x.Role, x.Content)) ?? [], chatOptions, cancellationToken))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (!string.IsNullOrEmpty(message.Text))
+                var session = await _ctx.Sessions.FindAsync(sessionId, cancellationToken);
+                if (session == null || session.Conversations == null)
                 {
-                    sb.Append(message.Text);
+                    _logger.LogError("Session with id {id} not found.", sessionId);
+                    throw new InvalidOperationException($"Session with id {sessionId} not found.");
                 }
 
-                if (message.Contents != null && 
-                    message.Contents.Count > 0)
+                if (session.Conversations.Count == 1)
                 {
-                    // Check for usage content to track token consumption during streaming
-                    var usageContent = message.Contents.OfType<UsageContent>().FirstOrDefault();
-                    if (usageContent != null)
+                    var sessionName = await _sessionService.CreateSessionNameAsync(sessionId, request);
+                    session.Name = sessionName;
+                }
+
+                session.Conversations.Add(new Conversation(ChatRole.User, request.Prompt));
+
+                var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId);
+                var chatClient = _azureAIFoundry;
+                var chatOptions = await CreateChatOptions(sessionId, model).ConfigureAwait(false);
+                StringBuilder sb = new();
+                long totalInputTokens = 0, totalOutputTokens = 0;
+                await foreach (var message in chatClient.GetStreamingResponseAsync(session.Conversations.Select(x => new ChatMessage(x.Role, x.Content)) ?? [], chatOptions, cancellationToken))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (!string.IsNullOrEmpty(message.Text))
                     {
-                        totalInputTokens += usageContent.Details?.InputTokenCount ?? 0;
-                        totalOutputTokens += usageContent.Details?.OutputTokenCount ?? 0;
+                        sb.Append(message.Text);
                     }
+
+                    if (message.Contents != null && 
+                        message.Contents.Count > 0)
+                    {
+                        // Check for usage content to track token consumption during streaming
+                        var usageContent = message.Contents.OfType<UsageContent>().FirstOrDefault();
+                        if (usageContent != null)
+                        {
+                            totalInputTokens += usageContent.Details?.InputTokenCount ?? 0;
+                            totalOutputTokens += usageContent.Details?.OutputTokenCount ?? 0;
+                        }
+                    }
+                    yield return message.Text;
                 }
-                yield return message.Text;
+
+                // Update token counts once at the end
+                session.InputTokens += totalInputTokens;
+                session.OutputTokens += totalOutputTokens;
+
+                session.Conversations?.Add(new Conversation(ChatRole.Assistant, sb.ToString()));
+                session.DateModified = DateTime.UtcNow;
+                _ctx.Entry(session).Property(e => e.Conversations).IsModified = true;
+
+                await _ctx.SaveChangesAsync(cancellationToken);
             }
-
-            // Update token counts once at the end
-            session.InputTokens += totalInputTokens;
-            session.OutputTokens += totalOutputTokens;
-
-            session.Conversations?.Add(new Conversation(ChatRole.Assistant, sb.ToString()));
-            session.DateModified = DateTime.UtcNow;
-            _ctx.Entry(session).Property(e => e.Conversations).IsModified = true;
-
-            await _ctx.SaveChangesAsync(cancellationToken);
         }
 
-        /// <summary>
-        /// Retrieves the conversation of a specific chat session asynchronously.
-        /// </summary>
-        /// <param name="sessionId">The unique identifier of the chat session.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the session conversation details.</returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when the session with the specified ID is not found or does not contain any messages.
-        /// </exception>
         public async Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId)
         {
             var session = await _ctx.Sessions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == sessionId);
@@ -153,13 +132,6 @@ namespace RR.AI_Chat.Service
             return new() { Id = sessionId, Name = session.Name!, Messages = messages! };
         }
 
-        /// <summary>
-        /// Creates chat options configured for the specified model and session.
-        /// </summary>
-        /// <param name="sessionId">The session identifier for conversation tracking.</param>
-        /// <param name="model">The model configuration containing name and tool enablement settings.</param>
-        /// <returns>A configured <see cref="ChatOptions"/> instance with model-specific settings and optional tools.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="model"/> is null.</exception>
         private async Task<ChatOptions> CreateChatOptions(Guid sessionId, ModelDto model)
         {
             if (model == null)
