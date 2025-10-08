@@ -1,11 +1,8 @@
-﻿using Anthropic.SDK;
-using Azure.AI.OpenAI;
+﻿using Azure.AI.OpenAI;
 using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
-using OllamaSharp;
-using OpenAI;
 using RR.AI_Chat.Repository;
 using RR.AI_Chat.Service;
 using System.ClientModel;
@@ -37,10 +34,11 @@ builder.Services.AddCors(builder => builder.AddPolicy("AllowSpecificOrigins", po
 // 1) Azure AI Foundry under key "azureaifoundry"
 var azureAIFoundryUrl = builder.Configuration.GetValue<string>("AzureAIFoundry:Url") ?? string.Empty;
 var azureAIFoundryKey = builder.Configuration.GetValue<string>("AzureAIFoundry:ApiKey") ?? string.Empty;
+var azureAIFoundryDefaultModel = builder.Configuration.GetValue<string>("AzureAIFoundry:DefaultModel") ?? string.Empty;
 builder.Services.AddKeyedChatClient(
         "azureaifoundry",
         sp => new AzureOpenAIClient(new Uri(azureAIFoundryUrl), new ApiKeyCredential(azureAIFoundryKey))
-                  .GetChatClient("gpt-5-nano")
+                  .GetChatClient(azureAIFoundryDefaultModel)
                   .AsIChatClient()
     )
     .UseOpenTelemetry()
@@ -84,12 +82,16 @@ builder.Services.AddHangfireServer(options =>
 builder.Services.AddScoped(provider => JobStorage.Current.GetConnection());
 
 
-builder.Services.AddTransient<IChatService, ChatService>();
-builder.Services.AddTransient<IDocumentService, DocumentService>();
-builder.Services.AddTransient<IDocumentToolService, DocumentToolService>();
-builder.Services.AddTransient<ISessionService, SessionService>();
-builder.Services.AddTransient<IModelService, ModelService>();
-builder.Services.AddTransient<IMcpServerService, McpServerService>();
+// Register the singleton lock service
+builder.Services.AddSingleton<ISessionLockService, SessionLockService>();
+
+// Keep other services as Scoped
+builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IDocumentToolService, DocumentToolService>();
+builder.Services.AddScoped<ISessionService, SessionService>();
+builder.Services.AddScoped<IModelService, ModelService>();
+builder.Services.AddScoped<IMcpServerService, McpServerService>();
 
 var app = builder.Build();
 

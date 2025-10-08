@@ -2,6 +2,7 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.ML.Tokenizers;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
@@ -15,6 +16,8 @@ namespace RR.AI_Chat.Service
         Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request);
 
         Task<List<SessionDto>> SearchSessionsAsync(string? query);
+
+        int GetSystemPromptTokenCount(string modelName);
     }
 
     public class SessionService(ILogger<SessionService> logger,
@@ -228,6 +231,15 @@ namespace RR.AI_Chat.Service
                 .Select(s => new SessionDto { Id = s.Id, Name = s.Name! })
                 .ToListAsync();
             return sessions;
+        }
+
+
+        public int GetSystemPromptTokenCount(string modelName)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(modelName);
+
+            var tokenizer = TiktokenTokenizer.CreateForModel(modelName);
+            return tokenizer.CountTokens(_defaultSystemPrompt);
         }
     }
 }
