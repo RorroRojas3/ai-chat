@@ -25,6 +25,7 @@ import { JobStatusDto } from '../../../dtos/JobStatusDto';
 import { FileUploadDto } from '../../../dtos/FileUploadDto';
 import { JobStatus } from '../../../dtos/const/JobStatus';
 import { JobState } from '../../../dtos/const/JobState';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-prompt-box',
@@ -38,7 +39,8 @@ export class PromptBoxComponent implements OnDestroy {
     private chatService: ChatService,
     private sanitizer: DomSanitizer,
     private sessionService: SessionService,
-    private documentService: DocumentService
+    private documentService: DocumentService,
+    private location: Location
   ) {
     this.md = new markdownit({
       html: true,
@@ -75,6 +77,7 @@ export class PromptBoxComponent implements OnDestroy {
           this.sessionService.createSession()
         );
         this.storeService.sessionId.set(session.id);
+        this.location.replaceState(`/session/${session.id}`);
       }
 
       this.showAttachedFiles = false;

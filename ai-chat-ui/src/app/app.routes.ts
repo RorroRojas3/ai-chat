@@ -5,5 +5,11 @@ export const routes: Routes = [
   {
     path: '',
     component: HomeComponent,
+    pathMatch: 'full',
+  },
+  {
+    path: 'session/:sessionId',
+    component: HomeComponent,
+    pathMatch: 'full',
   },
 ];

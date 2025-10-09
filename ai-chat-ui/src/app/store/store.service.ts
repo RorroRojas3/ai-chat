@@ -2,12 +2,13 @@ import { Injectable, signal } from '@angular/core';
 import { MessageDto } from '../dtos/MessageDto';
 import { ModelDto } from '../dtos/ModelDto';
 import { SessionDto } from '../dtos/SessionDto';
+import { Location } from '@angular/common';
 
 @Injectable({
   providedIn: 'root',
 })
 export class StoreService {
-  constructor() {}
+  constructor(private location: Location) {}
 
   sessionId = signal<string>('');
   disablePromptButton = signal<boolean>(false);
@@ -38,6 +39,7 @@ export class StoreService {
    * - Initializing a new empty stream message
    */
   clearForNewSession(): void {
+    this.location.replaceState(`/`);
     this.sessionId.set('');
     this.messages.set([]);
     this.disablePromptButton.set(false);

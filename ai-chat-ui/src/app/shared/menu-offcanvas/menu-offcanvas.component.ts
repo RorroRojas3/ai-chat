@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { StoreService } from '../../store/store.service';
 import { ChatService } from '../../services/chat.service';
 import { SessionService } from '../../services/session.service';
@@ -9,10 +9,11 @@ import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import { MessageDto } from '../../dtos/MessageDto';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { CommonModule, Location } from '@angular/common';
 
 @Component({
   selector: 'app-menu-offcanvas',
-  imports: [FormsModule],
+  imports: [FormsModule, CommonModule],
   templateUrl: './menu-offcanvas.component.html',
   styleUrl: './menu-offcanvas.component.scss',
 })
@@ -21,7 +22,8 @@ export class MenuOffcanvasComponent {
     public storeService: StoreService,
     private chatService: ChatService,
     private sessionService: SessionService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private location: Location
   ) {
     this.md = new markdownit({
       html: true,
@@ -94,6 +96,7 @@ export class MenuOffcanvasComponent {
    */
   onClickSession(sessionId: string): void {
     this.storeService.sessionId.set(sessionId);
+    this.location.replaceState(`/session/${sessionId}`);
     this.storeService.disablePromptButton.set(true);
     this.chatService.getSessionConversation().subscribe((response) => {
       const mappedMessages = response.messages.map((message) => {
