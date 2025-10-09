@@ -71,7 +71,7 @@
       </li>
       } @else { @for (session of storeService.sessions(); track session) {
       <a
-        href="#"
+        href="javascript:void(0);"
         class="list-group-item list-group-item-action menu-list__item"
         (click)="onClickSession(session.id)"
         >{{
