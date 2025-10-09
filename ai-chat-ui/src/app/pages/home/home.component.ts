@@ -1,4 +1,4 @@
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, computed, OnDestroy, OnInit, signal } from '@angular/core';
 import { PromptBoxComponent } from '../../components/home/prompt-box/prompt-box.component';
 import { StoreService } from '../../store/store.service';
 import { MessageBubbleComponent } from '../../components/home/message-bubble/message-bubble.component';
@@ -10,6 +10,7 @@ import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import hljs from 'highlight.js';
 import { ActivatedRoute } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -17,11 +18,12 @@ import { ChatService } from '../../services/chat.service';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   markdown?: SafeHtml;
   stream?: string;
   messages = signal<MessageDto[]>([]);
   md: markdownit;
+  private destroy$ = new Subject<void>();
 
   canHighlight = computed(() => {
     return this.storeService.isStreaming();
@@ -42,12 +44,17 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
     // Listen to route parameter changes to load conversation when sessionId changes
-    this.route.params.subscribe((params) => {
+    this.route.params.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       const sessionId = params['sessionId'];
       if (sessionId) {
         this.loadSessionConversation(sessionId);
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   /**
