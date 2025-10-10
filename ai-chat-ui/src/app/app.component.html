@@ -1,3 +1,5 @@
 <app-navbar></app-navbar>
 <app-menu-offcanvas></app-menu-offcanvas>
-<router-outlet />
+@if (!isIframe) {
+<router-outlet></router-outlet>
+}

@@ -1,13 +1,25 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
+import { MsalGuard } from '@azure/msal-angular';
 
 export const routes: Routes = [
   {
     path: '',
-    component: HomeComponent,
+    redirectTo: '/chat',
+    pathMatch: 'full',
   },
   {
-    path: 'session/:sessionId',
+    path: 'chat',
     component: HomeComponent,
+    canActivate: [MsalGuard],
+  },
+  {
+    path: 'chat/session/:sessionId',
+    component: HomeComponent,
+    canActivate: [MsalGuard],
+  },
+  {
+    path: '**',
+    redirectTo: '/chat',
   },
 ];
