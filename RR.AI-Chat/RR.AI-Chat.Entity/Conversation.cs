@@ -2,16 +2,10 @@
 
 namespace RR.AI_Chat.Entity
 {
-    public class Conversation
+    public class Conversation(ChatRole role, string content)
     {
-        public Conversation(ChatRole role, string content)
-        {
-            Role = role;
-            Content = content;
-        }
+        public ChatRole Role { get; set; } = role;
 
-        public ChatRole Role { get; set; }
-
-        public string Content { get; set; } = null!;
+        public string Content { get; set; } = content;
     }
 }

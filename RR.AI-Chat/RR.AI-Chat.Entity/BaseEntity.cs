@@ -11,4 +11,9 @@ namespace RR.AI_Chat.Entity
 
         public DateTime? DateDeactivated { get; set; }
     }
+
+    public class BaseModifiedEntity : BaseEntity
+    {
+        public DateTime DateModified { get; set; }
+    }
 }

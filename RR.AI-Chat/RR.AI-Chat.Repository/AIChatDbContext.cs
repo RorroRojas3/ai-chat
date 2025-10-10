@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.AI;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository.Configurations;
 using System.Text.Json;
@@ -20,6 +19,8 @@ namespace RR.AI_Chat.Repository
         public virtual DbSet<McpServer> McpServers { get; set; }
 
         public virtual DbSet<Session> Sessions { get; set; }
+
+        public virtual DbSet<User> Users { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
