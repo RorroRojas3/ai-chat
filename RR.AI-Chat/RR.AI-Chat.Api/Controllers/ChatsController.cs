@@ -27,9 +27,9 @@ namespace RR.AI_Chat.Api.Controllers
         }
 
         [HttpGet("sessions/{sessionId}/conversations")]
-        public async Task<IActionResult> GetSessionConversationAsync(Guid sessionId)
+        public async Task<IActionResult> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken)
         {
-            var response = await _chatService.GetSessionConversationAsync(sessionId);
+            var response = await _chatService.GetSessionConversationAsync(sessionId, cancellationToken);
             return Ok(response);
         }
     }

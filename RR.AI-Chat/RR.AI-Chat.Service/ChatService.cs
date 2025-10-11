@@ -15,7 +15,7 @@ namespace RR.AI_Chat.Service
     {
         IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken);
 
-        Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId);
+        Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken);
 
         bool IsSessionBusy(Guid sessionId);
     }
@@ -27,6 +27,7 @@ namespace RR.AI_Chat.Service
         [FromKeyedServices("azureaifoundry")] IChatClient azureAIFoundry,
         IMcpServerService mcpServerService,
         ISessionLockService sessionLockService,
+        ITokenService tokenService,
         AIChatDbContext ctx) : IChatService
     {
         private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -36,6 +37,7 @@ namespace RR.AI_Chat.Service
         private readonly IModelService _modelService = modelService ?? throw new ArgumentNullException(nameof(modelService));
         private readonly IMcpServerService _mcpServerService = mcpServerService ?? throw new ArgumentNullException(nameof(mcpServerService));
         private readonly ISessionLockService _sessionLockService = sessionLockService ?? throw new ArgumentNullException(nameof(sessionLockService));
+        private readonly ITokenService _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
         private readonly AIChatDbContext _ctx = ctx;
 
         public bool IsSessionBusy(Guid sessionId) => _sessionLockService.IsSessionBusy(sessionId);
@@ -49,9 +51,13 @@ namespace RR.AI_Chat.Service
                 throw new InvalidOperationException($"Session {sessionId} is currently being processed. Please wait for the current request to complete.");
             }
 
+            var userId = _tokenService.GetOid()!.Value;
             using (lockReleaser)
             {
-                var session = await _ctx.Sessions.FindAsync(sessionId, cancellationToken);
+                var session = await _ctx.Sessions
+                                .SingleOrDefaultAsync(x => x.Id == sessionId && 
+                                    x.UserId == userId && 
+                                    !x.DateDeactivated.HasValue, cancellationToken);
                 if (session == null || session.Conversations == null)
                 {
                     _logger.LogError("Session with id {id} not found.", sessionId);
@@ -60,13 +66,13 @@ namespace RR.AI_Chat.Service
 
                 if (session.Conversations.Count == 1)
                 {
-                    var sessionName = await _sessionService.CreateSessionNameAsync(sessionId, request);
+                    var sessionName = await _sessionService.CreateSessionNameAsync(sessionId, request, cancellationToken);
                     session.Name = sessionName;
                 }
 
                 session.Conversations.Add(new Conversation(ChatRole.User, request.Prompt));
 
-                var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId);
+                var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId, cancellationToken);
                 var chatClient = _azureAIFoundry;
                 var chatOptions = await CreateChatOptions(sessionId, model).ConfigureAwait(false);
                 StringBuilder sb = new();
@@ -106,9 +112,9 @@ namespace RR.AI_Chat.Service
             }
         }
 
-        public async Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId)
+        public async Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken)
         {
-            var session = await _ctx.Sessions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == sessionId);
+            var session = await _ctx.Sessions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == sessionId, cancellationToken);
             if (session == null)
             {
                 _logger.LogError("Session with id {id} not found.", sessionId);
@@ -161,6 +167,7 @@ namespace RR.AI_Chat.Service
                 chatOptions.AllowMultipleToolCalls = true;
             }
             
+            await Task.CompletedTask;
             return chatOptions;
         }
     }

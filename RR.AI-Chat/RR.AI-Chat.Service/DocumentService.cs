@@ -12,7 +12,7 @@ namespace RR.AI_Chat.Service
 {
     public interface IDocumentService 
     {
-        Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid sessionId,CancellationToken cancellation = default);
+        Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid sessionId, CancellationToken cancellationToken);
     }
 
     public class DocumentService(ILogger<DocumentService> logger, 
@@ -39,7 +39,7 @@ namespace RR.AI_Chat.Service
         /// 4. Creates document page entities with embeddings
         /// 5. Saves the document and all pages to the database
         /// </remarks>
-        public async Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid sessionId, CancellationToken cancellation = default)
+        public async Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid sessionId, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(context, nameof(context));
             ArgumentNullException.ThrowIfNull(fileDataDto, nameof(fileDataDto));
@@ -64,7 +64,7 @@ namespace RR.AI_Chat.Service
 
             foreach (var documentExtractor in documentExtractors)
             {
-                var task = GenerateEmbeddingForPageAsync(documentExtractor);
+                var task = GenerateEmbeddingForPageAsync(documentExtractor, cancellationToken);
                 tasks.Add(task);
 
                 // Process in batches of 10
@@ -187,9 +187,9 @@ namespace RR.AI_Chat.Service
         }
 
         // Add this helper method to the DocumentService class
-        private async Task<(int PageNumber, ReadOnlyMemory<float> Embedding, string PageText)> GenerateEmbeddingForPageAsync(DocumentExtractorDto documentExtractor)
+        private async Task<(int PageNumber, ReadOnlyMemory<float> Embedding, string PageText)> GenerateEmbeddingForPageAsync(DocumentExtractorDto documentExtractor, CancellationToken cancellationToken)
         {
-            var embedding = await _embeddingGenerator.GenerateVectorAsync(string.IsNullOrWhiteSpace(documentExtractor.PageText) ? "EMPTY PAGE" : documentExtractor.PageText);
+            var embedding = await _embeddingGenerator.GenerateVectorAsync(string.IsNullOrWhiteSpace(documentExtractor.PageText) ? "EMPTY PAGE" : documentExtractor.PageText, null, cancellationToken);
             return (documentExtractor.PageNumber, embedding, documentExtractor.PageText);
         }
     }

@@ -12,9 +12,9 @@ namespace RR.AI_Chat.Api.Controllers
         private readonly IModelService _modelService = modelService;
 
         [HttpGet]
-        public async Task<IActionResult> GetModelsAsync()
+        public async Task<IActionResult> GetModelsAsync(CancellationToken cancellationToken)
         {
-            var response = await _modelService.GetModelsAsync();
+            var response = await _modelService.GetModelsAsync(cancellationToken);
             return Ok(response);
         }
     }

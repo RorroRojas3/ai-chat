@@ -61,7 +61,6 @@ namespace RR.AI_Chat.Repository.Migrations
                     FirstName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
-                    Oid = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)

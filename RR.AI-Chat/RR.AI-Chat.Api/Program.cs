@@ -9,6 +9,7 @@ using Microsoft.Graph;
 using Microsoft.Identity.Web;
 using RR.AI_Chat.Repository;
 using RR.AI_Chat.Service;
+using RR.AI_Chat.Service.Middleware;
 using System.ClientModel;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -150,6 +151,8 @@ app.UseHttpsRedirection();
 app.UseCors("AllowSpecificOrigins");
 
 app.UseAuthentication();
+
+app.UseMiddleware<UserExistenceMiddleware>();
 
 app.UseAuthorization();
 

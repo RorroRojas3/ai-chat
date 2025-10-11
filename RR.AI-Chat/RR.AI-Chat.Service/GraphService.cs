@@ -7,7 +7,7 @@ namespace RR.AI_Chat.Service
 {
     public interface IGraphService
     {
-        Task<User> CreateUserAsync(CreateGraphUserActionDto request);
+        Task<User> CreateUserAsync(CreateGraphUserActionDto request, CancellationToken cancellationToken);
     }   
 
     public class GraphService(ILogger<GraphService> logger, GraphServiceClient graphServiceClient) : IGraphService
@@ -15,7 +15,7 @@ namespace RR.AI_Chat.Service
         private readonly ILogger<GraphService> _logger = logger;
         private readonly GraphServiceClient _graphClient = graphServiceClient;
 
-        public async Task<User> CreateUserAsync(CreateGraphUserActionDto request)
+        public async Task<User> CreateUserAsync(CreateGraphUserActionDto request, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(request);
 
@@ -36,7 +36,7 @@ namespace RR.AI_Chat.Service
                 }
             };
 
-            user = await _graphClient.Users.PostAsync(user);
+            user = await _graphClient.Users.PostAsync(user, null, cancellationToken);
 
             _logger.LogInformation("User created in Microsoft Graph with ID: {UserId}", user!.Id);
 

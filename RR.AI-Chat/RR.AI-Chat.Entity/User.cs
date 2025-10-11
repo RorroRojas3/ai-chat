@@ -16,9 +16,6 @@ namespace RR.AI_Chat.Entity
         [EmailAddress]
         public string Email { get; set; } = null!;
 
-        [StringLength(100)]
-        public string Oid { get; set; } = null!;
-
         [NotMapped]
         public string FullName => $"{FirstName} {LastName}";
     }

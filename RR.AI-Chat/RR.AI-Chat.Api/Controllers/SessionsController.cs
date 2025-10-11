@@ -12,16 +12,16 @@ namespace RR.AI_Chat.Api.Controllers
         private readonly ISessionService _sessionService = sessionService;  
 
         [HttpPost]
-        public async Task<IActionResult> CreateSessionAsync()
+        public async Task<IActionResult> CreateSessionAsync(CancellationToken cancellationToken)
         {
-            var response = await _sessionService.CreateChatSessionAsync();
+            var response = await _sessionService.CreateChatSessionAsync(cancellationToken);
             return Created($"api/sessions/{response.Id}", response);
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> SearchSessionsAsync([FromQuery] string? query)
+        public async Task<IActionResult> SearchSessionsAsync([FromQuery] string? query, CancellationToken cancellationToken)
         {
-            var response = await _sessionService.SearchSessionsAsync(query);
+            var response = await _sessionService.SearchSessionsAsync(query, cancellationToken);
             return Ok(response);
         }
     }

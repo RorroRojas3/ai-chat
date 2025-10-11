@@ -96,7 +96,7 @@ export class MenuOffcanvasComponent {
    */
   onClickSession(sessionId: string): void {
     this.storeService.sessionId.set(sessionId);
-    this.location.replaceState(`/session/${sessionId}`);
+    this.location.replaceState(`chat/session/${sessionId}`);
     this.storeService.disablePromptButton.set(true);
     this.chatService.getSessionConversation().subscribe((response) => {
       const mappedMessages = response.messages.map((message) => {

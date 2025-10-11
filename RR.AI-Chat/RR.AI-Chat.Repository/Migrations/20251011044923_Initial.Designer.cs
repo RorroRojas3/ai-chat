@@ -12,7 +12,7 @@ using RR.AI_Chat.Repository;
 namespace RR.AI_Chat.Repository.Migrations
 {
     [DbContext(typeof(AIChatDbContext))]
-    [Migration("20251010234911_Initial")]
+    [Migration("20251011044923_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -300,11 +300,6 @@ namespace RR.AI_Chat.Repository.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("Oid")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 

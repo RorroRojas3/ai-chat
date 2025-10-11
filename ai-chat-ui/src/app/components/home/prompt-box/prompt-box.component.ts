@@ -77,7 +77,7 @@ export class PromptBoxComponent implements OnDestroy {
           this.sessionService.createSession()
         );
         this.storeService.sessionId.set(session.id);
-        this.location.replaceState(`/session/${session.id}`);
+        this.location.replaceState(`chat/session/${session.id}`);
       }
 
       this.showAttachedFiles = false;

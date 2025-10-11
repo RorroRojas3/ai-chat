@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto.Actions.Graph;
 using RR.AI_Chat.Dto.Actions.User;
 using RR.AI_Chat.Entity;
@@ -8,7 +9,9 @@ namespace RR.AI_Chat.Service
 {
     public interface IUserService
     {
-        Task CreateUserAsync(CreateUserActionDto request);
+        Task CreateUserAsync(CreateUserActionDto request, CancellationToken cancellationToken);
+
+        Task<bool> IsUserInDatabaseAsync(Guid userId, CancellationToken cancellationToken);
     }   
 
     public class UserService(ILogger<UserService> logger,
@@ -19,7 +22,7 @@ namespace RR.AI_Chat.Service
         private readonly IGraphService _graphService = graphService;
         private readonly AIChatDbContext _ctx = ctx;
 
-        public async Task CreateUserAsync(CreateUserActionDto request)
+        public async Task CreateUserAsync(CreateUserActionDto request, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(request); 
 
@@ -30,20 +33,25 @@ namespace RR.AI_Chat.Service
                 Email = request.Email
             };
 
-            var user = await _graphService.CreateUserAsync(graphRequest);
+            var user = await _graphService.CreateUserAsync(graphRequest, cancellationToken);
 
             var date = DateTime.UtcNow;
             var newUser = new User
             {
+                Id = Guid.Parse(user.Id!),
                 FirstName = user.GivenName!,
                 LastName = user.Surname!,
                 Email = request.Email,
                 DateCreated = date,
                 DateModified = date,
-                Oid = user.Id!
             };
-            await _ctx.Users.AddAsync(newUser);
-            await _ctx.SaveChangesAsync();
+            await _ctx.Users.AddAsync(newUser, cancellationToken);
+            await _ctx.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<bool> IsUserInDatabaseAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            return await _ctx.Users.Where(x => x.Id == userId).AnyAsync(cancellationToken);
         }
     }
 }

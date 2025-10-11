@@ -7,14 +7,14 @@ namespace RR.AI_Chat.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController(IUserService userService) : ControllerBase
+    public class UsersController(IUserService userService) : ControllerBase
     {
         private readonly IUserService _userService = userService;
 
         [HttpPost]
-        public async Task<IActionResult> CreateUser(CreateUserActionDto request)
+        public async Task<IActionResult> CreateUser(CreateUserActionDto request, CancellationToken cancellationToken)
         {
-            await _userService.CreateUserAsync(request);
+            await _userService.CreateUserAsync(request, cancellationToken);
             return Created();
         }
     }

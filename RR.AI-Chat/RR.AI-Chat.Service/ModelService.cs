@@ -7,9 +7,9 @@ namespace RR.AI_Chat.Service
 {
     public interface IModelService
     {
-        Task<List<ModelDto>> GetModelsAsync();
+        Task<List<ModelDto>> GetModelsAsync(CancellationToken cancellationToken);
 
-        Task<ModelDto> GetModelAsync(Guid id, Guid serviceId);
+        Task<ModelDto> GetModelAsync(Guid id, Guid serviceId, CancellationToken cancellationToken);
     }
 
     public class ModelService(ILogger<ModelService> logger,
@@ -28,7 +28,7 @@ namespace RR.AI_Chat.Service
         /// <exception cref="InvalidOperationException">
         /// Thrown when the database context is not properly configured or the Models DbSet is null.
         /// </exception>
-        public async Task<List<ModelDto>> GetModelsAsync()
+        public async Task<List<ModelDto>> GetModelsAsync(CancellationToken cancellationToken)
         {
             var models = await _ctx.Models
                             .AsNoTracking()
@@ -40,7 +40,7 @@ namespace RR.AI_Chat.Service
                                 Name = x.Name,
                                 AiServiceId = x.AIServiceId
                             })
-                            .ToListAsync();
+                            .ToListAsync(cancellationToken);
 
             return models;
         }
@@ -57,7 +57,7 @@ namespace RR.AI_Chat.Service
         /// <exception cref="InvalidOperationException">
         /// Thrown when no model is found with the specified ID and service ID combination.
         /// </exception>
-        public async Task<ModelDto> GetModelAsync(Guid id, Guid serviceId)
+        public async Task<ModelDto> GetModelAsync(Guid id, Guid serviceId, CancellationToken cancellationToken)
         {
             return await _ctx.Models
                 .AsNoTracking()
@@ -69,7 +69,7 @@ namespace RR.AI_Chat.Service
                     AiServiceId = x.AIServiceId,
                     IsToolEnabled = x.IsToolEnabled
                 })
-                .FirstOrDefaultAsync() ?? throw new InvalidOperationException("Model not found.");
+                .FirstOrDefaultAsync(cancellationToken) ?? throw new InvalidOperationException("Model not found.");
         }
     }
 }

@@ -11,21 +11,23 @@ namespace RR.AI_Chat.Service
 {
     public interface ISessionService
     {
-        Task<SessionDto> CreateChatSessionAsync();
+        Task<SessionDto> CreateChatSessionAsync(CancellationToken cancellationToken);
 
-        Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request);
+        Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken);
 
-        Task<List<SessionDto>> SearchSessionsAsync(string? query);
+        Task<List<SessionDto>> SearchSessionsAsync(string? query, CancellationToken cancellationToken);
 
         int GetSystemPromptTokenCount(string modelName);
     }
 
     public class SessionService(ILogger<SessionService> logger,
         [FromKeyedServices("azureaifoundry")] IChatClient openAiClient,
+        ITokenService tokenService,
         AIChatDbContext ctx) : ISessionService
     {
         private readonly ILogger<SessionService> _logger = logger;
         private readonly IChatClient _chatClient = openAiClient;
+        private readonly ITokenService _tokenService = tokenService;
         private readonly AIChatDbContext _ctx = ctx;
         private readonly string _defaultSystemPrompt = @"
             You are an advanced AI assistant with comprehensive analytical capabilities and access to a powerful suite of specialized tools. Your primary mission is to provide thorough, insightful, and actionable responses that leverage all available resources to deliver maximum value.
@@ -123,17 +125,20 @@ namespace RR.AI_Chat.Service
         /// </remarks>
         /// <exception cref="DbUpdateException">Thrown when the database update operation fails.</exception>
         /// <exception cref="InvalidOperationException">Thrown when the entity framework context is in an invalid state.</exception>
-        public async Task<SessionDto> CreateChatSessionAsync()
+        public async Task<SessionDto> CreateChatSessionAsync(CancellationToken cancellationToken)
         {
-            var transaction = await _ctx.Database.BeginTransactionAsync();
+            var userId = _tokenService.GetOid()!.Value;
+
+            var transaction = await _ctx.Database.BeginTransactionAsync(cancellationToken);
             var date = DateTime.UtcNow;
             var newSession = new Session() 
             { 
+                UserId= userId,
                 DateCreated = date,
                 DateModified = date
             };
             await _ctx.AddAsync(newSession);
-            await _ctx.SaveChangesAsync();
+            await _ctx.SaveChangesAsync(cancellationToken);
 
             var prompt = string.Format(_defaultSystemPrompt, newSession.Id);
             var coversations = new List<ChatMessage>
@@ -142,8 +147,8 @@ namespace RR.AI_Chat.Service
             };
             newSession.Conversations = [.. coversations.Select(x => new Conversation(x.Role, x.Text))];
             newSession.DateModified = date;
-            await _ctx.SaveChangesAsync();
-            await transaction.CommitAsync();
+            await _ctx.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
 
             return new() { Id = newSession.Id };
         }
@@ -156,19 +161,21 @@ namespace RR.AI_Chat.Service
         /// <returns>A task that represents the asynchronous operation. The task result contains the generated session name.</returns>
         /// <exception cref="ArgumentException">Thrown when the request is null or empty.</exception>
         /// <exception cref="InvalidOperationException">Thrown when the session name creation fails.</exception>
-        public async Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request)
+        public async Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken)
         {
             ArgumentException.ThrowIfNullOrEmpty(nameof(request));
             ArgumentException.ThrowIfNullOrWhiteSpace(nameof(request));
 
-            var session = await _ctx.Sessions.FindAsync(sessionId);
+            var session = await _ctx.Sessions.FindAsync(sessionId, cancellationToken);
             if (session == null)
             {
                 _logger.LogError("Session with id {id} not found", sessionId);
                 throw new InvalidOperationException($"Session with id {sessionId} not found");
             }
 
-            var model = await _ctx.Models.AsNoTracking().FirstOrDefaultAsync(x => x.Id == request.ModelId);
+            var model = await _ctx.Models
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.Id == request.ModelId, cancellationToken);
             if (model == null)
             {
                 _logger.LogError("Model with id {id} not found", request.ModelId);
@@ -178,7 +185,7 @@ namespace RR.AI_Chat.Service
             var response = await _chatClient.GetResponseAsync([
                                  new ChatMessage(ChatRole.System, _defaultSystemPrompt),
                                  new ChatMessage(ChatRole.User, $"Create a session name based on the following prompt, please make it 25 maximum and make it a string. Do not hav the name on the session nor the id. Just the name based on the prompt. The result must be a string, not markdown. Prompt: {request.Prompt}")
-                             ], new() { ModelId = model.Name }, CancellationToken.None);
+                             ], new() { ModelId = model.Name }, cancellationToken);
             if (response == null)
             {
                 _logger.LogError("Failed to create session name for session id {id}", sessionId);
@@ -187,7 +194,8 @@ namespace RR.AI_Chat.Service
 
             var name = response.Messages.Last().Text?.Trim() ?? string.Empty;
             session.Name = name;
-            await _ctx.SaveChangesAsync();
+            session.DateModified = DateTime.UtcNow;
+            await _ctx.SaveChangesAsync(cancellationToken);
 
             return session.Name;
         }
@@ -212,24 +220,27 @@ namespace RR.AI_Chat.Service
         /// </remarks>
         /// <exception cref="InvalidOperationException">Thrown when the database context is in an invalid state.</exception>
         /// <exception cref="SqlException">Thrown when a database-related error occurs during query execution.</exception>
-        public async Task<List<SessionDto>> SearchSessionsAsync(string? query)
+        public async Task<List<SessionDto>> SearchSessionsAsync(string? query, CancellationToken cancellationToken)
         {
+            var userId = _tokenService.GetOid()!.Value;
             if (string.IsNullOrWhiteSpace(query))
             {
                 return await _ctx.Sessions.AsNoTracking()
-                    .Where(x => !string.IsNullOrWhiteSpace(x.Name))
+                    .Where(x => x.UserId == userId && 
+                        !string.IsNullOrWhiteSpace(x.Name))
                     .OrderByDescending(x => x.DateCreated)
                     .Take(10)
                     .Select(s => new SessionDto { Id = s.Id, Name = s.Name! })
-                    .ToListAsync();
+                    .ToListAsync(cancellationToken);
             }
 
             var sessions = await _ctx.Sessions.AsNoTracking()
-                .Where(x => !string.IsNullOrWhiteSpace(x.Name) &&
+                .Where(x =>x.UserId == userId &&
+                            !string.IsNullOrWhiteSpace(x.Name) &&
                             EF.Functions.Like(x.Name, $"%{query}%"))
                 .Take(10)
                 .Select(s => new SessionDto { Id = s.Id, Name = s.Name! })
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
             return sessions;
         }
 
