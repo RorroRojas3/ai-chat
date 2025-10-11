@@ -5,6 +5,9 @@ namespace RR.AI_Chat.Entity
     [Table(nameof(Document), Schema = "AI")]
     public class Document : BaseEntity
     {
+        [ForeignKey(nameof(User))]
+        public Guid UserId { get; set; }
+
         [ForeignKey(nameof(Session))]
         public Guid SessionId { get; set; }
 
@@ -15,5 +18,7 @@ namespace RR.AI_Chat.Entity
         public Session Session { get; set; } = null!;
 
         public List<DocumentPage> Pages { get; set; } = [];  
+
+        public User User { get; set; } = null!;
     }
 }

@@ -1,16 +1,34 @@
 ﻿using Azure.AI.OpenAI;
+using Azure.Identity;
 using Hangfire;
 using Hangfire.SqlServer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
+using Microsoft.Graph;
+using Microsoft.Identity.Web;
 using RR.AI_Chat.Repository;
 using RR.AI_Chat.Service;
+using RR.AI_Chat.Service.Middleware;
 using System.ClientModel;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApi(options =>
+    {
+        builder.Configuration.Bind("AzureAd", options);
 
+        // Explicitly validate audience to ensure token is for this API
+        options.TokenValidationParameters.ValidateAudience = true;
+        options.TokenValidationParameters.ValidAudiences =
+        [
+            builder.Configuration["AzureAd:ClientId"],
+            $"api://{builder.Configuration["AzureAd:ClientId"]}"
+        ];
+    },
+    options => builder.Configuration.Bind("AzureAd", options));
 builder.Services.AddControllers();
 
 builder.Services.AddHttpContextAccessor();
@@ -21,13 +39,14 @@ builder.Services.AddDbContext<AIChatDbContext>(options =>
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpContextAccessor();
 
 // Add CORS
 var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>();
 corsOrigins ??= [];
 builder.Services.AddCors(builder => builder.AddPolicy("AllowSpecificOrigins", policy =>
 {
-    policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod();
+    policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
 }));
 
 
@@ -81,9 +100,27 @@ builder.Services.AddHangfireServer(options =>
 // Register IStorageConnection for dependency injection
 builder.Services.AddScoped(provider => JobStorage.Current.GetConnection());
 
+// Add Microsoft Graph Service
+builder.Services.AddSingleton(sp =>
+{
+    var tenantId = builder.Configuration["AzureAd:TenantId"];
+    var clientId = builder.Configuration["AzureAd:ClientId"];
+    var clientSecret = builder.Configuration["AzureAd:ClientSecret"];
+
+    var clientSecretCredential = new ClientSecretCredential(
+        tenantId,
+        clientId,
+        clientSecret
+    );
+
+    return new GraphServiceClient(clientSecretCredential);
+});
+
 
 // Register the singleton lock service
 builder.Services.AddSingleton<ISessionLockService, SessionLockService>();
+builder.Services.AddSingleton<ITokenService, TokenService>();
+builder.Services.AddSingleton<IGraphService, GraphService>();
 
 // Keep other services as Scoped
 builder.Services.AddScoped<IChatService, ChatService>();
@@ -92,6 +129,7 @@ builder.Services.AddScoped<IDocumentToolService, DocumentToolService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IModelService, ModelService>();
 builder.Services.AddScoped<IMcpServerService, McpServerService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
@@ -111,6 +149,10 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 app.UseHttpsRedirection();
 
 app.UseCors("AllowSpecificOrigins");
+
+app.UseAuthentication();
+
+app.UseMiddleware<UserExistenceMiddleware>();
 
 app.UseAuthorization();
 

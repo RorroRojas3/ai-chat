@@ -5,6 +5,7 @@ import { SessionCoversationDto } from '../dtos/SessionDto';
 import { environment } from '../../environments/environment';
 import { StoreService } from '../store/store.service';
 import { ChatStreamRequestDto } from '../dtos/ChatStreamRequestDto';
+import { MsalService } from '@azure/msal-angular';
 
 @Injectable({
   providedIn: 'root',
@@ -13,7 +14,8 @@ export class ChatService {
   constructor(
     private http: HttpClient,
     private storeService: StoreService,
-    private zone: NgZone
+    private zone: NgZone,
+    private msalService: MsalService
   ) {}
 
   /**
@@ -28,6 +30,7 @@ export class ChatService {
    *
    * @throws Will emit an error if the HTTP request fails or if there are network issues
    * @throws Will emit an error if the response body is null or cannot be read
+   * @throws Will emit an error if authentication fails or token cannot be acquired
    */
   getServerSentEvent(prompt: string): Observable<string> {
     return new Observable((observer) => {
@@ -52,25 +55,55 @@ export class ChatService {
         }
       };
 
-      fetch(
-        `${
-          environment.apiUrl
-        }chats/sessions/${this.storeService.sessionId()}/stream`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'text/event-stream',
-          },
-          body: JSON.stringify(
-            new ChatStreamRequestDto(
-              prompt,
-              this.storeService.selectedModel().id,
-              this.storeService.selectedModel().aiServiceId
-            )
-          ),
+      // Acquire access token from MSAL
+      const acquireToken = async () => {
+        try {
+          const account = this.msalService.instance.getActiveAccount();
+          if (!account) {
+            throw new Error('No active account! Please sign in.');
+          }
+
+          const tokenResponse =
+            await this.msalService.instance.acquireTokenSilent({
+              scopes: environment.apiConfig.scopes,
+              account: account,
+            });
+
+          return tokenResponse.accessToken;
+        } catch (error) {
+          // If silent token acquisition fails, try interactive
+          const tokenResponse =
+            await this.msalService.instance.acquireTokenPopup({
+              scopes: environment.apiConfig.scopes,
+            });
+          return tokenResponse.accessToken;
         }
-      )
+      };
+
+      // Start the fetch request with authentication
+      acquireToken()
+        .then((accessToken) => {
+          return fetch(
+            `${
+              environment.apiUrl
+            }chats/sessions/${this.storeService.sessionId()}/stream`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'text/event-stream',
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify(
+                new ChatStreamRequestDto(
+                  prompt,
+                  this.storeService.selectedModel().id,
+                  this.storeService.selectedModel().aiServiceId
+                )
+              ),
+            }
+          );
+        })
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

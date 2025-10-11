@@ -39,7 +39,7 @@ export class StoreService {
    * - Initializing a new empty stream message
    */
   clearForNewSession(): void {
-    this.location.replaceState(`/`);
+    this.location.replaceState(`/chat`);
     this.sessionId.set('');
     this.messages.set([]);
     this.disablePromptButton.set(false);

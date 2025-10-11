@@ -75,9 +75,14 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<Guid>("SessionId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SessionId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Document", "AI");
                 });
@@ -253,9 +258,49 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<long>("OutputTokens")
                         .HasColumnType("bigint");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Session", "AI");
+                });
+
+            modelBuilder.Entity("RR.AI_Chat.Entity.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateDeactivated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("User", "AI");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.Document", b =>
@@ -263,10 +308,18 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.HasOne("RR.AI_Chat.Entity.Session", "Session")
                         .WithMany()
                         .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("RR.AI_Chat.Entity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Session");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.DocumentPage", b =>
@@ -274,7 +327,7 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.HasOne("RR.AI_Chat.Entity.Document", "Document")
                         .WithMany("Pages")
                         .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Document");
@@ -285,10 +338,21 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.HasOne("RR.AI_Chat.Entity.AIService", "AIService")
                         .WithMany()
                         .HasForeignKey("AIServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("AIService");
+                });
+
+            modelBuilder.Entity("RR.AI_Chat.Entity.Session", b =>
+                {
+                    b.HasOne("RR.AI_Chat.Entity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.Document", b =>

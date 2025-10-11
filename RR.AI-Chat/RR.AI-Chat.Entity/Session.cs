@@ -4,8 +4,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace RR.AI_Chat.Entity
 {
     [Table(nameof(Session), Schema = "AI")]    
-    public class Session : BaseEntity
+    public class Session : BaseModifiedEntity
     {
+        [ForeignKey(nameof(User))]
+        public Guid UserId { get; set; }
+
         [StringLength(100)]
         public string? Name { get; set; }
 
@@ -17,6 +20,8 @@ namespace RR.AI_Chat.Entity
 
         public long TotalTokens => InputTokens + OutputTokens;
 
-        public DateTime DateModified { get; set; } 
+        public DateTime DateModified { get; set; }
+
+        public User User { get; set; } = null!;
     }
 }

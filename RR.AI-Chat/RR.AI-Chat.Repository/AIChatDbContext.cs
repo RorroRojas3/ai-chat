@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.AI;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository.Configurations;
 using System.Text.Json;
@@ -20,6 +19,8 @@ namespace RR.AI_Chat.Repository
         public virtual DbSet<McpServer> McpServers { get; set; }
 
         public virtual DbSet<Session> Sessions { get; set; }
+
+        public virtual DbSet<User> Users { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -49,6 +50,13 @@ namespace RR.AI_Chat.Repository
             modelBuilder.ApplyConfiguration(new AIServiceConfiguration());
             modelBuilder.ApplyConfiguration(new ModelConfiguration());
             modelBuilder.ApplyConfiguration(new McpServerConfiguration());
+
+            // Configure global delete behavior
+            foreach (var relationship in modelBuilder.Model.GetEntityTypes()
+                .SelectMany(e => e.GetForeignKeys()))
+            {
+                relationship.DeleteBehavior = DeleteBehavior.NoAction;
+            }
         }
     }
 }

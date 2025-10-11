@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Service;
 
 namespace RR.AI_Chat.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ChatsController(IChatService chatService) : ControllerBase
@@ -25,9 +27,9 @@ namespace RR.AI_Chat.Api.Controllers
         }
 
         [HttpGet("sessions/{sessionId}/conversations")]
-        public async Task<IActionResult> GetSessionConversationAsync(Guid sessionId)
+        public async Task<IActionResult> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken)
         {
-            var response = await _chatService.GetSessionConversationAsync(sessionId);
+            var response = await _chatService.GetSessionConversationAsync(sessionId, cancellationToken);
             return Ok(response);
         }
     }
