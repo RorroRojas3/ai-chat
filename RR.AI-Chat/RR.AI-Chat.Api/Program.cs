@@ -120,7 +120,7 @@ builder.Services.AddSingleton(sp =>
 // Register the singleton lock service
 builder.Services.AddSingleton<ISessionLockService, SessionLockService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
-builder.Services.AddSingleton<IGraphService, GraphService>  ();
+builder.Services.AddSingleton<IGraphService, GraphService>();
 
 // Keep other services as Scoped
 builder.Services.AddScoped<IChatService, ChatService>();
