@@ -19,7 +19,8 @@ namespace RR.AI_Chat.Service
         {
             ArgumentNullException.ThrowIfNull(request);
 
-            _logger.LogInformation("Creating user in Microsoft Graph: {Email}", request.Email);
+            var sanitizedEmail = request.Email.Replace("\r", "").Replace("\n", "");
+            _logger.LogInformation("Creating user in Microsoft Graph: {Email}", sanitizedEmail);
 
             var user = new User
             {
