@@ -73,16 +73,8 @@ export class AppComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         this.setLoginDisplay();
         this.checkAndSetActiveAccount();
+        this.loadDataIfAuthenticated();
       });
-
-    forkJoin([
-      this.modelService.getModels(),
-      this.sessionService.searchSessions(''),
-    ]).subscribe(([models, sessions]) => {
-      this.storeService.models.set(models);
-      this.storeService.selectedModel.set(models[0]);
-      this.storeService.sessions.set(sessions);
-    });
   }
 
   setLoginDisplay() {
@@ -103,6 +95,19 @@ export class AppComponent implements OnInit, OnDestroy {
     ) {
       let accounts = this.authService.instance.getAllAccounts();
       this.authService.instance.setActiveAccount(accounts[0]);
+    }
+  }
+
+  loadDataIfAuthenticated() {
+    if (this.loginDisplay) {
+      forkJoin([
+        this.modelService.getModels(),
+        this.sessionService.searchSessions(''),
+      ]).subscribe(([models, sessions]) => {
+        this.storeService.models.set(models);
+        this.storeService.selectedModel.set(models[0]);
+        this.storeService.sessions.set(sessions);
+      });
     }
   }
 

@@ -7,7 +7,7 @@ namespace RR.AI_Chat.Entity
     public class Session : BaseEntity
     {
         [ForeignKey(nameof(User))]
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
 
         [StringLength(100)]
         public string? Name { get; set; }

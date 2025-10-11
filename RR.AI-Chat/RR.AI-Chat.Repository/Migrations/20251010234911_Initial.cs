@@ -53,22 +53,22 @@ namespace RR.AI_Chat.Repository.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Session",
+                name: "User",
                 schema: "AI",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    Conversations = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    InputTokens = table.Column<long>(type: "bigint", nullable: false),
-                    OutputTokens = table.Column<long>(type: "bigint", nullable: false),
-                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
+                    Oid = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Session", x => x.Id);
+                    table.PrimaryKey("PK_User", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -92,8 +92,33 @@ namespace RR.AI_Chat.Repository.Migrations
                         column: x => x.AIServiceId,
                         principalSchema: "AI.Ref",
                         principalTable: "AIService",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Session",
+                schema: "AI",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Conversations = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    InputTokens = table.Column<long>(type: "bigint", nullable: false),
+                    OutputTokens = table.Column<long>(type: "bigint", nullable: false),
+                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Session", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Session_User_UserId",
+                        column: x => x.UserId,
+                        principalSchema: "AI",
+                        principalTable: "User",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -102,6 +127,7 @@ namespace RR.AI_Chat.Repository.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     SessionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Extension = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -116,8 +142,13 @@ namespace RR.AI_Chat.Repository.Migrations
                         column: x => x.SessionId,
                         principalSchema: "AI",
                         principalTable: "Session",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Document_User_UserId",
+                        column: x => x.UserId,
+                        principalSchema: "AI",
+                        principalTable: "User",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -141,8 +172,7 @@ namespace RR.AI_Chat.Repository.Migrations
                         column: x => x.DocumentId,
                         principalSchema: "AI",
                         principalTable: "Document",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.InsertData(
@@ -175,6 +205,12 @@ namespace RR.AI_Chat.Repository.Migrations
                 column: "SessionId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Document_UserId",
+                schema: "AI",
+                table: "Document",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DocumentPage_DocumentId",
                 schema: "AI",
                 table: "DocumentPage",
@@ -185,6 +221,12 @@ namespace RR.AI_Chat.Repository.Migrations
                 schema: "AI.Ref",
                 table: "Model",
                 column: "AIServiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Session_UserId",
+                schema: "AI",
+                table: "Session",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -212,6 +254,10 @@ namespace RR.AI_Chat.Repository.Migrations
 
             migrationBuilder.DropTable(
                 name: "Session",
+                schema: "AI");
+
+            migrationBuilder.DropTable(
+                name: "User",
                 schema: "AI");
         }
     }

@@ -1,14 +1,15 @@
 ﻿using Hangfire;
 using Hangfire.Common;
 using Hangfire.Storage;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
 using RR.AI_Chat.Service;
-using System.Text.Json;
 
 namespace RR.AI_Chat.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class DocumentsController(IDocumentService service, IStorageConnection storageConnection) : ControllerBase

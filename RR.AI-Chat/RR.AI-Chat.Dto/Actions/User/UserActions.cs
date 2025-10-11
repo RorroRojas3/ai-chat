@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RR.AI_Chat.Entity
+namespace RR.AI_Chat.Dto.Actions.User
 {
-    [Table(nameof(User), Schema = "AI")]
-    public class User : BaseModifiedEntity
+    public class CreateUserActionDto
     {
         [StringLength(256)]
         public string FirstName { get; set; } = null!;
@@ -15,11 +13,5 @@ namespace RR.AI_Chat.Entity
         [StringLength(512)]
         [EmailAddress]
         public string Email { get; set; } = null!;
-
-        [StringLength(100)]
-        public string Oid { get; set; } = null!;
-
-        [NotMapped]
-        public string FullName => $"{FirstName} {LastName}";
     }
 }

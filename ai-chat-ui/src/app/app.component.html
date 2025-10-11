@@ -1,5 +1,6 @@
+@if (loginDisplay) {
 <app-navbar></app-navbar>
 <app-menu-offcanvas></app-menu-offcanvas>
-@if (!isIframe) {
+} @if (!isIframe) {
 <router-outlet></router-outlet>
 }

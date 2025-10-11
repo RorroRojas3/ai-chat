@@ -9,7 +9,7 @@ export const environment = {
     },
   },
   apiConfig: {
-    scopes: ['b40defa0-5309-45c4-82fc-cb284010cc10/.default'],
+    scopes: ['api://b40defa0-5309-45c4-82fc-cb284010cc10/access_as_user'],
     uri: 'https://localhost:7045/api/',
   },
 };

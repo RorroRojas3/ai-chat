@@ -5,11 +5,11 @@ namespace RR.AI_Chat.Entity
     [Table(nameof(Document), Schema = "AI")]
     public class Document : BaseEntity
     {
+        [ForeignKey(nameof(User))]
+        public Guid UserId { get; set; }
+
         [ForeignKey(nameof(Session))]
         public Guid SessionId { get; set; }
-
-        [ForeignKey(nameof(User))]
-        public int UserId { get; set; }
 
         public string Name { get; set; } = null!;
 
