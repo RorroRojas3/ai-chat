@@ -57,7 +57,7 @@ namespace RR.AI_Chat.Service
                     WorkingDirectory = server.WorkingDirectory,
                 });
 
-                var mcpClient = await McpClientFactory.CreateAsync(clientTransport, null, null, cancellationToken)
+                var mcpClient = await McpClient.CreateAsync(clientTransport, null, null, cancellationToken)
                                 .ConfigureAwait(false);
                 var mcpTools = await mcpClient.ListToolsAsync(null, cancellationToken);
                 tools.AddRange(mcpTools);

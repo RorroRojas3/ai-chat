@@ -1,5 +1,6 @@
 ﻿using Azure.AI.OpenAI;
 using Azure.Identity;
+using Azure.Storage.Blobs;
 using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -116,11 +117,19 @@ builder.Services.AddSingleton(sp =>
     return new GraphServiceClient(clientSecretCredential);
 });
 
+// Azure Storage
+builder.Services.AddSingleton(x =>
+{
+    var connectionString = builder.Configuration["AzureStorage:ConnectionString"];
+    return new BlobServiceClient(connectionString);
+});
+
 
 // Register the singleton lock service
 builder.Services.AddSingleton<ISessionLockService, SessionLockService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IGraphService, GraphService>();
+builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 
 // Keep other services as Scoped
 builder.Services.AddScoped<IChatService, ChatService>();

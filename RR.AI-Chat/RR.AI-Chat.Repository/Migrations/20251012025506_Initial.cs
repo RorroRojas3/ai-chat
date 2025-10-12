@@ -128,8 +128,11 @@ namespace RR.AI_Chat.Repository.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     SessionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Extension = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Extension = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
+                    MimeType = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Size = table.Column<long>(type: "bigint", nullable: false),
+                    Path = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
