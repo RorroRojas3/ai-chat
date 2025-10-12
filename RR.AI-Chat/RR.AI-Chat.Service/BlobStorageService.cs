@@ -6,7 +6,7 @@ namespace RR.AI_Chat.Service
 {
     public interface IBlobStorageService
     {
-        Task<byte[]> DownlodAsync(string container, string blob, CancellationToken cancellationToken);
+        Task<byte[]> DownloadAsync(string container, string blob, CancellationToken cancellationToken);
 
         Task UploadAsync(string container, string blob, byte[] data, Dictionary<string, string> metadata, CancellationToken cancellationToken);
 
@@ -19,7 +19,7 @@ namespace RR.AI_Chat.Service
         private readonly ILogger<BlobStorageService> _logger = logger;
         private readonly BlobServiceClient _blobServiceClient = blobServiceClient;
 
-        public async Task<byte[]> DownlodAsync(string container, string blob, CancellationToken cancellationToken)
+        public async Task<byte[]> DownloadAsync(string container, string blob, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Downloading blob '{Blob}' from container '{Container}'", blob, container); 
 
