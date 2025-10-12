@@ -129,6 +129,7 @@ builder.Services.AddSingleton(x =>
 builder.Services.AddSingleton<ISessionLockService, SessionLockService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IGraphService, GraphService>();
+builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 
 // Keep other services as Scoped
 builder.Services.AddScoped<IChatService, ChatService>();

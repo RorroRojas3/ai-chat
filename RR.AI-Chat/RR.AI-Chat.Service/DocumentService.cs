@@ -1,5 +1,6 @@
 ﻿using Hangfire.Server;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
@@ -12,15 +13,19 @@ namespace RR.AI_Chat.Service
 {
     public interface IDocumentService 
     {
-        Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid sessionId, CancellationToken cancellationToken);
+        Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken);
     }
 
     public class DocumentService(ILogger<DocumentService> logger, 
         IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
+        IBlobStorageService blobStorageService,
+        IConfiguration configuration,
         AIChatDbContext ctx) : IDocumentService
     {
         private readonly ILogger _logger = logger;
         private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator = embeddingGenerator;
+        private readonly IBlobStorageService _blobStorageService = blobStorageService;
+        private readonly IConfiguration _configuration = configuration;
         private readonly AIChatDbContext _ctx = ctx;
         private const double _cosineDistanceThreshold = 0.3;
 
@@ -39,7 +44,7 @@ namespace RR.AI_Chat.Service
         /// 4. Creates document page entities with embeddings
         /// 5. Saves the document and all pages to the database
         /// </remarks>
-        public async Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid sessionId, CancellationToken cancellationToken)
+        public async Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(context, nameof(context));
             ArgumentNullException.ThrowIfNull(fileDataDto, nameof(fileDataDto));
@@ -49,9 +54,21 @@ namespace RR.AI_Chat.Service
             context.SetJobParameter(JobName.Progress.ToString(), 0);
             _logger.LogInformation("Starting document creation. Job ID: {JobId}, Session ID: {SessionId}, File Name: {FileName}", jobId, sessionId, fileDataDto.FileName);
 
-
-            context.SetJobParameter(JobName.Status.ToString(), JobStatus.Reading.ToString());
+            context.SetJobParameter(JobName.Status.ToString(), JobStatus.Uploading.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 25);
+
+            string container = _configuration.GetValue<string>("AzureStorage:DocumentsContainer")!;  
+            string blob = $"{userId}/{sessionId}/{fileDataDto.FileName}";
+            Dictionary<string, string> metadata = new()
+            {
+                { "userId", userId.ToString() },
+                { "sessionId", sessionId.ToString() },
+                { "fileName", fileDataDto.FileName },
+                { "contentType", fileDataDto.ContentType },
+                { "length", fileDataDto.Length.ToString() }
+            };
+
+            await _blobStorageService.UploadAsync(container, blob, fileDataDto.Content, metadata, cancellationToken);
 
             var documentExtractors = ExtractTextFromPdfFileAsync(fileDataDto.Content);
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Extracting.ToString());
@@ -105,15 +122,19 @@ namespace RR.AI_Chat.Service
 
             var document = new Document
             {
+                UserId = userId,
                 SessionId = sessionId,
                 Name = fileDataDto.FileName,
                 Extension = GetFileExtension(fileDataDto.FileName),
+                MimeType = fileDataDto.ContentType,
+                Size = fileDataDto.Length,
+                Path = blob,
                 Pages = documentPages,
                 DateCreated = date
             };
 
-            await _ctx.AddAsync(document);
-            await _ctx.SaveChangesAsync();
+            await _ctx.AddAsync(document, cancellationToken);
+            await _ctx.SaveChangesAsync(cancellationToken);
 
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Processed.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 100);

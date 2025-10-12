@@ -1,6 +1,6 @@
 export enum JobStatus {
   Queued = 'queued',
-  Reading = 'reading',
+  Uploading = 'uploading',
   Extracting = 'extracting',
   Embedding = 'embedding',
   Processed = 'processed',

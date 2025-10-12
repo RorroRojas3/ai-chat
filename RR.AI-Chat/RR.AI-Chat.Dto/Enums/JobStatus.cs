@@ -7,8 +7,8 @@ namespace RR.AI_Chat.Dto.Enums
         [Description(nameof(Queued))]   
         Queued = 1,
 
-        [Description(nameof(Reading))]    
-        Reading = 2,
+        [Description(nameof(Uploading))]    
+        Uploading = 2,
 
         [Description(nameof(Extracting))]
         Extracting = 3,

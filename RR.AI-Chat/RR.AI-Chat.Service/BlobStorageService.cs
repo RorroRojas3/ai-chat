@@ -6,6 +6,11 @@ namespace RR.AI_Chat.Service
 {
     public interface IBlobStorageService
     {
+        Task<byte[]> DownlodAsync(string container, string blob, CancellationToken cancellationToken);
+
+        Task UploadAsync(string container, string blob, byte[] data, Dictionary<string, string> metadata, CancellationToken cancellationToken);
+
+        Task<bool> DeleteAsync(string container, string blob, CancellationToken cancellationToken);
     }
 
     public class BlobStorageService(ILogger<BlobStorageService> logger, 
@@ -37,11 +42,7 @@ namespace RR.AI_Chat.Service
 
             var options = new BlobUploadOptions
             {
-                Metadata = metadata,
-                Conditions = new BlobRequestConditions
-                {
-                    IfNoneMatch = new Azure.ETag("*")
-                }
+                Metadata = metadata
             };
             await blobClient.UploadAsync(memoryStream, options, cancellationToken);
 
