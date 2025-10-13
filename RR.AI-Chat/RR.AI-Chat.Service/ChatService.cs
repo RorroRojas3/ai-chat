@@ -135,7 +135,14 @@ namespace RR.AI_Chat.Service
             }
 
             await Task.CompletedTask;
-            return new() { Id = sessionId, Name = session.Name!, Messages = messages! };
+            return new() 
+            { 
+                Id = sessionId, 
+                Name = session.Name!, 
+                DateCreated = session.DateCreated,
+                DateModified = session.DateModified,
+                Messages = messages! 
+            };
         }
 
         private async Task<ChatOptions> CreateChatOptions(Guid sessionId, ModelDto model)

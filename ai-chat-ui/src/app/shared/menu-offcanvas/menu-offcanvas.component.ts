@@ -9,7 +9,8 @@ import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import { MessageDto } from '../../dtos/MessageDto';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-menu-offcanvas',
@@ -23,7 +24,7 @@ export class MenuOffcanvasComponent {
     private chatService: ChatService,
     private sessionService: SessionService,
     private sanitizer: DomSanitizer,
-    private location: Location
+    private router: Router
   ) {
     this.md = new markdownit({
       html: true,
@@ -86,30 +87,9 @@ export class MenuOffcanvasComponent {
     }
   }
 
-  /**
-   * Handles session change by updating the current session and retrieving its conversation history.
-   * Processes the conversation messages, converting assistant messages from markdown to sanitized HTML.
-   * Updates the store with the processed messages.
-   *
-   * @param sessionId - The unique identifier of the selected session
-   * @returns void
-   */
   onClickSession(sessionId: string): void {
     this.storeService.sessionId.set(sessionId);
-    this.location.replaceState(`chat/session/${sessionId}`);
-    this.storeService.disablePromptButton.set(true);
-    this.chatService.getSessionConversation().subscribe((response) => {
-      const mappedMessages = response.messages.map((message) => {
-        if (message.role === 1) {
-          const html = this.md.render(message.text);
-          const sanitizeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
-          return new MessageDto('', false, sanitizeHtml);
-        }
-        return new MessageDto(message.text, true, undefined);
-      });
-      this.storeService.messages.set(mappedMessages);
-      this.storeService.disablePromptButton.set(false);
-    });
+    this.router.navigate(['chat', 'session', sessionId]);
   }
 
   /**
