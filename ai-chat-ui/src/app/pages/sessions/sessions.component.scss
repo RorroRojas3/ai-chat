@@ -1,0 +1,135 @@
+.sessions-container {
+  min-height: calc(100vh - 56px);
+  background-color: var(--color-navy);
+  color: white;
+}
+
+.sessions-title {
+  color: white;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.sessions-subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0;
+}
+
+.sessions-list {
+  .menu-list {
+    &__item {
+      background-color: var(--color-accent);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      transition: background-color 0.2s ease;
+      margin-bottom: 0.5rem;
+
+      &:hover {
+        background-color: var(--color-navy);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      &:focus {
+        background-color: var(--color-navy);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: none;
+      }
+
+      &--no-results {
+        background-color: transparent;
+        color: rgba(255, 255, 255, 0.6);
+        font-style: italic;
+        cursor: default;
+        pointer-events: none;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+
+        &:hover {
+          background-color: transparent;
+          color: rgba(255, 255, 255, 0.6);
+        }
+      }
+
+      &--loading {
+        background-color: transparent;
+        color: rgba(255, 255, 255, 0.8);
+        cursor: default;
+        pointer-events: none;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+
+        &:hover {
+          background-color: transparent;
+          color: rgba(255, 255, 255, 0.8);
+        }
+      }
+    }
+  }
+}
+
+.session-name {
+  color: white;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.session-date {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+}
+
+.menu-search {
+  &__icon {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+  }
+
+  &__input {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    &:focus {
+      background-color: var(--color-accent);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.15);
+      color: white;
+    }
+  }
+
+  &__clear {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+
+    &:hover {
+      background-color: var(--color-navy);
+      border-color: var(--color-navy);
+      color: white;
+    }
+  }
+}
+
+.btn-load-more {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+  padding: 0.5rem 2rem;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-navy);
+    border-color: var(--color-navy);
+    color: white;
+  }
+
+  &:disabled {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    opacity: 0.7;
+  }
+}

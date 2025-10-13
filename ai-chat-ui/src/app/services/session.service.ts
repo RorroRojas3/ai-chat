@@ -20,14 +20,20 @@ export class SessionService {
   }
 
   /**
-   * Searches for sessions based on the provided query string.
+   * Searches for sessions based on a filter string with pagination support.
    *
-   * @param query - The search query string to filter sessions
+   * @param filter - The search filter string to match against sessions
+   * @param skip - The number of records to skip for pagination (default: 0)
+   * @param take - The number of records to retrieve (default: 10)
    * @returns An Observable that emits an array of SessionDto objects matching the search criteria
    */
-  searchSessions(query: string): Observable<SessionDto[]> {
+  searchSessions(
+    filter: string,
+    skip: number = 0,
+    take: number = 10
+  ): Observable<SessionDto[]> {
     return this.http.get<SessionDto[]>(`${environment.apiUrl}sessions/search`, {
-      params: { query },
+      params: { filter, skip, take },
     });
   }
 }
