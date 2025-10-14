@@ -18,6 +18,8 @@ namespace RR.AI_Chat.Service
         Task<PaginatedResponseDto<SessionDto>> SearchSessionsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default);
 
         int GetSystemPromptTokenCount(string modelName);
+
+        Task DeactivateSessionAsync(Guid sessionId, CancellationToken cancellationToken);
     }
 
     public class SessionService(ILogger<SessionService> logger,
@@ -244,6 +246,27 @@ namespace RR.AI_Chat.Service
 
             var tokenizer = TiktokenTokenizer.CreateForModel(modelName);
             return tokenizer.CountTokens(_defaultSystemPrompt);
+        }
+
+        public async Task DeativateSessionAsync(Guid sessionId, CancellationToken cancellationToken)
+        {
+            var userId = _tokenService.GetOid()!.Value;
+            var rowsAffected = await _ctx.Sessions
+                                .Where(x => x.Id == sessionId &&
+                                            x.UserId == userId &&
+                                            !x.DateDeactivated.HasValue)
+                                .ExecuteUpdateAsync(s => s
+                                    .SetProperty(p => p.DateDeactivated, DateTime.UtcNow)
+                                    .SetProperty(p => p.DateModified, DateTime.UtcNow),
+                                    cancellationToken);
+
+            if (rowsAffected == 0)
+            {
+                _logger.LogError("Session with id {Id} not found", sessionId);
+                throw new InvalidOperationException($"Session with id {sessionId} not found");
+            }
+
+            _logger.LogInformation("Session with id {Id} deactivated", sessionId);
         }
     }
 }

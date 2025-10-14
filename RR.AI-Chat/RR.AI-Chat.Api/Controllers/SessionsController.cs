@@ -24,5 +24,12 @@ namespace RR.AI_Chat.Api.Controllers
             var response = await _sessionService.SearchSessionsAsync(filter, skip, take, cancellationToken);
             return Ok(response);
         }
+
+        [HttpDelete("{sessionId}")]
+        public async Task<IActionResult> DeactivateSessionAsync(Guid sessionId, CancellationToken cancellationToken)
+        {
+            await _sessionService.DeactivateSessionAsync(sessionId, cancellationToken);
+            return NoContent();
+        }
     }
 }
