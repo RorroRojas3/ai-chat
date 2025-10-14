@@ -166,7 +166,7 @@ namespace RR.AI_Chat.Service
             ArgumentException.ThrowIfNullOrEmpty(nameof(request));
             ArgumentException.ThrowIfNullOrWhiteSpace(nameof(request));
 
-            var session = await _ctx.Sessions.FindAsync(sessionId, cancellationToken);
+            var session = await _ctx.Sessions.FindAsync([sessionId], cancellationToken);
             if (session == null)
             {
                 _logger.LogError("Session with id {id} not found", sessionId);
