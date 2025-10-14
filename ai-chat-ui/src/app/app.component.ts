@@ -106,7 +106,7 @@ export class AppComponent implements OnInit, OnDestroy {
       ]).subscribe(([models, sessions]) => {
         this.storeService.models.set(models);
         this.storeService.selectedModel.set(models[0]);
-        this.storeService.sessions.set(sessions);
+        this.storeService.sessions.set(sessions.items);
       });
     }
   }

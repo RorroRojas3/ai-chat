@@ -39,7 +39,7 @@ namespace RR.AI_Chat.Service
         {
             var mcpServers = await _ctx.McpServers.AsNoTracking()
                                 .Where(x => !x.DateDeactivated.HasValue)
-                                .ToListAsync();
+                                .ToListAsync(cancellationToken);
             if (mcpServers == null || mcpServers.Count == 0)
             {
                 _logger.LogWarning("No MCP servers found in the database.");

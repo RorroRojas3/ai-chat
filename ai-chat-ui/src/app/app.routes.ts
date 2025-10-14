@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
 import { MsalGuard } from '@azure/msal-angular';
+import { SessionsComponent } from './pages/sessions/sessions.component';
 
 export const routes: Routes = [
   {
@@ -16,6 +17,11 @@ export const routes: Routes = [
   {
     path: 'chat/session/:sessionId',
     component: HomeComponent,
+    canActivate: [MsalGuard],
+  },
+  {
+    path: 'sessions',
+    component: SessionsComponent,
     canActivate: [MsalGuard],
   },
   {

@@ -114,7 +114,9 @@ namespace RR.AI_Chat.Service
 
         public async Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken)
         {
-            var session = await _ctx.Sessions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == sessionId, cancellationToken);
+            var userId = _tokenService.GetOid()!.Value;
+            var session = await _ctx.Sessions.AsNoTracking()
+                            .FirstOrDefaultAsync(x => x.Id == sessionId && x.UserId == userId, cancellationToken);
             if (session == null)
             {
                 _logger.LogError("Session with id {id} not found.", sessionId);
@@ -135,7 +137,14 @@ namespace RR.AI_Chat.Service
             }
 
             await Task.CompletedTask;
-            return new() { Id = sessionId, Name = session.Name!, Messages = messages! };
+            return new() 
+            { 
+                Id = sessionId, 
+                Name = session.Name!, 
+                DateCreated = session.DateCreated,
+                DateModified = session.DateModified,
+                Messages = messages! 
+            };
         }
 
         private async Task<ChatOptions> CreateChatOptions(Guid sessionId, ModelDto model)

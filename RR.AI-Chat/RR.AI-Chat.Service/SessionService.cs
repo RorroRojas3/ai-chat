@@ -15,7 +15,7 @@ namespace RR.AI_Chat.Service
 
         Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken);
 
-        Task<List<SessionDto>> SearchSessionsAsync(string? query, CancellationToken cancellationToken);
+        Task<PaginatedResponseDto<SessionDto>> SearchSessionsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default);
 
         int GetSystemPromptTokenCount(string modelName);
     }
@@ -137,7 +137,7 @@ namespace RR.AI_Chat.Service
                 DateCreated = date,
                 DateModified = date
             };
-            await _ctx.AddAsync(newSession);
+            await _ctx.AddAsync(newSession, cancellationToken);
             await _ctx.SaveChangesAsync(cancellationToken);
 
             var prompt = string.Format(_defaultSystemPrompt, newSession.Id);
@@ -166,7 +166,7 @@ namespace RR.AI_Chat.Service
             ArgumentException.ThrowIfNullOrEmpty(nameof(request));
             ArgumentException.ThrowIfNullOrWhiteSpace(nameof(request));
 
-            var session = await _ctx.Sessions.FindAsync(sessionId, cancellationToken);
+            var session = await _ctx.Sessions.FindAsync([sessionId], cancellationToken);
             if (session == null)
             {
                 _logger.LogError("Session with id {id} not found", sessionId);
@@ -200,48 +200,41 @@ namespace RR.AI_Chat.Service
             return session.Name;
         }
 
-        /// <summary>
-        /// Asynchronously searches for chat sessions based on a query string or returns recent sessions if no query is provided.
-        /// </summary>
-        /// <param name="query">The search query to filter sessions by name. If null or whitespace, returns recent sessions instead.</param>
-        /// <returns>
-        /// A task that represents the asynchronous operation. The task result contains a list of up to 10 <see cref="SessionDto"/> 
-        /// objects matching the search criteria, ordered by creation date (most recent first) when no query is provided.
-        /// </returns>
-        /// <remarks>
-        /// This method performs different operations based on the query parameter:
-        /// <list type="bullet">
-        /// <item><description>If <paramref name="query"/> is null or whitespace: Returns the 10 most recent sessions with non-empty names, ordered by creation date descending</description></item>
-        /// <item><description>If <paramref name="query"/> has a value: Returns up to 10 sessions whose names contain the query string (case-insensitive partial match)</description></item>
-        /// </list>
-        /// The method uses Entity Framework's <see cref="EF.Functions.Like"/> for SQL LIKE pattern matching and 
-        /// <see cref="EntityFrameworkQueryableExtensions.AsNoTracking"/> for read-only operations to improve performance.
-        /// Only sessions with non-null and non-whitespace names are included in the results.
-        /// </remarks>
-        /// <exception cref="InvalidOperationException">Thrown when the database context is in an invalid state.</exception>
-        /// <exception cref="SqlException">Thrown when a database-related error occurs during query execution.</exception>
-        public async Task<List<SessionDto>> SearchSessionsAsync(string? query, CancellationToken cancellationToken)
+        public async Task<PaginatedResponseDto<SessionDto>> SearchSessionsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default)
         {
             var userId = _tokenService.GetOid()!.Value;
-            if (string.IsNullOrWhiteSpace(query))
+            
+            var query = _ctx.Sessions
+                .AsNoTracking()
+                .Where(x => x.UserId == userId);
+
+            if (!string.IsNullOrWhiteSpace(filter))
             {
-                return await _ctx.Sessions.AsNoTracking()
-                    .Where(x => x.UserId == userId && 
-                        !string.IsNullOrWhiteSpace(x.Name))
-                    .OrderByDescending(x => x.DateCreated)
-                    .Take(10)
-                    .Select(s => new SessionDto { Id = s.Id, Name = s.Name! })
-                    .ToListAsync(cancellationToken);
+                query = query.Where(x => !string.IsNullOrWhiteSpace(x.Name) && EF.Functions.Like(x.Name, $"%{filter}%"));
             }
 
-            var sessions = await _ctx.Sessions.AsNoTracking()
-                .Where(x =>x.UserId == userId &&
-                            !string.IsNullOrWhiteSpace(x.Name) &&
-                            EF.Functions.Like(x.Name, $"%{query}%"))
-                .Take(10)
-                .Select(s => new SessionDto { Id = s.Id, Name = s.Name! })
+            var totalCount = await query.CountAsync(cancellationToken);
+
+            var items = await query
+                .OrderByDescending(x => x.DateCreated)
+                .Skip(skip)
+                .Take(take)
+                .Select(s => new SessionDto
+                {
+                    Id = s.Id,
+                    Name = s.Name!,
+                    DateCreated = s.DateCreated,
+                    DateModified = s.DateModified
+                })
                 .ToListAsync(cancellationToken);
-            return sessions;
+
+            return new PaginatedResponseDto<SessionDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageSize = take,
+                CurrentPage = (skip / take) + 1
+            };
         }
 
 

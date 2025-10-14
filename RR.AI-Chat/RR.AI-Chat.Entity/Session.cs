@@ -20,8 +20,6 @@ namespace RR.AI_Chat.Entity
 
         public long TotalTokens => InputTokens + OutputTokens;
 
-        public DateTime DateModified { get; set; }
-
         public User User { get; set; } = null!;
     }
 }

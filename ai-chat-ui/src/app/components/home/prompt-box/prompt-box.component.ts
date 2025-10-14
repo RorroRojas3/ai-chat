@@ -122,12 +122,12 @@ export class PromptBoxComponent implements OnDestroy {
             if (this.storeService.hasSearchFilter()) {
               this.sessionService
                 .searchSessions(this.storeService.searchFilter())
-                .subscribe((sessions) => {
-                  this.storeService.sessions.set(sessions);
+                .subscribe((response) => {
+                  this.storeService.sessions.set(response.items);
                 });
             } else {
-              this.sessionService.searchSessions('').subscribe((sessions) => {
-                this.storeService.sessions.set(sessions);
+              this.sessionService.searchSessions('').subscribe((response) => {
+                this.storeService.sessions.set(response.items);
               });
             }
           },

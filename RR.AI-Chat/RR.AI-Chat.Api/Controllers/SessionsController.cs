@@ -19,9 +19,9 @@ namespace RR.AI_Chat.Api.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> SearchSessionsAsync([FromQuery] string? query, CancellationToken cancellationToken)
+        public async Task<IActionResult> SearchSessionsAsync([FromQuery] string? filter, [FromQuery] int skip, [FromQuery] int take, CancellationToken cancellationToken)
         {
-            var response = await _sessionService.SearchSessionsAsync(query, cancellationToken);
+            var response = await _sessionService.SearchSessionsAsync(filter, skip, take, cancellationToken);
             return Ok(response);
         }
     }

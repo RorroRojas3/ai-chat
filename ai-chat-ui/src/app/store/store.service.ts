@@ -18,9 +18,9 @@ export class StoreService {
   streamMessage = signal<MessageDto>(new MessageDto('', false, undefined));
   models = signal<ModelDto[]>([]);
   selectedModel = signal<ModelDto>({} as ModelDto);
-  sessions = signal<SessionDto[]>([]);
 
   // Search functionality
+  sessions = signal<SessionDto[]>([]);
   searchFilter = signal<string>('');
   isSearching = signal<boolean>(false);
 
@@ -39,7 +39,6 @@ export class StoreService {
    * - Initializing a new empty stream message
    */
   clearForNewSession(): void {
-    this.location.replaceState(`/chat`);
     this.sessionId.set('');
     this.messages.set([]);
     this.disablePromptButton.set(false);

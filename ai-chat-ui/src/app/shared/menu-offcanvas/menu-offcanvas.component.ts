@@ -9,7 +9,8 @@ import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import { MessageDto } from '../../dtos/MessageDto';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-menu-offcanvas',
@@ -23,7 +24,7 @@ export class MenuOffcanvasComponent {
     private chatService: ChatService,
     private sessionService: SessionService,
     private sanitizer: DomSanitizer,
-    private location: Location
+    private router: Router
   ) {
     this.md = new markdownit({
       html: true,
@@ -34,8 +35,8 @@ export class MenuOffcanvasComponent {
     // Set up debounced search
     this.searchSubject
       .pipe(debounceTime(600), distinctUntilChanged())
-      .subscribe((query) => {
-        this.performSearch(query);
+      .subscribe((filter) => {
+        this.performSearch(filter);
       });
   }
 
@@ -45,19 +46,19 @@ export class MenuOffcanvasComponent {
   /**
    * Performs search using the session service
    */
-  private performSearch(query: string): void {
-    this.storeService.setSearchFilter(query);
+  private performSearch(filter: string): void {
+    this.storeService.setSearchFilter(filter);
 
-    if (!query.trim()) {
+    if (!filter.trim()) {
       // If search is cleared, reload all sessions
       this.loadAllSessions();
       return;
     }
 
     this.storeService.setSearching(true);
-    this.sessionService.searchSessions(query).subscribe({
-      next: (sessions) => {
-        this.storeService.sessions.set(sessions);
+    this.sessionService.searchSessions(filter).subscribe({
+      next: (response) => {
+        this.storeService.sessions.set(response.items);
         this.storeService.setSearching(false);
       },
       error: () => {
@@ -70,8 +71,8 @@ export class MenuOffcanvasComponent {
    * Loads all sessions without search filter
    */
   private loadAllSessions(): void {
-    this.sessionService.searchSessions('').subscribe((sessions) => {
-      this.storeService.sessions.set(sessions);
+    this.sessionService.searchSessions('').subscribe((response) => {
+      this.storeService.sessions.set(response.items);
     });
   }
 
@@ -86,30 +87,9 @@ export class MenuOffcanvasComponent {
     }
   }
 
-  /**
-   * Handles session change by updating the current session and retrieving its conversation history.
-   * Processes the conversation messages, converting assistant messages from markdown to sanitized HTML.
-   * Updates the store with the processed messages.
-   *
-   * @param sessionId - The unique identifier of the selected session
-   * @returns void
-   */
   onClickSession(sessionId: string): void {
     this.storeService.sessionId.set(sessionId);
-    this.location.replaceState(`chat/session/${sessionId}`);
-    this.storeService.disablePromptButton.set(true);
-    this.chatService.getSessionConversation().subscribe((response) => {
-      const mappedMessages = response.messages.map((message) => {
-        if (message.role === 1) {
-          const html = this.md.render(message.text);
-          const sanitizeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
-          return new MessageDto('', false, sanitizeHtml);
-        }
-        return new MessageDto(message.text, true, undefined);
-      });
-      this.storeService.messages.set(mappedMessages);
-      this.storeService.disablePromptButton.set(false);
-    });
+    this.router.navigate(['chat', 'session', sessionId]);
   }
 
   /**
@@ -120,6 +100,7 @@ export class MenuOffcanvasComponent {
    */
   onClickCreateNewSession(): void {
     this.storeService.clearForNewSession();
+    this.router.navigate(['chat']);
   }
 
   /**

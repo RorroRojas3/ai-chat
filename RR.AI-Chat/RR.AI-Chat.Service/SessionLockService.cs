@@ -114,6 +114,8 @@ namespace RR.AI_Chat.Service
                 lockInfo.Semaphore.Dispose();
             }
             _sessionLocks.Clear();
+
+            GC.SuppressFinalize(this);
         }
     }
 }
