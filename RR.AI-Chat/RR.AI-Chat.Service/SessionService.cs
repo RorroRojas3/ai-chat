@@ -248,7 +248,7 @@ namespace RR.AI_Chat.Service
             return tokenizer.CountTokens(_defaultSystemPrompt);
         }
 
-        public async Task DeativateSessionAsync(Guid sessionId, CancellationToken cancellationToken)
+        public async Task DeactivateSessionAsync(Guid sessionId, CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid()!.Value;
             var rowsAffected = await _ctx.Sessions
