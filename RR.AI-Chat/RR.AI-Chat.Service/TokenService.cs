@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Security.Claims;
 
 namespace RR.AI_Chat.Service
 {
@@ -19,7 +18,11 @@ namespace RR.AI_Chat.Service
         public Guid? GetOid() 
         {  
             var user = _httpContextAccessor.HttpContext?.User;
-            if (user == null) return null;
+            if (user == null)
+            {
+                _logger.LogWarning("No user context available to extract OID.");
+                return null;
+            }
 
             var oidClaim = user?.Identities?.FirstOrDefault()?.Claims?.FirstOrDefault(x => x.Type == _oidClaimType);
             return oidClaim != null ? Guid.Parse(oidClaim.Value) : null;
