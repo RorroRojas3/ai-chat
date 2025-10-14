@@ -4,7 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { SessionService } from '../../services/session.service';
 import { SessionDto } from '../../dtos/SessionDto';
-import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  Subject,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -28,15 +34,46 @@ export class SessionsComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   constructor(private sessionService: SessionService, private router: Router) {
-    // Set up debounced search
+    // Set up debounced search with switchMap to avoid race conditions
     this.searchSubject
       .pipe(
         debounceTime(600),
         distinctUntilChanged(),
+        tap(() => {
+          this.isSearching = true;
+          this.currentPage = 1; // Reset to first page on new search
+        }),
+        switchMap((filter) => {
+          this.searchFilter = filter;
+          const skip = (this.currentPage - 1) * this.pageSize;
+          return this.sessionService.searchSessions(
+            filter,
+            skip,
+            this.pageSize
+          );
+        }),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((filter) => {
-        this.performSearch(filter);
+      .subscribe({
+        next: (response) => {
+          // Update pagination metadata
+          this.totalCount = response.totalCount;
+          this.totalPages = response.totalPages;
+
+          // Map plain objects to SessionDto instances
+          this.sessions = response.items.map((session) => {
+            const dto = new SessionDto();
+            dto.id = session.id;
+            dto.name = session.name;
+            dto.dateCreated = session.dateCreated;
+            dto.dateModified = session.dateModified;
+            return dto;
+          });
+          this.isSearching = false;
+        },
+        error: () => {
+          this.isSearching = false;
+        },
       });
   }
 
@@ -75,15 +112,6 @@ export class SessionsComponent implements OnInit {
           this.isSearching = false;
         },
       });
-  }
-
-  /**
-   * Performs search using the session service
-   */
-  private performSearch(filter: string): void {
-    this.searchFilter = filter;
-    this.currentPage = 1; // Reset to first page on new search
-    this.loadSessions();
   }
 
   /**
