@@ -137,7 +137,7 @@ namespace RR.AI_Chat.Service
                 DateCreated = date,
                 DateModified = date
             };
-            await _ctx.AddAsync(newSession);
+            await _ctx.AddAsync(newSession, cancellationToken);
             await _ctx.SaveChangesAsync(cancellationToken);
 
             var prompt = string.Format(_defaultSystemPrompt, newSession.Id);
