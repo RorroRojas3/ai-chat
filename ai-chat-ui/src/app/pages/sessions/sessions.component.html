@@ -1,1 +1,157 @@
-TEST
+<div class="container-fluid sessions-container p-4">
+  <div class="row">
+    <div class="col-12">
+      <h2 class="mb-4">Chat Sessions</h2>
+
+      <!-- Search functionality -->
+      <div class="mb-4">
+        <div class="input-group">
+          <span class="input-group-text sessions-search__icon">
+            <i class="bi bi-search"></i>
+          </span>
+          <input
+            type="text"
+            class="form-control sessions-search__input"
+            placeholder="Search chats..."
+            [value]="searchFilter"
+            (input)="onSearchChange($any($event.target).value)"
+          />
+          @if (searchFilter) {
+          <button
+            class="btn btn-outline-secondary sessions-search__clear"
+            type="button"
+            (click)="clearSearch()"
+          >
+            <i class="bi bi-x"></i>
+          </button>
+          }
+        </div>
+      </div>
+
+      <!-- Sessions list -->
+      <div class="sessions-list pb-4">
+        @if (isSearching) {
+        <div class="alert alert-info">
+          <i class="bi bi-search me-2"></i>
+          Searching...
+        </div>
+        } @else { @if (sessions.length > 0) {
+        <ul class="list-group">
+          @for (session of sessions; track session.id) {
+          <li
+            class="list-group-item list-group-item-action sessions-list__item rounded-3"
+            (click)="onClickSession(session.id)"
+            style="cursor: pointer"
+          >
+            <div class="d-flex w-100 justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <h5 class="mb-2 sessions-list__title">
+                  {{ session.name }}
+                </h5>
+                <div class="sessions-list__dates">
+                  <small class="d-block mb-1">
+                    <i class="bi bi-calendar-plus me-1"></i>
+                    <strong>Created:</strong>
+                    {{ session.getLocalDateCreated() | date : "short" }}
+                  </small>
+                  <small class="d-block">
+                    <i class="bi bi-calendar-check me-1"></i>
+                    <strong>Modified:</strong>
+                    {{ session.getLocalDateModified() | date : "short" }}
+                  </small>
+                </div>
+              </div>
+              <div class="sessions-list__icon">
+                <i class="bi bi-chevron-right"></i>
+              </div>
+            </div>
+          </li>
+          }
+        </ul>
+
+        <!-- Pagination -->
+        @if (totalPages > 1) {
+        <nav aria-label="Sessions pagination" class="mt-4">
+          <div class="d-flex justify-content-end align-items-center mb-3">
+            <div class="text-muted">
+              <small
+                >Showing {{ (currentPage - 1) * pageSize + 1 }} -
+                {{
+                  currentPage * pageSize > totalCount
+                    ? totalCount
+                    : currentPage * pageSize
+                }}
+                of {{ totalCount }} results</small
+              >
+            </div>
+          </div>
+          <ul class="pagination justify-content-center">
+            <li class="page-item" [class.disabled]="!hasPreviousResults">
+              <a
+                class="page-link sessions-pagination__link"
+                href="javascript:void(0);"
+                (click)="firstPage()"
+                aria-label="First"
+                title="First page"
+              >
+                <span aria-hidden="true">&laquo;&laquo;</span>
+              </a>
+            </li>
+            <li class="page-item" [class.disabled]="!hasPreviousResults">
+              <a
+                class="page-link sessions-pagination__link"
+                href="javascript:void(0);"
+                (click)="previousPage()"
+                aria-label="Previous"
+                title="Previous page"
+              >
+                <span aria-hidden="true">&lt;</span>
+              </a>
+            </li>
+            @for (page of getPageNumbers(); track page) {
+            <li class="page-item" [class.active]="page === currentPage">
+              <a
+                class="page-link sessions-pagination__link"
+                href="javascript:void(0);"
+                (click)="goToPage(page)"
+                >{{ page }}</a
+              >
+            </li>
+            }
+            <li class="page-item" [class.disabled]="!hasMoreResults">
+              <a
+                class="page-link sessions-pagination__link"
+                href="javascript:void(0);"
+                (click)="nextPage()"
+                aria-label="Next"
+                title="Next page"
+              >
+                <span aria-hidden="true">&gt;</span>
+              </a>
+            </li>
+            <li class="page-item" [class.disabled]="!hasMoreResults">
+              <a
+                class="page-link sessions-pagination__link"
+                href="javascript:void(0);"
+                (click)="lastPage()"
+                aria-label="Last"
+                title="Last page"
+              >
+                <span aria-hidden="true">&raquo;&raquo;</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+        } } @else {
+        <div class="alert alert-secondary sessions-list__no-results">
+          @if (searchFilter) {
+          <i class="bi bi-search me-2"></i>
+          No chats found for "{{ searchFilter }}" } @else {
+          <i class="bi bi-chat-text me-2"></i>
+          No chat sessions available }
+        </div>
+        } }
+      </div>
+    </div>
+  </div>
+</div>

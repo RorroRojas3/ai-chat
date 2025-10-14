@@ -1,0 +1,152 @@
+.sessions-container {
+  background-color: var(--color-light-blue);
+  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sessions-search {
+  &__icon {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+  }
+
+  &__input {
+    background-color: white;
+    border-color: var(--color-accent);
+
+    &:focus {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 0.2rem rgba(28, 60, 98, 0.25);
+    }
+  }
+
+  &__clear {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+
+    &:hover {
+      background-color: var(--color-navy);
+      border-color: var(--color-navy);
+      color: white;
+    }
+  }
+}
+
+.sessions-list {
+  &__item {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+    margin-bottom: 0.75rem;
+    padding: 1rem;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--color-navy);
+      color: white;
+      border-color: var(--color-navy);
+    }
+
+    &:focus {
+      background-color: var(--color-navy);
+      color: white;
+      border-color: var(--color-navy);
+      box-shadow: none;
+    }
+  }
+
+  &__title {
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  &__dates {
+    color: rgba(255, 255, 255, 0.9);
+
+    small {
+      color: rgba(255, 255, 255, 0.9);
+
+      strong {
+        color: white;
+      }
+    }
+
+    i {
+      opacity: 0.8;
+    }
+  }
+
+  &__icon {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+
+    .sessions-list__item:hover & {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  &__no-results {
+    background-color: var(--color-accent);
+    color: rgba(255, 255, 255, 0.8);
+    border-color: var(--color-accent);
+  }
+}
+
+.sessions-pagination {
+  &__link {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+
+    &:hover {
+      background-color: var(--color-navy);
+      border-color: var(--color-navy);
+      color: white;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(28, 60, 98, 0.25);
+    }
+  }
+}
+
+.page-item {
+  &.active .sessions-pagination__link {
+    background-color: var(--color-accent-light);
+    border-color: var(--color-accent-light);
+    font-weight: 600;
+
+    &:hover {
+      background-color: var(--color-accent-light);
+      border-color: var(--color-accent-light);
+    }
+  }
+
+  &.disabled .sessions-pagination__link {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    opacity: 0.5;
+    cursor: not-allowed;
+
+    &:hover {
+      background-color: var(--color-accent);
+      border-color: var(--color-accent);
+    }
+  }
+}
+
+.alert {
+  &.alert-info {
+    background-color: var(--color-accent);
+    color: white;
+    border-color: var(--color-accent);
+  }
+}

@@ -15,7 +15,7 @@ namespace RR.AI_Chat.Service
 
         Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken);
 
-        Task<List<SessionDto>> SearchSessionsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default);
+        Task<PaginatedResponseDto<SessionDto>> SearchSessionsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default);
 
         int GetSystemPromptTokenCount(string modelName);
     }
@@ -200,7 +200,7 @@ namespace RR.AI_Chat.Service
             return session.Name;
         }
 
-        public async Task<List<SessionDto>> SearchSessionsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default)
+        public async Task<PaginatedResponseDto<SessionDto>> SearchSessionsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default)
         {
             var userId = _tokenService.GetOid()!.Value;
             
@@ -213,18 +213,28 @@ namespace RR.AI_Chat.Service
                 query = query.Where(x => EF.Functions.Like(x.Name, $"%{filter}%"));
             }
 
-            return await query
+            var totalCount = await query.CountAsync(cancellationToken);
+
+            var items = await query
                 .OrderByDescending(x => x.DateCreated)
                 .Skip(skip)
                 .Take(take)
-                .Select(s => new SessionDto 
-                { 
-                    Id = s.Id, 
-                    Name = s.Name!, 
-                    DateCreated = s.DateCreated, 
-                    DateModified = s.DateModified 
+                .Select(s => new SessionDto
+                {
+                    Id = s.Id,
+                    Name = s.Name!,
+                    DateCreated = s.DateCreated,
+                    DateModified = s.DateModified
                 })
                 .ToListAsync(cancellationToken);
+
+            return new PaginatedResponseDto<SessionDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageSize = take,
+                CurrentPage = (skip / take) + 1
+            };
         }
 
 

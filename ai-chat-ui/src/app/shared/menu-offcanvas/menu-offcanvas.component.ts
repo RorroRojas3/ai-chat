@@ -35,8 +35,8 @@ export class MenuOffcanvasComponent {
     // Set up debounced search
     this.searchSubject
       .pipe(debounceTime(600), distinctUntilChanged())
-      .subscribe((query) => {
-        this.performSearch(query);
+      .subscribe((filter) => {
+        this.performSearch(filter);
       });
   }
 
@@ -46,19 +46,19 @@ export class MenuOffcanvasComponent {
   /**
    * Performs search using the session service
    */
-  private performSearch(query: string): void {
-    this.storeService.setSearchFilter(query);
+  private performSearch(filter: string): void {
+    this.storeService.setSearchFilter(filter);
 
-    if (!query.trim()) {
+    if (!filter.trim()) {
       // If search is cleared, reload all sessions
       this.loadAllSessions();
       return;
     }
 
     this.storeService.setSearching(true);
-    this.sessionService.searchSessions(query).subscribe({
-      next: (sessions) => {
-        this.storeService.sessions.set(sessions);
+    this.sessionService.searchSessions(filter).subscribe({
+      next: (response) => {
+        this.storeService.sessions.set(response.items);
         this.storeService.setSearching(false);
       },
       error: () => {
@@ -71,8 +71,8 @@ export class MenuOffcanvasComponent {
    * Loads all sessions without search filter
    */
   private loadAllSessions(): void {
-    this.sessionService.searchSessions('').subscribe((sessions) => {
-      this.storeService.sessions.set(sessions);
+    this.sessionService.searchSessions('').subscribe((response) => {
+      this.storeService.sessions.set(response.items);
     });
   }
 
@@ -100,6 +100,7 @@ export class MenuOffcanvasComponent {
    */
   onClickCreateNewSession(): void {
     this.storeService.clearForNewSession();
+    this.router.navigate(['chat']);
   }
 
   /**

@@ -114,7 +114,9 @@ namespace RR.AI_Chat.Service
 
         public async Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken)
         {
-            var session = await _ctx.Sessions.AsNoTracking().FirstOrDefaultAsync(x => x.Id == sessionId, cancellationToken);
+            var userId = _tokenService.GetOid()!.Value;
+            var session = await _ctx.Sessions.AsNoTracking()
+                            .FirstOrDefaultAsync(x => x.Id == sessionId && x.UserId == userId, cancellationToken);
             if (session == null)
             {
                 _logger.LogError("Session with id {id} not found.", sessionId);

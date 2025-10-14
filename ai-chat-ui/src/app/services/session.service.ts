@@ -3,6 +3,7 @@ import { SessionDto } from '../dtos/SessionDto';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
+import { PaginatedResponseDto } from '../dtos/PaginatedResponseDto';
 
 @Injectable({
   providedIn: 'root',
@@ -31,9 +32,12 @@ export class SessionService {
     filter: string,
     skip: number = 0,
     take: number = 10
-  ): Observable<SessionDto[]> {
-    return this.http.get<SessionDto[]>(`${environment.apiUrl}sessions/search`, {
-      params: { filter, skip, take },
-    });
+  ): Observable<PaginatedResponseDto<SessionDto>> {
+    return this.http.get<PaginatedResponseDto<SessionDto>>(
+      `${environment.apiUrl}sessions/search`,
+      {
+        params: { filter, skip, take },
+      }
+    );
   }
 }
