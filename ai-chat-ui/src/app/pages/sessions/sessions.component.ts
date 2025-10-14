@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { SessionService } from '../../services/session.service';
 import { SessionDto } from '../../dtos/SessionDto';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-sessions',
@@ -24,11 +25,16 @@ export class SessionsComponent implements OnInit {
   totalCount: number = 0;
 
   private searchSubject = new Subject<string>();
+  private destroyRef = inject(DestroyRef);
 
   constructor(private sessionService: SessionService, private router: Router) {
     // Set up debounced search
     this.searchSubject
-      .pipe(debounceTime(600), distinctUntilChanged())
+      .pipe(
+        debounceTime(600),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe((filter) => {
         this.performSearch(filter);
       });
@@ -47,6 +53,7 @@ export class SessionsComponent implements OnInit {
 
     this.sessionService
       .searchSessions(this.searchFilter, skip, this.pageSize)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
           // Update pagination metadata
