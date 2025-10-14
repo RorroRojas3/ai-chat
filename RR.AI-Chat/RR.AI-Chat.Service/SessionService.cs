@@ -210,7 +210,7 @@ namespace RR.AI_Chat.Service
 
             if (!string.IsNullOrWhiteSpace(filter))
             {
-                query = query.Where(x => EF.Functions.Like(x.Name, $"%{filter}%"));
+                query = query.Where(x => !string.IsNullOrWhiteSpace(x.Name) && EF.Functions.Like(x.Name, $"%{filter}%"));
             }
 
             var totalCount = await query.CountAsync(cancellationToken);
