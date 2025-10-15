@@ -40,4 +40,20 @@ export class SessionService {
       }
     );
   }
+
+  /**
+   * Deactivates a session by sending a DELETE request to the API.
+   *
+   * @param sessionId - The unique identifier of the session to deactivate
+   * @returns An Observable that completes when the session is successfully deactivated
+   *
+   * @remarks
+   * This method sends a DELETE request to the `/sessions/{sessionId}/deactivate` endpoint.
+   * The operation completes without returning any data upon success.
+   */
+  deactivateSession(sessionId: string): Observable<void> {
+    return this.http.delete<void>(
+      `${environment.apiUrl}sessions/${sessionId}/deactivate`
+    );
+  }
 }
