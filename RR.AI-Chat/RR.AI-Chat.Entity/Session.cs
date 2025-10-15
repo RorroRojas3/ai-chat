@@ -21,5 +21,7 @@ namespace RR.AI_Chat.Entity
         public long TotalTokens => InputTokens + OutputTokens;
 
         public User User { get; set; } = null!;
+
+        public List<Document> Documents { get; set; } = [];
     }
 }

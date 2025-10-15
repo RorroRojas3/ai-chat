@@ -251,22 +251,40 @@ namespace RR.AI_Chat.Service
         public async Task DeactivateSessionAsync(Guid sessionId, CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid()!.Value;
-            var rowsAffected = await _ctx.Sessions
-                                .Where(x => x.Id == sessionId &&
-                                            x.UserId == userId &&
-                                            !x.DateDeactivated.HasValue)
-                                .ExecuteUpdateAsync(s => s
-                                    .SetProperty(p => p.DateDeactivated, DateTime.UtcNow)
-                                    .SetProperty(p => p.DateModified, DateTime.UtcNow),
-                                    cancellationToken);
+            var date = DateTime.UtcNow;
 
-            if (rowsAffected == 0)
+            // Check if session exists and belongs to user
+            var sessionExists = await _ctx.Sessions
+                .Where(x => x.Id == sessionId && x.UserId == userId && !x.DateDeactivated.HasValue)
+                .AnyAsync(cancellationToken);
+
+            if (!sessionExists)
             {
-                _logger.LogError("Session with id {Id} not found", sessionId);
-                throw new InvalidOperationException($"Session with id {sessionId} not found");
+                _logger.LogWarning("Session with id {id} not found or already deactivated", sessionId);
+                return;
             }
 
-            _logger.LogInformation("Session with id {Id} deactivated", sessionId);
+            // Deactivate all pages for documents in this session
+            await _ctx.DocumentPages
+                .Where(p => p.Document.SessionId == sessionId && !p.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(p => p
+                    .SetProperty(x => x.DateDeactivated, date), 
+                    cancellationToken);
+
+            // Deactivate all documents in this session
+            await _ctx.Documents
+                .Where(d => d.SessionId == sessionId && !d.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(d => d
+                    .SetProperty(x => x.DateDeactivated, date), 
+                    cancellationToken);
+
+            // Deactivate the session
+            await _ctx.Sessions
+                .Where(s => s.Id == sessionId)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(x => x.DateDeactivated, date)
+                    .SetProperty(x => x.DateModified, date), 
+                    cancellationToken);
         }
     }
 }
