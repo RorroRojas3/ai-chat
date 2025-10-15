@@ -1,7 +1,16 @@
 <div class="container-fluid sessions-container p-4">
   <div class="row">
     <div class="col-12">
-      <h2 class="mb-4">Chat Sessions</h2>
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Your chat history</h2>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="onClickCreateNewSession()"
+        >
+          <i class="bi bi-plus-circle"></i>&nbsp;New Chat
+        </button>
+      </div>
 
       <!-- Search functionality -->
       <div class="mb-4">
@@ -28,6 +37,13 @@
         </div>
       </div>
 
+      <!-- Total count display -->
+      <div class="mb-3">
+        <p class="text-muted">
+          <i class="bi bi-chat-text me-2"></i>{{ totalCount }} chats with RR-GPT
+        </p>
+      </div>
+
       <!-- Sessions list -->
       <div class="sessions-list pb-4">
         @if (isSearching) {
@@ -52,12 +68,12 @@
                   <small class="d-block mb-1">
                     <i class="bi bi-calendar-plus me-1"></i>
                     <strong>Created:</strong>
-                    {{ session.getLocalDateCreated() | date : "short" }}
+                    {{ session.dateCreated | date : "MMM d, y, h:mm a" }}
                   </small>
                   <small class="d-block">
                     <i class="bi bi-calendar-check me-1"></i>
                     <strong>Modified:</strong>
-                    {{ session.getLocalDateModified() | date : "short" }}
+                    {{ session.dateModified | date : "MMM d, y, h:mm a" }}
                   </small>
                 </div>
               </div>

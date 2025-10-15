@@ -12,6 +12,7 @@ import {
   tap,
 } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { StoreService } from '../../store/store.service';
 
 @Component({
   selector: 'app-sessions',
@@ -33,7 +34,11 @@ export class SessionsComponent implements OnInit {
   private searchSubject = new Subject<string>();
   private destroyRef = inject(DestroyRef);
 
-  constructor(private sessionService: SessionService, private router: Router) {
+  constructor(
+    private sessionService: SessionService,
+    private router: Router,
+    private storeService: StoreService
+  ) {
     // Set up debounced search with switchMap to avoid race conditions
     this.searchSubject
       .pipe(
@@ -61,14 +66,9 @@ export class SessionsComponent implements OnInit {
           this.totalPages = response.totalPages;
 
           // Map plain objects to SessionDto instances
-          this.sessions = response.items.map((session) => {
-            const dto = new SessionDto();
-            dto.id = session.id;
-            dto.name = session.name;
-            dto.dateCreated = session.dateCreated;
-            dto.dateModified = session.dateModified;
-            return dto;
-          });
+          this.sessions = response.items.map(
+            (session) => new SessionDto(session)
+          );
           this.isSearching = false;
         },
         error: () => {
@@ -98,14 +98,9 @@ export class SessionsComponent implements OnInit {
           this.totalPages = response.totalPages;
 
           // Map plain objects to SessionDto instances
-          this.sessions = response.items.map((session) => {
-            const dto = new SessionDto();
-            dto.id = session.id;
-            dto.name = session.name;
-            dto.dateCreated = session.dateCreated;
-            dto.dateModified = session.dateModified;
-            return dto;
-          });
+          this.sessions = response.items.map(
+            (session) => new SessionDto(session)
+          );
           this.isSearching = false;
         },
         error: () => {
@@ -222,5 +217,10 @@ export class SessionsComponent implements OnInit {
     }
 
     return pages;
+  }
+
+  onClickCreateNewSession(): void {
+    this.storeService.clearForNewSession();
+    this.router.navigate(['chat']);
   }
 }

@@ -64,3 +64,32 @@ app-home {
   scrollbar-width: thin;
   scrollbar-color: var(--color-accent) var(--color-light-blue);
 }
+
+/* Custom Button Styling */
+.btn-primary {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+
+  &:hover {
+    background-color: var(--color-navy);
+    border-color: var(--color-navy);
+    color: white;
+  }
+
+  &:focus,
+  &:active,
+  &.active {
+    background-color: var(--color-navy);
+    border-color: var(--color-navy);
+    color: white;
+    box-shadow: 0 0 0 0.25rem rgba(28, 60, 98, 0.5);
+  }
+
+  &:disabled,
+  &.disabled {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    opacity: 0.65;
+  }
+}
