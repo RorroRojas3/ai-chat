@@ -1,6 +1,6 @@
 <div class="container-fluid sessions-container p-4">
   <div class="row h-100">
-    <div class="col-12 d-flex flex-column h-100">
+    <div class="col-12 d-flex flex-column h-100 px-3">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Your chat history</h2>
         <button
@@ -50,7 +50,7 @@
 
       <!-- Sessions list with scrollable container -->
       <div class="sessions-list-container mb-5">
-        <div class="sessions-list">
+        <div class="sessions-list pe-2">
           @if (isSearching) {
           <div class="alert alert-info">
             <i class="bi bi-search me-2"></i>
@@ -60,7 +60,7 @@
           <ul class="list-group">
             @for (session of sessions; track session.id) {
             <li
-              class="list-group-item list-group-item-action sessions-list__item rounded-3"
+              class="mb-2 p-3 list-group-item list-group-item-action sessions-list__item rounded-3"
               (click)="onClickSession(session.id)"
               style="cursor: pointer"
             >

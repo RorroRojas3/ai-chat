@@ -53,9 +53,7 @@ export class SessionService {
    * The operation completes without returning any data upon success.
    */
   deactivateSession(sessionId: string): Observable<void> {
-    return this.http.delete<void>(
-      `${environment.apiUrl}sessions/${sessionId}/deactivate`
-    );
+    return this.http.delete<void>(`${environment.apiUrl}sessions/${sessionId}`);
   }
 
   /**
