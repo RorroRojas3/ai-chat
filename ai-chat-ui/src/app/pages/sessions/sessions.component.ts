@@ -177,12 +177,39 @@ export class SessionsComponent implements OnInit {
     this.router.navigate(['chat']);
   }
 
+  onDeleteSession(sessionId: string): void {
+    this.selectedSessionIds = [sessionId];
+    this.showDeleteModal = true;
+  }
+
   handleDeleteSession(): void {
-    // Implement the logic to delete the session here
-    this.showDeleteModal = false;
+    if (this.selectedSessionIds.length === 0) {
+      this.showDeleteModal = false;
+      return;
+    }
+
+    // Delete the session
+    const sessionId = this.selectedSessionIds[0];
+    this.sessionService
+      .deactivateSession(sessionId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.showDeleteModal = false;
+          this.selectedSessionIds = [];
+          // Reload sessions to sync with server
+          this.loadSessions();
+        },
+        error: (error) => {
+          console.error('Error deleting session:', error);
+          this.showDeleteModal = false;
+          this.selectedSessionIds = [];
+        },
+      });
   }
 
   closeDeleteModal(): void {
     this.showDeleteModal = false;
+    this.selectedSessionIds = [];
   }
 }

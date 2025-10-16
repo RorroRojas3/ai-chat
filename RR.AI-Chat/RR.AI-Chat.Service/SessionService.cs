@@ -211,7 +211,7 @@ namespace RR.AI_Chat.Service
             
             var query = _ctx.Sessions
                 .AsNoTracking()
-                .Where(x => x.UserId == userId);
+                .Where(x => x.UserId == userId && !x.DateDeactivated.HasValue);
 
             if (!string.IsNullOrWhiteSpace(filter))
             {
