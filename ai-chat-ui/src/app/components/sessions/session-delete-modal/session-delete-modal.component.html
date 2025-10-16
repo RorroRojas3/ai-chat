@@ -12,11 +12,16 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title fw-bold" id="deleteSessionModalLabel">
-          Delete chat
+          @if (sessionCount === 1) { Delete chat } @else { Delete
+          {{ sessionCount }} chats }
         </h5>
       </div>
       <div class="modal-body">
-        <p>Are you sure you want to delete this chat?</p>
+        <p>
+          @if (sessionCount === 1) { Are you sure you want to delete this chat?
+          } @else { Are you sure you want to delete these
+          {{ sessionCount }} chats? }
+        </p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="handleClose()">

@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 })
 export class SessionDeleteModalComponent {
   @Input() show: boolean = false;
+  @Input() sessionCount: number = 0;
   @Output() onDelete = new EventEmitter<void>();
   @Output() onClose = new EventEmitter<void>();
 

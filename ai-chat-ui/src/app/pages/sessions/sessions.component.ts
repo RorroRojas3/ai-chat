@@ -32,7 +32,8 @@ export class SessionsComponent implements OnInit {
   currentSkip: number = 0;
   totalCount: number = 0;
   hasMoreSessions: boolean = true;
-  showDeleteModal: boolean = true;
+  showDeleteModal: boolean = false;
+  selectedSessionIds: string[] = [];
 
   private searchSubject = new Subject<string>();
   private destroyRef = inject(DestroyRef);

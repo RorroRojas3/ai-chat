@@ -133,6 +133,7 @@
 
 <app-session-delete-modal
   [show]="this.showDeleteModal"
+  [sessionCount]="selectedSessionIds.length"
   (onDelete)="handleDeleteSession()"
   (onClose)="closeDeleteModal()"
 ></app-session-delete-modal>
