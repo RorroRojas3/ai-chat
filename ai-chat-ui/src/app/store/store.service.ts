@@ -74,4 +74,11 @@ export class StoreService {
   hasSearchFilter(): boolean {
     return this.searchFilter().trim().length > 0;
   }
+
+  /**
+   * Updates the sessions list in the store with the first 10 sessions (no filters, no skip)
+   */
+  updateSessions(sessions: SessionDto[]): void {
+    this.sessions.set(sessions);
+  }
 }

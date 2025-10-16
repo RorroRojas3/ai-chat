@@ -67,29 +67,38 @@ app-home {
 
 /* Custom Button Styling */
 .btn-primary {
-  background-color: var(--color-accent);
-  border-color: var(--color-accent);
-  color: white;
+  background-color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+  color: white !important;
 
   &:hover {
-    background-color: var(--color-navy);
-    border-color: var(--color-navy);
-    color: white;
+    background-color: var(--color-navy) !important;
+    border-color: var(--color-navy) !important;
+    color: white !important;
   }
 
   &:focus,
   &:active,
-  &.active {
-    background-color: var(--color-navy);
-    border-color: var(--color-navy);
-    color: white;
-    box-shadow: 0 0 0 0.25rem rgba(28, 60, 98, 0.5);
+  &.active,
+  &:focus-visible {
+    background-color: var(--color-navy) !important;
+    border-color: var(--color-navy) !important;
+    color: white !important;
+    box-shadow: 0 0 0 0.25rem rgba(28, 60, 98, 0.5) !important;
   }
 
   &:disabled,
   &.disabled {
-    background-color: var(--color-accent);
-    border-color: var(--color-accent);
+    background-color: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
     opacity: 0.65;
   }
+}
+
+.btn-primary:not(:disabled):not(.disabled):active,
+.btn-primary:not(:disabled):not(.disabled).active,
+.show > .btn-primary.dropdown-toggle {
+  background-color: var(--color-navy) !important;
+  border-color: var(--color-navy) !important;
+  color: white !important;
 }

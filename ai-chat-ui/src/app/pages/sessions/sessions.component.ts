@@ -14,6 +14,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StoreService } from '../../store/store.service';
 import { SessionDeleteModalComponent } from '../../components/sessions/session-delete-modal/session-delete-modal.component';
+import { DeactivateSessionBulkActionDto } from '../../dtos/actions/session/DeactivateSessionBulkActionDto';
 
 @Component({
   selector: 'app-sessions',
@@ -34,6 +35,9 @@ export class SessionsComponent implements OnInit {
   hasMoreSessions: boolean = true;
   showDeleteModal: boolean = false;
   selectedSessionIds: string[] = [];
+
+  // Checkbox selection tracking
+  hoveredSessionId: string | null = null;
 
   private searchSubject = new Subject<string>();
   private destroyRef = inject(DestroyRef);
@@ -177,6 +181,67 @@ export class SessionsComponent implements OnInit {
     this.router.navigate(['chat']);
   }
 
+  /**
+   * Toggles the selection state of a session checkbox
+   */
+  toggleSessionSelection(sessionId: string, event: Event): void {
+    event.stopPropagation(); // Prevent navigation when clicking checkbox
+
+    const index = this.selectedSessionIds.indexOf(sessionId);
+    if (index > -1) {
+      this.selectedSessionIds.splice(index, 1);
+    } else {
+      this.selectedSessionIds.push(sessionId);
+    }
+  }
+
+  /**
+   * Checks if a session is selected
+   */
+  isSessionSelected(sessionId: string): boolean {
+    return this.selectedSessionIds.includes(sessionId);
+  }
+
+  /**
+   * Checks if checkbox should be visible for a session
+   */
+  shouldShowCheckbox(sessionId: string): boolean {
+    return (
+      this.hoveredSessionId === sessionId || this.selectedSessionIds.length > 0
+    );
+  }
+
+  /**
+   * Handles mouse enter on a session item
+   */
+  onSessionMouseEnter(sessionId: string): void {
+    this.hoveredSessionId = sessionId;
+  }
+
+  /**
+   * Handles mouse leave on a session item
+   */
+  onSessionMouseLeave(): void {
+    this.hoveredSessionId = null;
+  }
+
+  /**
+   * Deselects all selected sessions
+   */
+  deselectAllSessions(): void {
+    this.selectedSessionIds = [];
+  }
+
+  /**
+   * Initiates deletion of selected sessions
+   */
+  onDeleteSelectedSessions(): void {
+    if (this.selectedSessionIds.length === 0) {
+      return;
+    }
+    this.showDeleteModal = true;
+  }
+
   onDeleteSession(sessionId: string): void {
     this.selectedSessionIds = [sessionId];
     this.showDeleteModal = true;
@@ -188,22 +253,69 @@ export class SessionsComponent implements OnInit {
       return;
     }
 
-    // Delete the session
-    const sessionId = this.selectedSessionIds[0];
+    // If single session, use single delete endpoint
+    if (this.selectedSessionIds.length === 1) {
+      const sessionId = this.selectedSessionIds[0];
+      this.sessionService
+        .deactivateSession(sessionId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.showDeleteModal = false;
+            this.selectedSessionIds = [];
+            // Reload sessions to sync with server
+            this.loadSessions();
+            // Update store with first 10 sessions (no filters, no skip)
+            this.updateStoreWithLatestSessions();
+          },
+          error: (error) => {
+            console.error('Error deleting session:', error);
+            this.showDeleteModal = false;
+            this.selectedSessionIds = [];
+          },
+        });
+    } else {
+      // Multiple sessions, use bulk delete endpoint
+      const bulkRequest = new DeactivateSessionBulkActionDto();
+      bulkRequest.sessionIds = [...this.selectedSessionIds];
+
+      this.sessionService
+        .deactivateSessionBulk(bulkRequest)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.showDeleteModal = false;
+            this.selectedSessionIds = [];
+            // Reload sessions to sync with server
+            this.loadSessions();
+            // Update store with first 10 sessions (no filters, no skip)
+            this.updateStoreWithLatestSessions();
+          },
+          error: (error) => {
+            console.error('Error deleting sessions:', error);
+            this.showDeleteModal = false;
+            this.selectedSessionIds = [];
+          },
+        });
+    }
+  }
+
+  /**
+   * Updates the store with the first 10 sessions (no filters, no skip)
+   */
+  private updateStoreWithLatestSessions(): void {
     this.sessionService
-      .deactivateSession(sessionId)
+      .searchSessions('', 0, 10)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
-          this.showDeleteModal = false;
-          this.selectedSessionIds = [];
-          // Reload sessions to sync with server
-          this.loadSessions();
+        next: (response) => {
+          const latestSessions = response.items.map(
+            (session) => new SessionDto(session)
+          );
+          this.storeService.updateSessions(latestSessions);
         },
         error: (error) => {
-          console.error('Error deleting session:', error);
-          this.showDeleteModal = false;
-          this.selectedSessionIds = [];
+          console.error('Error updating store sessions:', error);
         },
       });
   }
