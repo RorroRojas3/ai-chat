@@ -288,7 +288,7 @@ namespace RR.AI_Chat.Service
 
         public async Task DeactivateSessionBulkAsync(DeactivateSessionBulkActionDto request, CancellationToken cancellationToken)
         {
-            ArgumentException.ThrowIfNullOrEmpty(nameof(request));
+            ArgumentNullException.ThrowIfNull(request);
 
             var userId = _tokenService.GetOid()!.Value;
             var date = DateTime.UtcNow;
