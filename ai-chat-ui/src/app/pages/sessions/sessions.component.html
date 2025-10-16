@@ -130,3 +130,9 @@
     </div>
   </div>
 </div>
+
+<app-session-delete-modal
+  [show]="this.showDeleteModal"
+  (onDelete)="handleDeleteSession()"
+  (onClose)="closeDeleteModal()"
+></app-session-delete-modal>

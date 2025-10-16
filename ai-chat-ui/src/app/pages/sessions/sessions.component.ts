@@ -13,10 +13,11 @@ import {
 } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StoreService } from '../../store/store.service';
+import { SessionDeleteModalComponent } from '../../components/sessions/session-delete-modal/session-delete-modal.component';
 
 @Component({
   selector: 'app-sessions',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SessionDeleteModalComponent],
   templateUrl: './sessions.component.html',
   styleUrl: './sessions.component.scss',
 })
@@ -31,6 +32,7 @@ export class SessionsComponent implements OnInit {
   currentSkip: number = 0;
   totalCount: number = 0;
   hasMoreSessions: boolean = true;
+  showDeleteModal: boolean = true;
 
   private searchSubject = new Subject<string>();
   private destroyRef = inject(DestroyRef);
@@ -172,5 +174,14 @@ export class SessionsComponent implements OnInit {
   onClickCreateNewSession(): void {
     this.storeService.clearForNewSession();
     this.router.navigate(['chat']);
+  }
+
+  handleDeleteSession(): void {
+    // Implement the logic to delete the session here
+    this.showDeleteModal = false;
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
   }
 }
