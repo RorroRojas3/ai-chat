@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.Tokenizers;
 using RR.AI_Chat.Dto;
+using RR.AI_Chat.Dto.Actions.Session;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
 
@@ -18,6 +19,10 @@ namespace RR.AI_Chat.Service
         Task<PaginatedResponseDto<SessionDto>> SearchSessionsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default);
 
         int GetSystemPromptTokenCount(string modelName);
+
+        Task DeactivateSessionAsync(Guid sessionId, CancellationToken cancellationToken);
+
+        Task DeactivateSessionBulkAsync(DeactivateSessionBulkActionDto request, CancellationToken cancellationToken);
     }
 
     public class SessionService(ILogger<SessionService> logger,
@@ -206,7 +211,7 @@ namespace RR.AI_Chat.Service
             
             var query = _ctx.Sessions
                 .AsNoTracking()
-                .Where(x => x.UserId == userId);
+                .Where(x => x.UserId == userId && !x.DateDeactivated.HasValue);
 
             if (!string.IsNullOrWhiteSpace(filter))
             {
@@ -244,6 +249,80 @@ namespace RR.AI_Chat.Service
 
             var tokenizer = TiktokenTokenizer.CreateForModel(modelName);
             return tokenizer.CountTokens(_defaultSystemPrompt);
+        }
+
+        public async Task DeactivateSessionAsync(Guid sessionId, CancellationToken cancellationToken)
+        {
+            var userId = _tokenService.GetOid()!.Value;
+            var date = DateTime.UtcNow;
+
+            var sessionExists = await _ctx.Sessions
+                .Where(x => x.Id == sessionId && x.UserId == userId && !x.DateDeactivated.HasValue)
+                .AnyAsync(cancellationToken);
+
+            if (!sessionExists)
+            {
+                _logger.LogWarning("Session with id {id} not found or already deactivated", sessionId);
+                return;
+            }
+
+            await _ctx.DocumentPages
+                .Where(p => p.Document.SessionId == sessionId && !p.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(p => p
+                    .SetProperty(x => x.DateDeactivated, date), 
+                    cancellationToken);
+
+            await _ctx.Documents
+                .Where(d => d.SessionId == sessionId && !d.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(d => d
+                    .SetProperty(x => x.DateDeactivated, date), 
+                    cancellationToken);
+
+            await _ctx.Sessions
+                .Where(s => s.Id == sessionId)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(x => x.DateDeactivated, date)
+                    .SetProperty(x => x.DateModified, date), 
+                    cancellationToken);
+        }
+
+        public async Task DeactivateSessionBulkAsync(DeactivateSessionBulkActionDto request, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+
+            var userId = _tokenService.GetOid()!.Value;
+            var date = DateTime.UtcNow;
+
+            var sessionIds = await _ctx.Sessions
+                .Where(x => request.SessionIds.Contains(x.Id) && x.UserId == userId && !x.DateDeactivated.HasValue)
+                .Select(x => x.Id)
+                .ToListAsync(cancellationToken);
+
+            if (sessionIds.Count == 0)
+            {
+                _logger.LogWarning("No valid sessions found to deactivate.");
+                return;
+            }
+
+            // Deactivate all pages for documents in these sessions
+            await _ctx.DocumentPages
+                .Where(p => sessionIds.Contains(p.Document.SessionId) && !p.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(p => p
+                    .SetProperty(x => x.DateDeactivated, date), 
+                    cancellationToken);
+
+            await _ctx.Documents
+                .Where(d => sessionIds.Contains(d.SessionId) && !d.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(d => d
+                    .SetProperty(x => x.DateDeactivated, date), 
+                    cancellationToken);
+
+            await _ctx.Sessions
+                .Where(s => sessionIds.Contains(s.Id))
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(x => x.DateDeactivated, date)
+                    .SetProperty(x => x.DateModified, date), 
+                    cancellationToken);
         }
     }
 }

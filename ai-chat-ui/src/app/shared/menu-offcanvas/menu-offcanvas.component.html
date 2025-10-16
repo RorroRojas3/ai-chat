@@ -33,7 +33,15 @@
         href="javascript:void(0);"
         class="list-group-item list-group-item-action menu-list__item"
         (click)="onClickCreateNewSession()"
-        ><i class="bi bi-chat-text"></i>&nbsp;New Chat</a
+        ><i class="bi bi-plus-circle"></i>&nbsp;New Chat</a
+      >
+    </ul>
+    <ul class="list-group menu-list mb-2">
+      <a
+        href="javascript:void(0);"
+        class="list-group-item list-group-item-action menu-list__item"
+        (click)="onClickGoToChats()"
+        ><i class="bi bi-chat-text"></i>&nbsp;Chats</a
       >
     </ul>
 
@@ -62,7 +70,7 @@
       </div>
     </div>
 
-    <h6 class="offcanvas-title menu-section-title">Chats</h6>
+    <h6 class="offcanvas-title menu-section-title">Recent Chats</h6>
     <ul class="list-group menu-list">
       @if (storeService.isSearching()) {
       <li class="list-group-item menu-list__item menu-list__item--loading">

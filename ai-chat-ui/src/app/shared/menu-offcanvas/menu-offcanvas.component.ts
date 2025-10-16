@@ -117,4 +117,13 @@ export class MenuOffcanvasComponent {
     this.storeService.clearSearchFilter();
     this.loadAllSessions();
   }
+
+  /**
+   * Navigates to the chat sessions page.
+   *
+   * @returns {void}
+   */
+  onClickGoToChats(): void {
+    this.router.navigate(['sessions']);
+  }
 }

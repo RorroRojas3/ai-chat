@@ -12,10 +12,13 @@ import {
   tap,
 } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { StoreService } from '../../store/store.service';
+import { SessionDeleteModalComponent } from '../../components/sessions/session-delete-modal/session-delete-modal.component';
+import { DeactivateSessionBulkActionDto } from '../../dtos/actions/session/DeactivateSessionBulkActionDto';
 
 @Component({
   selector: 'app-sessions',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SessionDeleteModalComponent],
   templateUrl: './sessions.component.html',
   styleUrl: './sessions.component.scss',
 })
@@ -23,17 +26,27 @@ export class SessionsComponent implements OnInit {
   sessions: SessionDto[] = [];
   searchFilter: string = '';
   isSearching: boolean = false;
+  isLoadingMore: boolean = false;
 
-  // Pagination properties
-  currentPage: number = 1;
+  // Virtual scrolling properties
   pageSize: number = 10;
-  totalPages: number = 0;
+  currentSkip: number = 0;
   totalCount: number = 0;
+  hasMoreSessions: boolean = true;
+  showDeleteModal: boolean = false;
+  selectedSessionIds: string[] = [];
+
+  // Checkbox selection tracking
+  hoveredSessionId: string | null = null;
 
   private searchSubject = new Subject<string>();
   private destroyRef = inject(DestroyRef);
 
-  constructor(private sessionService: SessionService, private router: Router) {
+  constructor(
+    private sessionService: SessionService,
+    private router: Router,
+    private storeService: StoreService
+  ) {
     // Set up debounced search with switchMap to avoid race conditions
     this.searchSubject
       .pipe(
@@ -41,14 +54,14 @@ export class SessionsComponent implements OnInit {
         distinctUntilChanged(),
         tap(() => {
           this.isSearching = true;
-          this.currentPage = 1; // Reset to first page on new search
+          this.currentSkip = 0; // Reset to beginning on new search
+          this.sessions = []; // Clear existing sessions on new search
         }),
         switchMap((filter) => {
           this.searchFilter = filter;
-          const skip = (this.currentPage - 1) * this.pageSize;
           return this.sessionService.searchSessions(
             filter,
-            skip,
+            this.currentSkip,
             this.pageSize
           );
         }),
@@ -56,19 +69,15 @@ export class SessionsComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          // Update pagination metadata
+          // Update metadata
           this.totalCount = response.totalCount;
-          this.totalPages = response.totalPages;
+          this.hasMoreSessions =
+            this.currentSkip + this.pageSize < response.totalCount;
 
           // Map plain objects to SessionDto instances
-          this.sessions = response.items.map((session) => {
-            const dto = new SessionDto();
-            dto.id = session.id;
-            dto.name = session.name;
-            dto.dateCreated = session.dateCreated;
-            dto.dateModified = session.dateModified;
-            return dto;
-          });
+          this.sessions = response.items.map(
+            (session) => new SessionDto(session)
+          );
           this.isSearching = false;
         },
         error: () => {
@@ -82,30 +91,27 @@ export class SessionsComponent implements OnInit {
   }
 
   /**
-   * Loads sessions with pagination
+   * Loads initial sessions
    */
   private loadSessions(): void {
-    const skip = (this.currentPage - 1) * this.pageSize;
     this.isSearching = true;
+    this.currentSkip = 0;
+    this.sessions = [];
 
     this.sessionService
-      .searchSessions(this.searchFilter, skip, this.pageSize)
+      .searchSessions(this.searchFilter, this.currentSkip, this.pageSize)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          // Update pagination metadata
+          // Update metadata
           this.totalCount = response.totalCount;
-          this.totalPages = response.totalPages;
+          this.hasMoreSessions =
+            this.currentSkip + this.pageSize < response.totalCount;
 
           // Map plain objects to SessionDto instances
-          this.sessions = response.items.map((session) => {
-            const dto = new SessionDto();
-            dto.id = session.id;
-            dto.name = session.name;
-            dto.dateCreated = session.dateCreated;
-            dto.dateModified = session.dateModified;
-            return dto;
-          });
+          this.sessions = response.items.map(
+            (session) => new SessionDto(session)
+          );
           this.isSearching = false;
         },
         error: () => {
@@ -122,12 +128,45 @@ export class SessionsComponent implements OnInit {
   }
 
   /**
-   * Clears the search term
+   * Clears the search term and reloads sessions
    */
   clearSearch(): void {
     this.searchFilter = '';
-    this.currentPage = 1;
     this.loadSessions();
+  }
+
+  /**
+   * Loads more sessions (next 10) and appends them to the existing list
+   */
+  loadMoreSessions(): void {
+    if (!this.hasMoreSessions || this.isLoadingMore) {
+      return;
+    }
+
+    this.isLoadingMore = true;
+    this.currentSkip += this.pageSize;
+
+    this.sessionService
+      .searchSessions(this.searchFilter, this.currentSkip, this.pageSize)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          // Update metadata
+          this.totalCount = response.totalCount;
+          this.hasMoreSessions =
+            this.currentSkip + this.pageSize < response.totalCount;
+
+          // Append new sessions to the existing list
+          const newSessions = response.items.map(
+            (session) => new SessionDto(session)
+          );
+          this.sessions = [...this.sessions, ...newSessions];
+          this.isLoadingMore = false;
+        },
+        error: () => {
+          this.isLoadingMore = false;
+        },
+      });
   }
 
   /**
@@ -137,90 +176,152 @@ export class SessionsComponent implements OnInit {
     this.router.navigate(['chat', 'session', sessionId]);
   }
 
+  onClickCreateNewSession(): void {
+    this.storeService.clearForNewSession();
+    this.router.navigate(['chat']);
+  }
+
   /**
-   * Navigates to the next page
+   * Toggles the selection state of a session checkbox
    */
-  nextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.loadSessions();
+  toggleSessionSelection(sessionId: string, event: Event): void {
+    event.stopPropagation(); // Prevent navigation when clicking checkbox
+
+    const index = this.selectedSessionIds.indexOf(sessionId);
+    if (index > -1) {
+      this.selectedSessionIds.splice(index, 1);
+    } else {
+      this.selectedSessionIds.push(sessionId);
     }
   }
 
   /**
-   * Navigates to the previous page
+   * Checks if a session is selected
    */
-  previousPage(): void {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.loadSessions();
+  isSessionSelected(sessionId: string): boolean {
+    return this.selectedSessionIds.includes(sessionId);
+  }
+
+  /**
+   * Checks if checkbox should be visible for a session
+   */
+  shouldShowCheckbox(sessionId: string): boolean {
+    return (
+      this.hoveredSessionId === sessionId || this.selectedSessionIds.length > 0
+    );
+  }
+
+  /**
+   * Handles mouse enter on a session item
+   */
+  onSessionMouseEnter(sessionId: string): void {
+    this.hoveredSessionId = sessionId;
+  }
+
+  /**
+   * Handles mouse leave on a session item
+   */
+  onSessionMouseLeave(): void {
+    this.hoveredSessionId = null;
+  }
+
+  /**
+   * Deselects all selected sessions
+   */
+  deselectAllSessions(): void {
+    this.selectedSessionIds = [];
+  }
+
+  /**
+   * Initiates deletion of selected sessions
+   */
+  onDeleteSelectedSessions(): void {
+    if (this.selectedSessionIds.length === 0) {
+      return;
+    }
+    this.showDeleteModal = true;
+  }
+
+  onDeleteSession(sessionId: string): void {
+    this.selectedSessionIds = [sessionId];
+    this.showDeleteModal = true;
+  }
+
+  handleDeleteSession(): void {
+    if (this.selectedSessionIds.length === 0) {
+      this.showDeleteModal = false;
+      return;
+    }
+
+    // If single session, use single delete endpoint
+    if (this.selectedSessionIds.length === 1) {
+      const sessionId = this.selectedSessionIds[0];
+      this.sessionService
+        .deactivateSession(sessionId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.showDeleteModal = false;
+            this.selectedSessionIds = [];
+            // Reload sessions to sync with server
+            this.loadSessions();
+            // Update store with first 10 sessions (no filters, no skip)
+            this.updateStoreWithLatestSessions();
+          },
+          error: (error) => {
+            console.error('Error deleting session:', error);
+            this.showDeleteModal = false;
+            this.selectedSessionIds = [];
+          },
+        });
+    } else {
+      // Multiple sessions, use bulk delete endpoint
+      const bulkRequest = new DeactivateSessionBulkActionDto();
+      bulkRequest.sessionIds = [...this.selectedSessionIds];
+
+      this.sessionService
+        .deactivateSessionBulk(bulkRequest)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.showDeleteModal = false;
+            this.selectedSessionIds = [];
+            // Reload sessions to sync with server
+            this.loadSessions();
+            // Update store with first 10 sessions (no filters, no skip)
+            this.updateStoreWithLatestSessions();
+          },
+          error: (error) => {
+            console.error('Error deleting sessions:', error);
+            this.showDeleteModal = false;
+            this.selectedSessionIds = [];
+          },
+        });
     }
   }
 
   /**
-   * Navigates to the first page
+   * Updates the store with the first 10 sessions (no filters, no skip)
    */
-  firstPage(): void {
-    if (this.currentPage !== 1) {
-      this.currentPage = 1;
-      this.loadSessions();
-    }
+  private updateStoreWithLatestSessions(): void {
+    this.sessionService
+      .searchSessions('', 0, 10)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          const latestSessions = response.items.map(
+            (session) => new SessionDto(session)
+          );
+          this.storeService.updateSessions(latestSessions);
+        },
+        error: (error) => {
+          console.error('Error updating store sessions:', error);
+        },
+      });
   }
 
-  /**
-   * Navigates to the last page
-   */
-  lastPage(): void {
-    if (this.currentPage !== this.totalPages) {
-      this.currentPage = this.totalPages;
-      this.loadSessions();
-    }
-  }
-
-  /**
-   * Goes to a specific page
-   */
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.loadSessions();
-    }
-  }
-
-  /**
-   * Returns whether there are more pages available
-   */
-  get hasMoreResults(): boolean {
-    return this.currentPage < this.totalPages;
-  }
-
-  /**
-   * Returns whether there are previous pages available
-   */
-  get hasPreviousResults(): boolean {
-    return this.currentPage > 1;
-  }
-
-  /**
-   * Generates an array of page numbers to display in pagination
-   */
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxPagesToShow = 5;
-    const halfRange = Math.floor(maxPagesToShow / 2);
-
-    let startPage = Math.max(1, this.currentPage - halfRange);
-    let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
-
-    // Adjust start page if we're near the end
-    if (endPage - startPage < maxPagesToShow - 1) {
-      startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return pages;
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
+    this.selectedSessionIds = [];
   }
 }

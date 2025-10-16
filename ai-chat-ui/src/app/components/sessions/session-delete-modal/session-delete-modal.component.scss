@@ -1,0 +1,106 @@
+// Modal styling to ensure it appears correctly
+.modal {
+  &.show {
+    opacity: 1;
+  }
+}
+
+.modal-backdrop {
+  background-color: rgba(18, 40, 66, 0.7);
+
+  &.show {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1rem 3rem rgba(18, 40, 66, 0.4);
+  border: none;
+  overflow: hidden;
+}
+
+.modal-header {
+  border-bottom: none;
+  padding: 1.5rem 2rem;
+  background-color: white;
+
+  .modal-title {
+    color: var(--color-navy);
+    font-weight: 700;
+    font-size: 1.5rem;
+  }
+
+  .btn-close {
+    &:focus {
+      box-shadow: 0 0 0 0.25rem rgba(28, 60, 98, 0.25);
+    }
+  }
+}
+
+.modal-body {
+  padding: 0 2rem 1.5rem 2rem;
+  color: var(--color-navy);
+  background-color: white;
+
+  p {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #6c757d;
+  }
+}
+
+.modal-footer {
+  border-top: none;
+  padding: 1rem 2rem 1.5rem 2rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background-color: white;
+
+  .btn {
+    padding: 0.625rem 1.5rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-secondary {
+    background-color: #e9ecef;
+    border-color: #e9ecef;
+    color: var(--color-navy);
+
+    &:hover {
+      background-color: #dee2e6;
+      border-color: #dee2e6;
+      color: var(--color-navy);
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 0.25rem rgba(28, 60, 98, 0.15);
+    }
+  }
+
+  .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+
+    &:hover {
+      background-color: #bb2d3b;
+      border-color: #b02a37;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}

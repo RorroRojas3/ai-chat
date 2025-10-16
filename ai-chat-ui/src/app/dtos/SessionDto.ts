@@ -4,18 +4,10 @@ export class SessionDto {
   dateCreated!: Date;
   dateModified!: Date;
 
-  /**
-   * Gets the dateCreated converted from UTC to local time
-   */
-  getLocalDateCreated(): Date {
-    return new Date(this.dateCreated);
-  }
-
-  /**
-   * Gets the dateModified converted from UTC to local time
-   */
-  getLocalDateModified(): Date {
-    return new Date(this.dateModified);
+  constructor(init?: Partial<SessionDto>) {
+    if (init) {
+      Object.assign(this, init);
+    }
   }
 }
 
