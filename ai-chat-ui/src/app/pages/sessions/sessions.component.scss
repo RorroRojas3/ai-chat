@@ -2,8 +2,34 @@
   background-color: var(--color-light-blue);
   min-height: 100vh;
   height: 100vh;
+  overflow: hidden;
+}
+
+.sessions-list-container {
+  flex: 1 1 auto;
   overflow-y: auto;
   overflow-x: hidden;
+  min-height: 0; // Important for flex children to scroll
+  margin-bottom: 1rem;
+
+  // Custom scrollbar styling
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(28, 60, 98, 0.1);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-accent);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--color-navy);
+    }
+  }
 }
 
 .sessions-search {
@@ -100,46 +126,40 @@
   }
 }
 
-.sessions-pagination {
-  &__link {
-    background-color: var(--color-accent);
-    border-color: var(--color-accent);
+.sessions-load-more {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+  padding: 0.75rem 2rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-navy);
+    border-color: var(--color-navy);
     color: white;
-
-    &:hover {
-      background-color: var(--color-navy);
-      border-color: var(--color-navy);
-      color: white;
-    }
-
-    &:focus {
-      box-shadow: 0 0 0 0.2rem rgba(28, 60, 98, 0.25);
-    }
-  }
-}
-
-.page-item {
-  &.active .sessions-pagination__link {
-    background-color: var(--color-accent-light);
-    border-color: var(--color-accent-light);
-    font-weight: 600;
-
-    &:hover {
-      background-color: var(--color-accent-light);
-      border-color: var(--color-accent-light);
-    }
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 
-  &.disabled .sessions-pagination__link {
-    background-color: var(--color-accent);
-    border-color: var(--color-accent);
-    opacity: 0.5;
+  &:focus {
+    box-shadow: 0 0 0 0.2rem rgba(28, 60, 98, 0.25);
+  }
+
+  &:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
+  }
 
-    &:hover {
-      background-color: var(--color-accent);
-      border-color: var(--color-accent);
-    }
+  i {
+    font-size: 1rem;
+  }
+
+  .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
   }
 }
 

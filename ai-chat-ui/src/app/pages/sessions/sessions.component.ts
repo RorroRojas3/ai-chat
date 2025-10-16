@@ -24,12 +24,13 @@ export class SessionsComponent implements OnInit {
   sessions: SessionDto[] = [];
   searchFilter: string = '';
   isSearching: boolean = false;
+  isLoadingMore: boolean = false;
 
-  // Pagination properties
-  currentPage: number = 1;
+  // Virtual scrolling properties
   pageSize: number = 10;
-  totalPages: number = 0;
+  currentSkip: number = 0;
   totalCount: number = 0;
+  hasMoreSessions: boolean = true;
 
   private searchSubject = new Subject<string>();
   private destroyRef = inject(DestroyRef);
@@ -46,14 +47,14 @@ export class SessionsComponent implements OnInit {
         distinctUntilChanged(),
         tap(() => {
           this.isSearching = true;
-          this.currentPage = 1; // Reset to first page on new search
+          this.currentSkip = 0; // Reset to beginning on new search
+          this.sessions = []; // Clear existing sessions on new search
         }),
         switchMap((filter) => {
           this.searchFilter = filter;
-          const skip = (this.currentPage - 1) * this.pageSize;
           return this.sessionService.searchSessions(
             filter,
-            skip,
+            this.currentSkip,
             this.pageSize
           );
         }),
@@ -61,9 +62,10 @@ export class SessionsComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          // Update pagination metadata
+          // Update metadata
           this.totalCount = response.totalCount;
-          this.totalPages = response.totalPages;
+          this.hasMoreSessions =
+            this.currentSkip + this.pageSize < response.totalCount;
 
           // Map plain objects to SessionDto instances
           this.sessions = response.items.map(
@@ -82,20 +84,22 @@ export class SessionsComponent implements OnInit {
   }
 
   /**
-   * Loads sessions with pagination
+   * Loads initial sessions
    */
   private loadSessions(): void {
-    const skip = (this.currentPage - 1) * this.pageSize;
     this.isSearching = true;
+    this.currentSkip = 0;
+    this.sessions = [];
 
     this.sessionService
-      .searchSessions(this.searchFilter, skip, this.pageSize)
+      .searchSessions(this.searchFilter, this.currentSkip, this.pageSize)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          // Update pagination metadata
+          // Update metadata
           this.totalCount = response.totalCount;
-          this.totalPages = response.totalPages;
+          this.hasMoreSessions =
+            this.currentSkip + this.pageSize < response.totalCount;
 
           // Map plain objects to SessionDto instances
           this.sessions = response.items.map(
@@ -117,12 +121,45 @@ export class SessionsComponent implements OnInit {
   }
 
   /**
-   * Clears the search term
+   * Clears the search term and reloads sessions
    */
   clearSearch(): void {
     this.searchFilter = '';
-    this.currentPage = 1;
     this.loadSessions();
+  }
+
+  /**
+   * Loads more sessions (next 10) and appends them to the existing list
+   */
+  loadMoreSessions(): void {
+    if (!this.hasMoreSessions || this.isLoadingMore) {
+      return;
+    }
+
+    this.isLoadingMore = true;
+    this.currentSkip += this.pageSize;
+
+    this.sessionService
+      .searchSessions(this.searchFilter, this.currentSkip, this.pageSize)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          // Update metadata
+          this.totalCount = response.totalCount;
+          this.hasMoreSessions =
+            this.currentSkip + this.pageSize < response.totalCount;
+
+          // Append new sessions to the existing list
+          const newSessions = response.items.map(
+            (session) => new SessionDto(session)
+          );
+          this.sessions = [...this.sessions, ...newSessions];
+          this.isLoadingMore = false;
+        },
+        error: () => {
+          this.isLoadingMore = false;
+        },
+      });
   }
 
   /**
@@ -130,93 +167,6 @@ export class SessionsComponent implements OnInit {
    */
   onClickSession(sessionId: string): void {
     this.router.navigate(['chat', 'session', sessionId]);
-  }
-
-  /**
-   * Navigates to the next page
-   */
-  nextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.loadSessions();
-    }
-  }
-
-  /**
-   * Navigates to the previous page
-   */
-  previousPage(): void {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.loadSessions();
-    }
-  }
-
-  /**
-   * Navigates to the first page
-   */
-  firstPage(): void {
-    if (this.currentPage !== 1) {
-      this.currentPage = 1;
-      this.loadSessions();
-    }
-  }
-
-  /**
-   * Navigates to the last page
-   */
-  lastPage(): void {
-    if (this.currentPage !== this.totalPages) {
-      this.currentPage = this.totalPages;
-      this.loadSessions();
-    }
-  }
-
-  /**
-   * Goes to a specific page
-   */
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      this.loadSessions();
-    }
-  }
-
-  /**
-   * Returns whether there are more pages available
-   */
-  get hasMoreResults(): boolean {
-    return this.currentPage < this.totalPages;
-  }
-
-  /**
-   * Returns whether there are previous pages available
-   */
-  get hasPreviousResults(): boolean {
-    return this.currentPage > 1;
-  }
-
-  /**
-   * Generates an array of page numbers to display in pagination
-   */
-  getPageNumbers(): number[] {
-    const pages: number[] = [];
-    const maxPagesToShow = 5;
-    const halfRange = Math.floor(maxPagesToShow / 2);
-
-    let startPage = Math.max(1, this.currentPage - halfRange);
-    let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
-
-    // Adjust start page if we're near the end
-    if (endPage - startPage < maxPagesToShow - 1) {
-      startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return pages;
   }
 
   onClickCreateNewSession(): void {

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RR.AI_Chat.Dto.Actions.Session;
 using RR.AI_Chat.Service;
 
 namespace RR.AI_Chat.Api.Controllers
@@ -29,6 +30,13 @@ namespace RR.AI_Chat.Api.Controllers
         public async Task<IActionResult> DeactivateSessionAsync(Guid sessionId, CancellationToken cancellationToken)
         {
             await _sessionService.DeactivateSessionAsync(sessionId, cancellationToken);
+            return NoContent();
+        }
+
+        [HttpDelete("bulk")]
+        public async Task<IActionResult> DeactivateSessionBulkAsync([FromBody] DeactivateSessionBulkActionDto request, CancellationToken cancellationToken)
+        {
+            await _sessionService.DeactivateSessionBulkAsync(request, cancellationToken);
             return NoContent();
         }
     }

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { PaginatedResponseDto } from '../dtos/PaginatedResponseDto';
+import { DeactivateSessionBulkActionDto } from '../dtos/actions/session/DeactivateSessionBulkActionDto';
 
 @Injectable({
   providedIn: 'root',
@@ -55,5 +56,23 @@ export class SessionService {
     return this.http.delete<void>(
       `${environment.apiUrl}sessions/${sessionId}/deactivate`
     );
+  }
+
+  /**
+   * Deactivates multiple sessions in bulk.
+   *
+   * @param request - The bulk deactivation request containing session identifiers to deactivate
+   * @returns An Observable that completes when the sessions have been deactivated
+   *
+   * @remarks
+   * This method sends a DELETE request to the sessions bulk endpoint with the deactivation
+   * criteria in the request body.
+   */
+  deactivateSessionBulk(
+    request: DeactivateSessionBulkActionDto
+  ): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}sessions/bulk`, {
+      body: request,
+    });
   }
 }
