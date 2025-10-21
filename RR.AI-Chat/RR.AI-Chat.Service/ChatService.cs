@@ -163,7 +163,7 @@ namespace RR.AI_Chat.Service
                 {
                     { "max_completion_tokens", 6_000},
                 },
-                MaxOutputTokens = model.Name.Contains("gpt") ? null : 6_000
+                MaxOutputTokens = model.Name.Contains("gpt") ? null : 6_000   
             };
             if (model.IsToolEnabled)
             {

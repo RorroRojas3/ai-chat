@@ -143,7 +143,9 @@ builder.Services.AddSingleton<ISessionLockService, SessionLockService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IGraphService, GraphService>();
 builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
-builder.Services.AddSingleton<IDocumentIntelligenceService, DocumentIntelligenceService>(); 
+builder.Services.AddSingleton<IDocumentIntelligenceService, DocumentIntelligenceService>();
+builder.Services.AddSingleton<IHtmlService, HtmlService>();
+builder.Services.AddSingleton<IPdfService, PdfService>();
 
 // Keep other services as Scoped
 builder.Services.AddScoped<IChatService, ChatService>();

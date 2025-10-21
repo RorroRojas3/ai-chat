@@ -1,20 +1,22 @@
 ﻿using Hangfire.Server;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Graph.Models.CallRecords;
 using ModelContextProtocol.Protocol;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
-using UglyToad.PdfPig;
-using UglyToad.PdfPig.Content;
 
 namespace RR.AI_Chat.Service
 {
     public interface IDocumentService 
     {
         Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken);
+
+        Task<FileDataDto?> GenerateConversationHistoryPdfAsync(Guid sessionId, CancellationToken cancellationToken);
     }
 
     public class DocumentService(ILogger<DocumentService> logger, 
@@ -22,6 +24,9 @@ namespace RR.AI_Chat.Service
         IBlobStorageService blobStorageService,
         IConfiguration configuration,
         IDocumentIntelligenceService documentIntelligenceService,
+        ITokenService tokenService,
+        IHtmlService htmlService,
+        IPdfService pdfService,
         AIChatDbContext ctx) : IDocumentService
     {
         private readonly ILogger _logger = logger;
@@ -29,6 +34,9 @@ namespace RR.AI_Chat.Service
         private readonly IBlobStorageService _blobStorageService = blobStorageService;
         private readonly IConfiguration _configuration = configuration;
         private readonly IDocumentIntelligenceService _documentIntelligenceService = documentIntelligenceService;
+        private readonly ITokenService _tokenService = tokenService;
+        private readonly IHtmlService _htmlService = htmlService;
+        private readonly IPdfService _pdfService = pdfService;
         private readonly AIChatDbContext _ctx = ctx;
         private const double _cosineDistanceThreshold = 0.3;
 
@@ -196,6 +204,53 @@ namespace RR.AI_Chat.Service
             }).ToList();
 
             return dto;
+        }
+
+        public async Task<FileDataDto?> GenerateConversationHistoryPdfAsync(Guid sessionId, CancellationToken cancellationToken)
+        {
+            var oid = _tokenService.GetOid()!;
+
+            var session = await _ctx.Sessions
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == sessionId &&
+                                    x.UserId == oid.Value &&
+                                    x.Conversations != null &&
+                                    !x.DateDeactivated.HasValue,
+                                    cancellationToken);
+
+            if (session?.Conversations == null || session.Conversations.Count == 0)
+            {
+                return null;
+            }
+
+            var conversations = session.Conversations
+                                      .Where(x => x.Role != ChatRole.System)
+                                      .ToList();
+
+            if (conversations.Count == 0)
+            {
+                return null;
+            }
+
+            var html = _htmlService.GenerateConversationHistoryAsync(conversations);
+            if (string.IsNullOrWhiteSpace(html))
+            {
+                return null;
+            }
+
+            var bytes = _pdfService.GeneratePdfFromHtmlAsync(html);
+            if (bytes == null || bytes.Length == 0)
+            {
+                return null;
+            }
+
+            return new FileDataDto
+            {
+                FileName = $"conversation-history-{sessionId}.pdf",
+                Content = bytes!,
+                ContentType = "application/pdf",
+                Length = bytes.Length
+            };
         }
 
         // Add this helper method to the DocumentService class
