@@ -83,9 +83,9 @@
         class="list-group-item list-group-item-action menu-list__item"
         (click)="onClickSession(session.id)"
         >{{
-          session.name.length > 40
+          session.name && session.name.length > 40
             ? session.name.slice(0, 40) + "..."
-            : session.name
+            : session.name || "Untitled Chat"
         }}</a
       >
       } @empty { @if (storeService.searchFilter()) {

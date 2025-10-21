@@ -1,4 +1,6 @@
-﻿using Azure.AI.OpenAI;
+﻿using Azure;
+using Azure.AI.DocumentIntelligence;
+using Azure.AI.OpenAI;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Hangfire;
@@ -124,12 +126,24 @@ builder.Services.AddSingleton(x =>
     return new BlobServiceClient(connectionString);
 });
 
+// Azure Document Intelligence 
+builder.Services.AddSingleton<DocumentIntelligenceClient>(sp =>
+{
+    var config = builder.Configuration.GetSection("DocumentIntelligence");
+    var endpoint = config["Endpoint"];
+    var apiKey = config["ApiKey"];
+
+    var credential = new AzureKeyCredential(apiKey!);
+    return new DocumentIntelligenceClient(new Uri(endpoint!), credential);
+});
+
 
 // Register the singleton lock service
 builder.Services.AddSingleton<ISessionLockService, SessionLockService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IGraphService, GraphService>();
 builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
+builder.Services.AddSingleton<IDocumentIntelligenceService, DocumentIntelligenceService>(); 
 
 // Keep other services as Scoped
 builder.Services.AddScoped<IChatService, ChatService>();

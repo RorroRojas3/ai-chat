@@ -20,12 +20,14 @@ namespace RR.AI_Chat.Service
         IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
         IBlobStorageService blobStorageService,
         IConfiguration configuration,
+        IDocumentIntelligenceService documentIntelligenceService,
         AIChatDbContext ctx) : IDocumentService
     {
         private readonly ILogger _logger = logger;
         private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator = embeddingGenerator;
         private readonly IBlobStorageService _blobStorageService = blobStorageService;
         private readonly IConfiguration _configuration = configuration;
+        private readonly IDocumentIntelligenceService _documentIntelligenceService = documentIntelligenceService;
         private readonly AIChatDbContext _ctx = ctx;
         private const double _cosineDistanceThreshold = 0.3;
 
@@ -70,7 +72,7 @@ namespace RR.AI_Chat.Service
 
             await _blobStorageService.UploadAsync(container, blob, fileDataDto.Content, metadata, cancellationToken);
 
-            var documentExtractors = ExtractTextFromPdfFileAsync(fileDataDto.Content);
+            var documentExtractors = await ExtractTextFromPdfFileAsync(fileDataDto.Content, cancellationToken);
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Extracting.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 50);
 
@@ -180,29 +182,17 @@ namespace RR.AI_Chat.Service
         /// <param name="bytes">The byte array representing the PDF file.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the extracted text from the PDF file.</returns>
         /// <exception cref="ArgumentNullException">Thrown when the byte array is null.</exception>
-        public static List<DocumentExtractorDto> ExtractTextFromPdfFileAsync(byte[] bytes)
+        public async Task<List<DocumentExtractorDto>> ExtractTextFromPdfFileAsync(byte[] bytes, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(bytes, nameof(bytes));
 
-            // Load PDF from byte array
-            using MemoryStream stream = new(bytes);
-
-            var dto = new List<DocumentExtractorDto>();
-
-            // Open the PDF document
-            using PdfDocument document = PdfDocument.Open(stream);
-            // Iterate through all pages
-            for (int i = 0; i < document.NumberOfPages; i++)
-            {
-                // Get the page (note: PdfPig uses 1-based page numbering)
-                Page page = document.GetPage(i + 1);
-
-                // Extract text from the page
-                string pageText = page.Text;
-
-                // Add the text to our StringBuilder
-                dto.Add(new() { PageNumber = i + 1, PageText = pageText});
-            }
+            var analyzeResult = await _documentIntelligenceService.ReadAsync(bytes, cancellationToken);
+            var dto = analyzeResult.Paragraphs.GroupBy(p => p.BoundingRegions![0].PageNumber)
+                .Select(g => new DocumentExtractorDto
+                {
+                    PageNumber = g.Key,
+                    PageText = string.Join("\n", g.Select(p => p.Content))
+                }).ToList();
 
             return dto;
         }
