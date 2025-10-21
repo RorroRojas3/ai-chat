@@ -2,6 +2,7 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Protocol;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
 using RR.AI_Chat.Entity;
@@ -187,12 +188,12 @@ namespace RR.AI_Chat.Service
             ArgumentNullException.ThrowIfNull(bytes, nameof(bytes));
 
             var analyzeResult = await _documentIntelligenceService.ReadAsync(bytes, cancellationToken);
-            var dto = analyzeResult.Paragraphs.GroupBy(p => p.BoundingRegions![0].PageNumber)
-                .Select(g => new DocumentExtractorDto
-                {
-                    PageNumber = g.Key,
-                    PageText = string.Join("\n", g.Select(p => p.Content))
-                }).ToList();
+
+            var dto = analyzeResult.Pages.Select(page => new DocumentExtractorDto
+            {
+                PageNumber = page.PageNumber,
+                PageText = string.Join("\n", page.Lines.Select(line => line.Content))
+            }).ToList();
 
             return dto;
         }
