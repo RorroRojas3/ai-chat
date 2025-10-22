@@ -64,7 +64,6 @@ namespace RR.AI_Chat.Api.Controllers
             });
         }
 
-        [AllowAnonymous]
         [HttpGet("sessions/{sessionId}/conversation-history")]
         public async Task<IActionResult> GenerateConversationHistoryFileAsync(
             Guid sessionId, 
