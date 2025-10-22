@@ -66,9 +66,12 @@ namespace RR.AI_Chat.Api.Controllers
 
         [AllowAnonymous]
         [HttpGet("sessions/{sessionId}/conversation-history")]
-        public async Task<IActionResult> GenerateConversationHistoryFileAsync(Guid sessionId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateConversationHistoryFileAsync(
+            Guid sessionId, 
+            [FromQuery] DocumentFormats documentFormat, 
+            CancellationToken cancellationToken)
         {
-            var dto = await _service.GenerateConversationHistoryPdfAsync(sessionId, cancellationToken);
+            var dto = await _service.GenerateConversationHistoryAsync(sessionId, documentFormat, cancellationToken);
             if (dto == null)
             {
                 return NotFound();

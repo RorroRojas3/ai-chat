@@ -11,10 +11,10 @@ namespace RR.AI_Chat.Service
         string? GenerateConversationHistoryAsync(List<Conversation> conversations);
     }
 
-    public class HtmlService : IHtmlService
+    public class HtmlService(ILogger<HtmlService> logger) : IHtmlService
     {
-        private readonly ILogger<HtmlService> _logger;
-        private readonly string _conversationHistoryTemplate;
+        private readonly ILogger<HtmlService> _logger = logger;
+        private readonly string _conversationHistoryTemplate = GetConversationHistoryHTMLContent();
         private readonly string _userMessage = @"<div class=""message user"">
                                                 <div class=""message-header"">User</div>
                                                 <div class=""message-content"">
@@ -27,12 +27,6 @@ namespace RR.AI_Chat.Service
                                                         {{MESSAGE}}
                                                     </div>
                                                 </div>";
-
-        public HtmlService(ILogger<HtmlService> logger)
-        {
-            _logger = logger;
-            _conversationHistoryTemplate = GetConversationHistoryHTMLContent();
-        }
 
         public string? GenerateConversationHistoryAsync(List<Conversation> conversations)
         {

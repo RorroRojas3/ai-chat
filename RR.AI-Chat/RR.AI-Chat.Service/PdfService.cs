@@ -6,14 +6,14 @@ namespace RR.AI_Chat.Service
 {
     public interface IPdfService
     {
-        byte[]? GeneratePdfFromHtmlAsync(string htmlContent);
+        byte[]? GeneratePdfFromHtml(string htmlContent);
     }
 
     public class PdfService(ILogger<PdfService> logger) : IPdfService
     {
         private readonly ILogger _logger = logger;
 
-        public byte[]? GeneratePdfFromHtmlAsync(string htmlContent)
+        public byte[]? GeneratePdfFromHtml(string htmlContent)
         {
             if (string.IsNullOrWhiteSpace(htmlContent))
             {

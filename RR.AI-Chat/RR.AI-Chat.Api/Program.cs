@@ -146,6 +146,8 @@ builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 builder.Services.AddSingleton<IDocumentIntelligenceService, DocumentIntelligenceService>();
 builder.Services.AddSingleton<IHtmlService, HtmlService>();
 builder.Services.AddSingleton<IPdfService, PdfService>();
+builder.Services.AddSingleton<IWordService, WordService>();
+builder.Services.AddSingleton<IMarkdownService, MarkdownService>();
 
 // Keep other services as Scoped
 builder.Services.AddScoped<IChatService, ChatService>();

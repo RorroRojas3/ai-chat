@@ -3,12 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Graph.Models.CallRecords;
-using ModelContextProtocol.Protocol;
+using Microsoft.OpenApi.Extensions;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
+using RR.AI_Chat.Service.Extensions;
 
 namespace RR.AI_Chat.Service
 {
@@ -16,7 +16,7 @@ namespace RR.AI_Chat.Service
     {
         Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken);
 
-        Task<FileDataDto?> GenerateConversationHistoryPdfAsync(Guid sessionId, CancellationToken cancellationToken);
+        Task<FileDataDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken);
     }
 
     public class DocumentService(ILogger<DocumentService> logger, 
@@ -27,6 +27,8 @@ namespace RR.AI_Chat.Service
         ITokenService tokenService,
         IHtmlService htmlService,
         IPdfService pdfService,
+        IWordService wordService,
+        IMarkdownService markdownService,
         AIChatDbContext ctx) : IDocumentService
     {
         private readonly ILogger _logger = logger;
@@ -37,6 +39,8 @@ namespace RR.AI_Chat.Service
         private readonly ITokenService _tokenService = tokenService;
         private readonly IHtmlService _htmlService = htmlService;
         private readonly IPdfService _pdfService = pdfService;
+        private readonly IWordService _wordService = wordService;
+        private readonly IMarkdownService _markdownService = markdownService;
         private readonly AIChatDbContext _ctx = ctx;
         private const double _cosineDistanceThreshold = 0.3;
 
@@ -206,7 +210,7 @@ namespace RR.AI_Chat.Service
             return dto;
         }
 
-        public async Task<FileDataDto?> GenerateConversationHistoryPdfAsync(Guid sessionId, CancellationToken cancellationToken)
+        public async Task<FileDataDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken)
         {
             var oid = _tokenService.GetOid()!;
 
@@ -238,17 +242,35 @@ namespace RR.AI_Chat.Service
                 return null;
             }
 
-            var bytes = _pdfService.GeneratePdfFromHtmlAsync(html);
+            byte[]? bytes = documentFormat switch
+            {
+                DocumentFormats.Pdf => _pdfService.GeneratePdfFromHtml(html),
+                DocumentFormats.Word => _wordService.GenerateWordFromHtml(html),
+                DocumentFormats.Markdown => _markdownService.GenerateMarkdownFromHtml(html),
+                _ => null
+            };
             if (bytes == null || bytes.Length == 0)
+            {
+                return null;
+            }
+
+            var fileName = documentFormat switch
+            {
+                DocumentFormats.Pdf => $"conversation-history-{sessionId}.pdf",
+                DocumentFormats.Word => $"conversation-history-{sessionId}.docx",
+                DocumentFormats.Markdown => $"conversation-history-{sessionId}.md",
+                _ => null
+            };
+            if (string.IsNullOrWhiteSpace(fileName))
             {
                 return null;
             }
 
             return new FileDataDto
             {
-                FileName = $"conversation-history-{sessionId}.pdf",
+                FileName = fileName,
                 Content = bytes!,
-                ContentType = "application/pdf",
+                ContentType = documentFormat.GetDescription(),
                 Length = bytes.Length
             };
         }
