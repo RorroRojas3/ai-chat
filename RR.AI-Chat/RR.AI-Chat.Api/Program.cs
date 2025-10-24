@@ -49,7 +49,11 @@ var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>(
 corsOrigins ??= [];
 builder.Services.AddCors(builder => builder.AddPolicy("AllowSpecificOrigins", policy =>
 {
-    policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+    policy.WithOrigins(corsOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials()
+            .WithExposedHeaders("Content-Disposition");
 }));
 
 
@@ -143,7 +147,11 @@ builder.Services.AddSingleton<ISessionLockService, SessionLockService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IGraphService, GraphService>();
 builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
-builder.Services.AddSingleton<IDocumentIntelligenceService, DocumentIntelligenceService>(); 
+builder.Services.AddSingleton<IDocumentIntelligenceService, DocumentIntelligenceService>();
+builder.Services.AddSingleton<IHtmlService, HtmlService>();
+builder.Services.AddSingleton<IPdfService, PdfService>();
+builder.Services.AddSingleton<IWordService, WordService>();
+builder.Services.AddSingleton<IMarkdownService, MarkdownService>();
 
 // Keep other services as Scoped
 builder.Services.AddScoped<IChatService, ChatService>();

@@ -8,23 +8,33 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspose.PDF" Version="25.10.0" />
+    <PackageReference Include="Aspose.Words" Version="25.10.0" />
     <PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.26.0" />
     <PackageReference Include="EFCore.SqlServer.VectorSearch" Version="9.0.0" />
     <PackageReference Include="Hangfire.Core" Version="1.8.21" />
-    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.10.0" />
+    <PackageReference Include="Markdig" Version="0.43.0" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.10.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
     <PackageReference Include="Microsoft.Graph" Version="5.94.0" />
     <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.0-preview.25503.2" />
     <PackageReference Include="ModelContextProtocol" Version="0.4.0-preview.3" />
     <PackageReference Include="PdfPig" Version="0.1.11" />
+    <PackageReference Include="ReverseMarkdown" Version="4.7.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\RR.AI-Chat.Dto\RR.AI-Chat.Dto.csproj" />
     <ProjectReference Include="..\RR.AI-Chat.Repository\RR.AI-Chat.Repository.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Files\conversation-history.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

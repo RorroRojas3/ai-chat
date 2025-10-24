@@ -64,6 +64,21 @@ namespace RR.AI_Chat.Api.Controllers
             });
         }
 
+        [HttpGet("sessions/{sessionId}/conversation-history")]
+        public async Task<IActionResult> GenerateConversationHistoryFileAsync(
+            Guid sessionId, 
+            [FromQuery] DocumentFormats documentFormat, 
+            CancellationToken cancellationToken)
+        {
+            var dto = await _service.GenerateConversationHistoryAsync(sessionId, documentFormat, cancellationToken);
+            if (dto == null)
+            {
+                return NotFound();
+            }
+
+            return File(dto.Content, dto.ContentType, dto.FileName);
+        }
+
         private static async Task<byte[]> ReadFileAsync(IFormFile file)
         {
             using var memoryStream = new MemoryStream();

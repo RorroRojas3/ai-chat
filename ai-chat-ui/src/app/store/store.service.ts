@@ -2,13 +2,12 @@ import { Injectable, signal } from '@angular/core';
 import { MessageDto } from '../dtos/MessageDto';
 import { ModelDto } from '../dtos/ModelDto';
 import { SessionDto } from '../dtos/SessionDto';
-import { Location } from '@angular/common';
 
 @Injectable({
   providedIn: 'root',
 })
 export class StoreService {
-  constructor(private location: Location) {}
+  constructor() {}
 
   sessionId = signal<string>('');
   disablePromptButton = signal<boolean>(false);
