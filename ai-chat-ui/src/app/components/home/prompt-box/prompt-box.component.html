@@ -35,62 +35,114 @@
           </div>
         </div>
         <div class="row">
-          <div class="col-6">
-            <div class="d-flex align-items-center gap-2">
-              <div class="dropdown">
-                <button
-                  class="btn btn-prompt-box dropdown-toggle"
-                  type="button"
-                  id="dropdownMenuButton"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                >
-                  @if (this.storeService.selectedModel().name) {
-                  <i
-                    class="me-2 {{
-                      getServiceIcon(
-                        this.storeService.selectedModel().aiServiceId
-                      )
-                    }}"
-                  ></i>
-                  {{ this.storeService.selectedModel().name }}
-                  } @else { Models... }
-                </button>
-                <ul
-                  class="dropdown-menu"
-                  style="background-color: var(--color-light-blue)"
-                  aria-labelledby="dropdownMenuButton"
-                >
-                  @for (model of this.storeService.models(); track model) {
-                  <li>
-                    <a class="dropdown-item" (click)="onModelChange(model)">
-                      <i
-                        class="me-2 {{ getServiceIcon(model.aiServiceId) }}"
-                      ></i>
-                      {{ model.name }}
-                    </a>
-                  </li>
-                  }
-                </ul>
-              </div>
-              <button
-                type="button"
-                class="btn btn-prompt-box"
-                (click)="fileInput.click()"
-              >
-                <i class="bi bi-paperclip me-1"></i>
-              </button>
-            </div>
-          </div>
-          <div class="col-6 justify-content-end d-flex">
-            <button
-              type="submit"
-              class="btn btn-prompt-box"
-              [disabled]="this.storeService.disablePromptButton()"
-              (click)="onClickCreateSession()"
+          <div class="col-12">
+            <div
+              class="d-flex align-items-center justify-content-between gap-2 flex-wrap"
             >
-              <i class="bi bi-send"></i>
-            </button>
+              <!-- Left side: Model and File buttons -->
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <!-- Model Dropdown -->
+                <div class="dropdown">
+                  <button
+                    class="btn btn-prompt-box dropdown-toggle"
+                    type="button"
+                    id="dropdownMenuButton"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    @if (this.storeService.selectedModel().name) {
+                    <i
+                      class="me-1 {{
+                        getServiceIcon(
+                          this.storeService.selectedModel().aiServiceId
+                        )
+                      }}"
+                    ></i>
+                    <span class="d-none d-sm-inline">{{
+                      this.storeService.selectedModel().name
+                    }}</span>
+                    } @else {
+                    <i class="bi bi-robot me-1"></i>
+                    <span class="d-none d-sm-inline">Models...</span>
+                    }
+                  </button>
+                  <ul
+                    class="dropdown-menu"
+                    style="background-color: var(--color-light-blue)"
+                    aria-labelledby="dropdownMenuButton"
+                  >
+                    @for (model of this.storeService.models(); track model) {
+                    <li>
+                      <a class="dropdown-item" (click)="onModelChange(model)">
+                        <i
+                          class="me-2 {{ getServiceIcon(model.aiServiceId) }}"
+                        ></i>
+                        {{ model.name }}
+                      </a>
+                    </li>
+                    }
+                  </ul>
+                </div>
+
+                <!-- File Attachment Button -->
+                <button
+                  type="button"
+                  class="btn btn-prompt-box"
+                  (click)="fileInput.click()"
+                  title="Attach files"
+                >
+                  <i class="bi bi-paperclip"></i>
+                </button>
+
+                <!-- Download Conversation History Dropdown -->
+                @if (this.storeService.sessionId() &&
+                this.storeService.messages().length > 0 &&
+                !this.storeService.isStreaming()) {
+                <div class="dropdown">
+                  <button
+                    class="btn btn-prompt-box dropdown-toggle"
+                    type="button"
+                    id="downloadDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    title="Download conversation history"
+                  >
+                    <i class="bi bi-download"></i>
+                  </button>
+                  <ul
+                    class="dropdown-menu"
+                    style="background-color: var(--color-light-blue)"
+                    aria-labelledby="downloadDropdown"
+                  >
+                    @for (format of documentFormats; track format) {
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        (click)="onDownloadConversationHistory(format)"
+                      >
+                        <i class="me-2 {{ getFormatIcon(format) }}"></i>
+                        {{ getFormatName(format) }}
+                      </a>
+                    </li>
+                    }
+                  </ul>
+                </div>
+                }
+              </div>
+
+              <!-- Right side: Send button -->
+              <div class="ms-auto">
+                <button
+                  type="submit"
+                  class="btn btn-prompt-box"
+                  [disabled]="this.storeService.disablePromptButton()"
+                  (click)="onClickCreateSession()"
+                  title="Send message"
+                >
+                  <i class="bi bi-send"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         <input

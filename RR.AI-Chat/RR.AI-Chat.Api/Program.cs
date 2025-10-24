@@ -49,7 +49,11 @@ var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>(
 corsOrigins ??= [];
 builder.Services.AddCors(builder => builder.AddPolicy("AllowSpecificOrigins", policy =>
 {
-    policy.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+    policy.WithOrigins(corsOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials()
+            .WithExposedHeaders("Content-Disposition");
 }));
 
 

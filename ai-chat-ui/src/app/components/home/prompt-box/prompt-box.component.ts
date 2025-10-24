@@ -26,6 +26,7 @@ import { FileUploadDto } from '../../../dtos/FileUploadDto';
 import { JobStatus } from '../../../dtos/const/JobStatus';
 import { JobState } from '../../../dtos/const/JobState';
 import { Location } from '@angular/common';
+import { DocumentFormats } from '../../../dtos/const/DocumentFormats';
 
 @Component({
   selector: 'app-prompt-box',
@@ -378,6 +379,72 @@ export class PromptBoxComponent implements OnDestroy {
       default:
         return 'bi bi-question-circle'; // Question circle for unknown services
     }
+  }
+
+  /**
+   * Downloads conversation history in the specified format
+   */
+  onDownloadConversationHistory(format: DocumentFormats): void {
+    const sessionId = this.storeService.sessionId();
+    if (!sessionId) {
+      console.error('No active session to download conversation history');
+      return;
+    }
+
+    this.documentService
+      .getConversationHistory(sessionId, format)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ blob, fileName }) => {
+          this.documentService.downloadFile(blob, fileName);
+        },
+        error: (error) => {
+          console.error('Error downloading conversation history:', error);
+        },
+      });
+  }
+
+  /**
+   * Gets the Bootstrap icon class for document format
+   */
+  getFormatIcon(format: DocumentFormats): string {
+    switch (format) {
+      case DocumentFormats.PDF:
+        return 'bi bi-file-earmark-pdf';
+      case DocumentFormats.DOCX:
+        return 'bi bi-file-earmark-word';
+      case DocumentFormats.MARKDOWN:
+        return 'bi bi-markdown';
+      default:
+        return 'bi bi-file-earmark';
+    }
+  }
+
+  /**
+   * Gets the display name for document format
+   */
+  getFormatName(format: DocumentFormats): string {
+    switch (format) {
+      case DocumentFormats.PDF:
+        return 'PDF';
+      case DocumentFormats.DOCX:
+        return 'Word';
+      case DocumentFormats.MARKDOWN:
+        return 'Markdown';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  /**
+   * Gets all available document formats
+   */
+  get documentFormats(): DocumentFormats[] {
+    return [
+      DocumentFormats.PDF,
+      DocumentFormats.DOCX,
+      DocumentFormats.MARKDOWN,
+    ];
   }
 
   /**
