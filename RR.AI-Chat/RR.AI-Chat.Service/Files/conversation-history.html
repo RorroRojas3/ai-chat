@@ -231,15 +231,5 @@
             Exported on <span id="export-date">{{DATE}}</span>
         </div>
     </div>
-
-    <script>
-        document.getElementById('export-date').textContent = new Date().toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    </script>
 </body>
 </html>
