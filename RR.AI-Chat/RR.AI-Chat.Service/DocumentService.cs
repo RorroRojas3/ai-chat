@@ -269,7 +269,7 @@ namespace RR.AI_Chat.Service
             return new FileDataDto
             {
                 FileName = fileName,
-                Content = bytes!,
+                Content = bytes,
                 ContentType = documentFormat.GetDescription(),
                 Length = bytes.Length
             };
