@@ -74,7 +74,7 @@ namespace RR.AI_Chat.Service
 
                 var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId, cancellationToken);
                 var chatClient = _azureAIFoundry;
-                var chatOptions = await CreateChatOptions(sessionId, model).ConfigureAwait(false);
+                var chatOptions = await CreateChatOptions(sessionId, model, cancellationToken).ConfigureAwait(false);
                 StringBuilder sb = new();
                 long totalInputTokens = 0, totalOutputTokens = 0;
                 await foreach (var message in chatClient.GetStreamingResponseAsync(session.Conversations.Select(x => new ChatMessage(x.Role, x.Content)) ?? [], chatOptions, cancellationToken))
@@ -147,7 +147,7 @@ namespace RR.AI_Chat.Service
             };
         }
 
-        private async Task<ChatOptions> CreateChatOptions(Guid sessionId, ModelDto model)
+        private async Task<ChatOptions> CreateChatOptions(Guid sessionId, ModelDto model, CancellationToken cancellationToken)
         {
             if (model == null)
             {
@@ -169,9 +169,10 @@ namespace RR.AI_Chat.Service
             {
                 List<AITool> tools = [];
                 var documentTools = _documentToolService.GetTools();
-                //var mcpTools = await _mcpServerService.GetToolsAsync().ConfigureAwait(false);
+                var mcpClient = await _mcpServerService.CreateClientAsync("Test MCP", cancellationToken);
+                var mcpTools = await _mcpServerService.GetToolsFromServerAsync(mcpClient, cancellationToken);
                 tools.AddRange(documentTools);
-                //tools.AddRange(mcpTools);
+                tools.AddRange(mcpTools);
                 chatOptions.Tools = tools;
                 chatOptions.AllowMultipleToolCalls = true;
             }
