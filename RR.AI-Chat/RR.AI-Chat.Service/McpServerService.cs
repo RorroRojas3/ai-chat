@@ -1,9 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
 using ModelContextProtocol.Client;
-using RR.AI_Chat.Repository;
 using RR.AI_Chat.Service.Settings;
 using System.Net.Http.Headers;
 
@@ -27,24 +25,24 @@ namespace RR.AI_Chat.Service
     public class McpServerService(ILogger<McpServerService> logger,
         ITokenAcquisition tokenAcquisition,
         IOptions<List<McpServerSettings>> mcpServerSettings,
-        IHttpClientFactory httpClientFactory,
-        AIChatDbContext ctx) : IMcpServerService
+        IHttpClientFactory httpClientFactory) : IMcpServerService
     {
         private readonly ILogger<McpServerService> _logger = logger;
         private readonly ITokenAcquisition _tokenAcquisition = tokenAcquisition;
         private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
         private readonly List<McpServerSettings> _mcpServerSettings = mcpServerSettings.Value;
-        private readonly AIChatDbContext _ctx = ctx;
 
         public async Task<McpClient> CreateClientAsync(string name, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(name))
+            ArgumentException.ThrowIfNullOrEmpty(name);
+
+            var mcpServer = _mcpServerSettings.FirstOrDefault(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (mcpServer == null)
             {
-                ArgumentNullException.ThrowIfNull(name);
+                _logger.LogError("MCP server with name {name} not found in configuration.", name);
+                throw new InvalidOperationException($"MCP server with name {name} not found in configuration.");
             }
 
-            var mcpServer = _mcpServerSettings.FirstOrDefault(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) ?? 
-                    throw new InvalidOperationException($"MCP server with name '{name}' not found in configuration.");
             var scopes = new[] { mcpServer.Scope };
             var accessToken = await _tokenAcquisition.GetAccessTokenForUserAsync(scopes);
 
