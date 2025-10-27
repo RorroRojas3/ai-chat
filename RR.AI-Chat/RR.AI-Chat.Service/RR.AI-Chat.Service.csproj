@@ -18,7 +18,8 @@
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.10.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
-    <PackageReference Include="Microsoft.Graph" Version="5.94.0" />
+    <PackageReference Include="Microsoft.Graph" Version="5.95.0" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="4.0.1" />
     <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.0-preview.25503.2" />
     <PackageReference Include="ModelContextProtocol" Version="0.4.0-preview.3" />
     <PackageReference Include="PdfPig" Version="0.1.11" />

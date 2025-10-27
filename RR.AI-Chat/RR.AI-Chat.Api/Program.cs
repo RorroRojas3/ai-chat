@@ -13,6 +13,7 @@ using Microsoft.Identity.Web;
 using RR.AI_Chat.Repository;
 using RR.AI_Chat.Service;
 using RR.AI_Chat.Service.Middleware;
+using RR.AI_Chat.Service.Settings;
 using System.ClientModel;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,7 +32,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             $"api://{builder.Configuration["AzureAd:ClientId"]}"
         ];
     },
-    options => builder.Configuration.Bind("AzureAd", options));
+    options => builder.Configuration.Bind("AzureAd", options))
+    .EnableTokenAcquisitionToCallDownstreamApi(options =>
+    {
+        builder.Configuration.Bind("AzureAd", options);
+    })
+    .AddInMemoryTokenCaches();
+
 builder.Services.AddControllers();
 
 builder.Services.AddHttpContextAccessor();
@@ -131,7 +138,7 @@ builder.Services.AddSingleton(x =>
 });
 
 // Azure Document Intelligence 
-builder.Services.AddSingleton<DocumentIntelligenceClient>(sp =>
+builder.Services.AddSingleton(sp =>
 {
     var config = builder.Configuration.GetSection("DocumentIntelligence");
     var endpoint = config["Endpoint"];
@@ -140,6 +147,9 @@ builder.Services.AddSingleton<DocumentIntelligenceClient>(sp =>
     var credential = new AzureKeyCredential(apiKey!);
     return new DocumentIntelligenceClient(new Uri(endpoint!), credential);
 });
+
+// Register configuration settings
+builder.Services.Configure<List<McpServerSettings>>(builder.Configuration.GetSection("McpServers"));
 
 
 // Register the singleton lock service
