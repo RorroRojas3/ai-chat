@@ -14,13 +14,6 @@ namespace RR.AI_Chat.Service
     /// </summary>
     public interface IMcpServerService
     {
-        /// <summary>
-        /// Retrieves all available tools from active MCP servers.
-        /// </summary>
-        /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
-        /// <returns>A list of MCP client tools from all active servers.</returns>
-        Task<IList<McpClientTool>> GetToolsAsync(CancellationToken cancellationToken = default);
-
         Task<McpClient> CreateClientAsync(string name, CancellationToken cancellationToken);
 
         Task<IList<McpClientTool>> GetToolsFromServerAsync(McpClient mcpClient, CancellationToken cancellationToken);
@@ -42,44 +35,6 @@ namespace RR.AI_Chat.Service
         private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
         private readonly List<McpServerSettings> _mcpServerSettings = mcpServerSettings.Value;
         private readonly AIChatDbContext _ctx = ctx;
-
-        /// <summary>
-        /// Retrieves all available tools from active MCP servers by connecting to each server
-        /// and querying their available tools.
-        /// </summary>
-        /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
-        /// <returns>A list of MCP client tools aggregated from all active servers.</returns>
-        /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the cancellation token.</exception>
-        public async Task<IList<McpClientTool>> GetToolsAsync(CancellationToken cancellationToken = default)
-        {
-            var mcpServers = await _ctx.McpServers.AsNoTracking()
-                                .Where(x => !x.DateDeactivated.HasValue)
-                                .ToListAsync(cancellationToken);
-            if (mcpServers == null || mcpServers.Count == 0)
-            {
-                _logger.LogWarning("No MCP servers found in the database.");
-                return [];
-            }
-
-            List<McpClientTool> tools = [];
-            foreach (var server in mcpServers)
-            {
-                var clientTransport = new StdioClientTransport(new StdioClientTransportOptions
-                {
-                    Name = server.Name,
-                    Command = server.Command,
-                    Arguments = server.Arguments,
-                    WorkingDirectory = server.WorkingDirectory,
-                });
-
-                var mcpClient = await McpClient.CreateAsync(clientTransport, null, null, cancellationToken)
-                                .ConfigureAwait(false);
-                var mcpTools = await mcpClient.ListToolsAsync(null, cancellationToken);
-                tools.AddRange(mcpTools);
-            }
-
-            return tools;
-        }
 
         public async Task<McpClient> CreateClientAsync(string name, CancellationToken cancellationToken)
         {
