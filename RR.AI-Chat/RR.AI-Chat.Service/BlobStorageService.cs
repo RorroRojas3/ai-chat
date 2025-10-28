@@ -1,5 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Sas;
 using Microsoft.Extensions.Logging;
 
 namespace RR.AI_Chat.Service
@@ -11,6 +12,8 @@ namespace RR.AI_Chat.Service
         Task UploadAsync(string container, string blob, byte[] data, Dictionary<string, string> metadata, CancellationToken cancellationToken);
 
         Task<bool> DeleteAsync(string container, string blob, CancellationToken cancellationToken);
+
+        Uri GenerateSasUri(string container, string blob, TimeSpan expiresIn, BlobSasPermissions permissions);
     }
 
     public class BlobStorageService(ILogger<BlobStorageService> logger, 
@@ -65,6 +68,37 @@ namespace RR.AI_Chat.Service
             }
 
             return response.Value;
+        }
+
+        public Uri GenerateSasUri(string container, string blob, TimeSpan expiresIn, BlobSasPermissions permissions)
+        {
+            _logger.LogInformation("Generating SAS URI for blob '{Blob}' in container '{Container}' with permissions '{Permissions}' expiring in {ExpiresIn}",
+                blob, container, permissions, expiresIn);
+
+            var blobClient = _blobServiceClient.GetBlobContainerClient(container).GetBlobClient(blob);
+
+            if (!blobClient.CanGenerateSasUri)
+            {
+                _logger.LogError("BlobClient cannot generate SAS URI. Ensure the BlobServiceClient is configured with credentials that support SAS generation.");
+                throw new InvalidOperationException("BlobClient cannot generate SAS URI. Ensure the BlobServiceClient is configured with credentials that support SAS generation.");
+            }
+
+            var sasBuilder = new BlobSasBuilder
+            {
+                BlobContainerName = container,
+                BlobName = blob,
+                Resource = "b",
+                StartsOn = DateTimeOffset.UtcNow.AddMinutes(-5),
+                ExpiresOn = DateTimeOffset.UtcNow.Add(expiresIn)
+            };
+
+            sasBuilder.SetPermissions(permissions);
+
+            var sasUri = blobClient.GenerateSasUri(sasBuilder);
+
+            _logger.LogInformation("SAS URI generated successfully for blob '{Blob}' in container '{Container}'", blob, container);
+
+            return sasUri;
         }
     }
 }

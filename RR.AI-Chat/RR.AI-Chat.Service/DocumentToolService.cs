@@ -1,7 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Azure.Storage.Sas;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Server;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
@@ -26,12 +29,16 @@ namespace RR.AI_Chat.Service
     public class DocumentToolService(ILogger<DocumentToolService> logger,
          [FromKeyedServices("azureaifoundry")] IChatClient openAiClient,
         IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
+        IBlobStorageService blobStorageService,
+        IConfiguration configuration,
         AIChatDbContext ctx) : IDocumentToolService
     {
         private readonly ILogger _logger = logger;
         private readonly AIChatDbContext _ctx = ctx;
         private readonly IChatClient _chatClient = openAiClient;
         private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator = embeddingGenerator;
+        private readonly IBlobStorageService _blobStorageService = blobStorageService;
+        private readonly IConfiguration _configuration = configuration;
         private const double _cosineDistanceThreshold = 0.5;
 
         [Description("Get all documents in the current session.")]
@@ -294,15 +301,61 @@ namespace RR.AI_Chat.Service
             return documentPages.Count > 0 ? string.Join("\n\n", documentPages) : null;
         }
 
+        [Description("Uploads AI-generated files (documents, reports, spreadsheets) to Azure Blob Storage and returns a downloadable SAS URL. Use this after the Document Generation MCP server creates a file that needs to be stored and made available to the user.")]
+        public async Task<string> ProcessGeneratedFileAsync(
+            [Description("The unique identifier of the current chat session")] Guid sessionId, 
+            [Description("The unique identifier of the user who owns the generated file")] Guid userId, 
+            [Description("JSON string containing the file object with generated content, filename, content type, and size information")] string fileDtoString, 
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(fileDtoString);
+
+            var fileDto = JsonSerializer.Deserialize<FileBase64Dto>(fileDtoString);
+
+            string container = _configuration.GetValue<string>("AzureStorage:DocumentsContainer")!;
+            string blob = $"{userId}/{sessionId}/{fileDto.FileName}";
+            Dictionary<string, string> metadata = new()
+            {
+                { "userId", userId.ToString() },
+                { "sessionId", sessionId.ToString() },
+                { "fileName", fileDto.FileName },
+                { "contentType", fileDto.ContentType },
+                { "length", fileDto.Length.ToString() }
+            };
+
+            var bytes = DecodeBase64(fileDto.Base64);
+
+            await _blobStorageService.UploadAsync(container, blob, bytes, metadata, cancellationToken);
+
+            // Generate SAS URL for user to download the file
+            var sasUrl = _blobStorageService.GenerateSasUri(container, blob, TimeSpan.FromHours(24), BlobSasPermissions.Read);
+
+            return $"File '{fileDto.FileName}' has been successfully uploaded and is ready for download. Download link (valid for 24 hours): {sasUrl}";
+        }
+
         public IList<AITool> GetTools()
         {
             IList<AITool> functions = [
                 AIFunctionFactory.Create(GetSessionDocumentsAsync),
                 AIFunctionFactory.Create(GetDocumentOverviewAsync),
                 AIFunctionFactory.Create(SearchDocumentsAsync),
-                AIFunctionFactory.Create(CompareDocumentsAsync)];
+                AIFunctionFactory.Create(CompareDocumentsAsync),
+                AIFunctionFactory.Create(ProcessGeneratedFileAsync)];
 
             return functions;
+        }
+
+        private byte[] DecodeBase64(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                throw new ArgumentException("Base64 string cannot be null or empty", nameof(input));
+
+            // Handle data URI format: data:mime/type;base64,actual-data
+            var base64Data = input.StartsWith("data:", StringComparison.OrdinalIgnoreCase)
+                ? input.Substring(input.IndexOf(',') + 1)
+                : input;
+
+            return Convert.FromBase64String(base64Data);
         }
     }
 }

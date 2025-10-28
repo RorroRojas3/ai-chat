@@ -29,7 +29,7 @@ namespace RR.AI_Chat.Api.Controllers
             }
 
             // Extract file data before enqueueing the job
-            var fileData = new FileDataDto
+            var fileData = new FileDto
             {
                 FileName = file.FileName,
                 ContentType = file.ContentType,

@@ -14,9 +14,9 @@ namespace RR.AI_Chat.Service
 {
     public interface IDocumentService 
     {
-        Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken);
+        Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken);
 
-        Task<FileDataDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken);
+        Task<FileDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken);
     }
 
     public class DocumentService(ILogger<DocumentService> logger, 
@@ -59,7 +59,7 @@ namespace RR.AI_Chat.Service
         /// 4. Creates document page entities with embeddings
         /// 5. Saves the document and all pages to the database
         /// </remarks>
-        public async Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken)
+        public async Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(context, nameof(context));
             ArgumentNullException.ThrowIfNull(fileDataDto, nameof(fileDataDto));
@@ -210,7 +210,7 @@ namespace RR.AI_Chat.Service
             return dto;
         }
 
-        public async Task<FileDataDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken)
+        public async Task<FileDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken)
         {
             var oid = _tokenService.GetOid()!;
 
@@ -266,7 +266,7 @@ namespace RR.AI_Chat.Service
                 return null;
             }
 
-            return new FileDataDto
+            return new FileDto
             {
                 FileName = fileName,
                 Content = bytes,
