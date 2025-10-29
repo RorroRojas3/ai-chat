@@ -98,7 +98,8 @@ export class ChatService {
                 new ChatStreamRequestDto(
                   prompt,
                   this.storeService.selectedModel().id,
-                  this.storeService.selectedModel().aiServiceId
+                  this.storeService.selectedModel().aiServiceId,
+                  this.storeService.selectedMcps()
                 )
               ),
             }

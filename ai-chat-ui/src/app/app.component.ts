@@ -20,6 +20,7 @@ import {
   InteractionStatus,
   EventType,
 } from '@azure/msal-browser';
+import { McpService } from './services/mcp.service';
 
 @Component({
   selector: 'app-root',
@@ -34,7 +35,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private msalBroadcastService: MsalBroadcastService,
     private storeService: StoreService,
     private sessionService: SessionService,
-    private modelService: ModelService
+    private modelService: ModelService,
+    private mcpService: McpService
   ) {}
 
   isIframe = false;
@@ -103,10 +105,12 @@ export class AppComponent implements OnInit, OnDestroy {
       forkJoin([
         this.modelService.getModels(),
         this.sessionService.searchSessions(''),
-      ]).subscribe(([models, sessions]) => {
+        this.mcpService.getMcpServers(),
+      ]).subscribe(([models, sessions, mcps]) => {
         this.storeService.models.set(models);
         this.storeService.selectedModel.set(models[0]);
         this.storeService.sessions.set(sessions.items);
+        this.storeService.mcps.set(mcps);
       });
     }
   }

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RR.AI_Chat.Entity
 {
-    [Table(nameof(Model), Schema = "AI.Ref")]
+    [Table(nameof(Model), Schema = "Core.Ref")]
     public class Model : BaseEntity
     {
         [ForeignKey(nameof(AIService))]

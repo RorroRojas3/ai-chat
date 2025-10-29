@@ -3,14 +3,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RR.AI_Chat.Entity
 {
-    [Table(nameof(Session), Schema = "AI")]    
+    [Table(nameof(Session), Schema = "Core")]    
     public class Session : BaseModifiedEntity
     {
         [ForeignKey(nameof(User))]
         public Guid UserId { get; set; }
 
-        [StringLength(100)]
-        public string? Name { get; set; }
+        [StringLength(256)]
+        public string Name { get; set; } = "New Chat";
 
         public List<Conversation>? Conversations { get; set; } = [];
 

@@ -27,10 +27,12 @@ import { JobStatus } from '../../../dtos/const/JobStatus';
 import { JobState } from '../../../dtos/const/JobState';
 import { Location } from '@angular/common';
 import { DocumentFormats } from '../../../dtos/const/DocumentFormats';
+import { McpDto } from '../../../dtos/McpDto';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-prompt-box',
-  imports: [FormsModule],
+  imports: [FormsModule, CommonModule],
   templateUrl: './prompt-box.component.html',
   styleUrl: './prompt-box.component.scss',
 })
@@ -159,6 +161,42 @@ export class PromptBoxComponent implements OnDestroy {
    */
   onModelChange(event: ModelDto): void {
     this.storeService.selectedModel.set(event);
+  }
+
+  /**
+   * Toggles MCP selection
+   */
+  toggleMcpSelection(mcp: McpDto, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.storeService.selectedMcps.update((current) => {
+      const index = current.findIndex((m) => m.name === mcp.name);
+      return index > -1
+        ? current.filter((m) => m.name !== mcp.name)
+        : [...current, mcp];
+    });
+  }
+
+  /**
+   * Checks if an MCP is selected
+   */
+  isMcpSelected(mcp: McpDto): boolean {
+    return this.storeService.selectedMcps().some((m) => m.name === mcp.name);
+  }
+
+  /**
+   * Gets display text for MCP dropdown button
+   */
+  getMcpButtonText(): string {
+    const selectedCount = this.storeService.selectedMcps().length;
+    if (selectedCount === 0) {
+      return 'MCPs';
+    } else if (selectedCount === 1) {
+      return this.storeService.selectedMcps()[0].name;
+    } else {
+      return `${selectedCount} MCPs`;
+    }
   }
 
   // File selection handler

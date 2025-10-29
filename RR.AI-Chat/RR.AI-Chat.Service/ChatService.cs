@@ -74,7 +74,7 @@ namespace RR.AI_Chat.Service
 
                 var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId, cancellationToken);
                 var chatClient = _azureAIFoundry;
-                var chatOptions = await CreateChatOptions(sessionId, model, cancellationToken).ConfigureAwait(false);
+                var chatOptions = await CreateChatOptions(sessionId, model, request.McpServers, cancellationToken).ConfigureAwait(false);
                 StringBuilder sb = new();
                 long totalInputTokens = 0, totalOutputTokens = 0;
                 await foreach (var message in chatClient.GetStreamingResponseAsync(session.Conversations.Select(x => new ChatMessage(x.Role, x.Content)) ?? [], chatOptions, cancellationToken))
@@ -147,7 +147,7 @@ namespace RR.AI_Chat.Service
             };
         }
 
-        private async Task<ChatOptions> CreateChatOptions(Guid sessionId, ModelDto model, CancellationToken cancellationToken)
+        private async Task<ChatOptions> CreateChatOptions(Guid sessionId, ModelDto model, List<McpDto> mcps, CancellationToken cancellationToken)
         {
             if (model == null)
             {
@@ -158,12 +158,7 @@ namespace RR.AI_Chat.Service
             {
                 AllowMultipleToolCalls = true,
                 ModelId = model.Name,
-                ConversationId = sessionId.ToString(),
-                AdditionalProperties = new AdditionalPropertiesDictionary
-                {
-                    { "max_completion_tokens", 6_000},
-                },
-                MaxOutputTokens = model.Name.Contains("gpt") ? null : 6_000   
+                ConversationId = sessionId.ToString() 
             };
             if (model.IsToolEnabled)
             {
@@ -171,19 +166,22 @@ namespace RR.AI_Chat.Service
                 var documentTools = _documentToolService.GetTools();
                 tools.AddRange(documentTools);
 
-                var mcpClient = await _mcpServerService.CreateClientAsync("Policy", cancellationToken);
-                var mcpTools = await _mcpServerService.GetToolsFromServerAsync(mcpClient, cancellationToken);
-                tools.AddRange(mcpTools);
+                if (mcps.Count > 0)
+                {
+                    var mcpToolTasks = mcps.Select(async mcp =>
+                    {
+                        var mcpClient = await _mcpServerService.CreateClientAsync(mcp.Name, cancellationToken);
+                        return await _mcpServerService.GetToolsFromServerAsync(mcpClient, cancellationToken);
+                    });
 
-                //var mcpClient = await _mcpServerService.CreateClientAsync("Document Generator", cancellationToken);
-                //var mcpTools = await _mcpServerService.GetToolsFromServerAsync(mcpClient, cancellationToken);
-                //tools.AddRange(mcpTools);
+                    var mcpToolResults = await Task.WhenAll(mcpToolTasks);
+                    tools.AddRange(mcpToolResults.SelectMany(t => t));
+                }
 
                 chatOptions.Tools = tools;
                 chatOptions.AllowMultipleToolCalls = true;
             }
             
-            await Task.CompletedTask;
             return chatOptions;
         }
     }

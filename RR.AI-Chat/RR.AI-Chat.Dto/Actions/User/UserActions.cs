@@ -13,5 +13,7 @@ namespace RR.AI_Chat.Dto.Actions.User
         [StringLength(512)]
         [EmailAddress]
         public string Email { get; set; } = null!;
+
+        public bool IsSuperAdministrator { get; set; } = false;
     }
 }

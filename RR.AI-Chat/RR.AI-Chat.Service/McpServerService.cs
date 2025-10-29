@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
 using ModelContextProtocol.Client;
+using RR.AI_Chat.Dto;
 using RR.AI_Chat.Service.Settings;
 using System.Net.Http.Headers;
 
@@ -15,6 +16,8 @@ namespace RR.AI_Chat.Service
         Task<McpClient> CreateClientAsync(string name, CancellationToken cancellationToken);
 
         Task<IList<McpClientTool>> GetToolsFromServerAsync(McpClient mcpClient, CancellationToken cancellationToken);
+
+        List<McpDto> GetMcpServers();
     }
 
     /// <summary>
@@ -66,6 +69,14 @@ namespace RR.AI_Chat.Service
         {
             var tools = await mcpClient.ListToolsAsync(null, cancellationToken);
             return tools;
+        }
+
+        public List<McpDto> GetMcpServers()
+        {
+            return [.. _mcpServerSettings.Select(s => new McpDto
+            {
+                Name = s.Name
+            })];
         }
     }
 }

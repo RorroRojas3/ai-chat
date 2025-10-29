@@ -7,5 +7,7 @@
         public Guid ModelId { get; set; }
 
         public Guid ServiceId { get; set; } 
+
+        public List<McpDto> McpServers { get; set; } = [];
     }
 }
