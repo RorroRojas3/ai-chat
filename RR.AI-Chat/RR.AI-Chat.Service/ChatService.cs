@@ -156,7 +156,6 @@ namespace RR.AI_Chat.Service
 
             ChatOptions chatOptions = new()
             {
-                AllowMultipleToolCalls = true,
                 ModelId = model.Name,
                 ConversationId = sessionId.ToString() 
             };
