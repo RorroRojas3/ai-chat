@@ -171,13 +171,13 @@ namespace RR.AI_Chat.Service
                 var documentTools = _documentToolService.GetTools();
                 tools.AddRange(documentTools);
 
-                //var mcpClient = await _mcpServerService.CreateClientAsync("Test MCP", cancellationToken);
-                //var mcpTools = await _mcpServerService.GetToolsFromServerAsync(mcpClient, cancellationToken);
-                //tools.AddRange(mcpTools);
-
-                var mcpClient = await _mcpServerService.CreateClientAsync("Document Generator", cancellationToken);
+                var mcpClient = await _mcpServerService.CreateClientAsync("Policy", cancellationToken);
                 var mcpTools = await _mcpServerService.GetToolsFromServerAsync(mcpClient, cancellationToken);
                 tools.AddRange(mcpTools);
+
+                //var mcpClient = await _mcpServerService.CreateClientAsync("Document Generator", cancellationToken);
+                //var mcpTools = await _mcpServerService.GetToolsFromServerAsync(mcpClient, cancellationToken);
+                //tools.AddRange(mcpTools);
 
                 chatOptions.Tools = tools;
                 chatOptions.AllowMultipleToolCalls = true;
