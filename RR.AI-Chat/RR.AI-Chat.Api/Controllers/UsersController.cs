@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RR.AI_Chat.Dto.Actions.User;
 using RR.AI_Chat.Service;
 
 namespace RR.AI_Chat.Api.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController(IUserService userService) : ControllerBase

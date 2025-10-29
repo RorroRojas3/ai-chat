@@ -84,6 +84,57 @@
                   </ul>
                 </div>
 
+                <!-- MCP Dropdown (Multi-select) -->
+                <div class="dropdown">
+                  <button
+                    class="btn btn-prompt-box dropdown-toggle"
+                    type="button"
+                    id="mcpDropdownButton"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    title="Select MCPs"
+                  >
+                    <i class="bi bi-robot me-1"></i>
+                    <span class="d-none d-sm-inline">{{
+                      getMcpButtonText()
+                    }}</span>
+                  </button>
+                  <ul
+                    class="dropdown-menu"
+                    style="background-color: var(--color-light-blue)"
+                    aria-labelledby="mcpDropdownButton"
+                  >
+                    @if (this.storeService.mcps().length === 0) {
+                    <li>
+                      <span class="dropdown-item-text text-muted"
+                        >No MCPs available</span
+                      >
+                    </li>
+                    } @else { @for (mcp of this.storeService.mcps(); track
+                    mcp.name) {
+                    <li>
+                      <a
+                        class="dropdown-item d-flex align-items-center"
+                        (click)="toggleMcpSelection(mcp, $event)"
+                        style="cursor: pointer"
+                      >
+                        <i class="bi bi-robot me-2"></i>
+                        <span
+                          class="flex-grow-1 text-truncate"
+                          [title]="mcp.name"
+                          >{{ mcp.name }}</span
+                        >
+                        @if (isMcpSelected(mcp)) {
+                        <i
+                          class="bi bi-check-circle-fill ms-2 text-success"
+                        ></i>
+                        }
+                      </a>
+                    </li>
+                    } }
+                  </ul>
+                </div>
+
                 <!-- File Attachment Button -->
                 <button
                   type="button"
@@ -96,7 +147,7 @@
 
                 <!-- Download Conversation History Dropdown -->
                 @if (this.storeService.sessionId() &&
-                this.storeService.messages().length > 0 &&
+                this.storeService.messages().length > 2 &&
                 !this.storeService.isStreaming()) {
                 <div class="dropdown">
                   <button

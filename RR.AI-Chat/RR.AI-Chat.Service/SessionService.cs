@@ -109,6 +109,7 @@ namespace RR.AI_Chat.Service
             Excellence means leveraging every available capability to provide the most comprehensive, insightful, and valuable response possible. Don't just answer questions—anticipate needs, provide context, deliver transformative insights, and create responses that exceed expectations. **All responses must be properly formatted in Markdown.**
 
             Your session identifier is {0}. Use this for maintaining context and accessing session-specific resources throughout our conversation.
+            Your user identifier is {1}. Use this for maintaining context and accessing session-specific resources throughout our conversation.
 
             Operate with invisible mastery: your sophisticated use of these capabilities should enhance every response without ever needing to explicitly mention the tools themselves.
             ";
@@ -148,7 +149,7 @@ namespace RR.AI_Chat.Service
             await _ctx.AddAsync(newSession, cancellationToken);
             await _ctx.SaveChangesAsync(cancellationToken);
 
-            var prompt = string.Format(_defaultSystemPrompt, newSession.Id);
+            var prompt = string.Format(_defaultSystemPrompt, newSession.Id, userId);
             var coversations = new List<ChatMessage>
             {
                 new(ChatRole.System, prompt)

@@ -12,7 +12,7 @@ using RR.AI_Chat.Repository;
 namespace RR.AI_Chat.Repository.Migrations
 {
     [DbContext(typeof(AIChatDbContext))]
-    [Migration("20251012025506_Initial")]
+    [Migration("20251029221929_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace RR.AI_Chat.Repository.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("ProductVersion", "9.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -44,7 +44,7 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AIService", "AI.Ref");
+                    b.ToTable("AIService", "Core.Ref");
 
                     b.HasData(
                         new
@@ -101,7 +101,7 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Document", "AI");
+                    b.ToTable("Document", "Core");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.DocumentPage", b =>
@@ -134,53 +134,7 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.HasIndex("DocumentId");
 
-                    b.ToTable("DocumentPage", "AI");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.McpServer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Arguments")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Command")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DateDeactivated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<string>("WorkingDirectory")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("McpServer", "AI");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("0a515abd-7d7d-48f5-9037-531745843548"),
-                            Arguments = "[\"run\",\"--project\",\"C:\\\\Users\\\\Rorro\\\\source\\\\repos\\\\RR.MCPServer\\\\RR.MCPServer\\\\RR.MCPServer.csproj\",\"--configuration\",\"Release\"]",
-                            Command = "dotnet",
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "Test MCP Server",
-                            WorkingDirectory = "C:\\Users\\Rorro\\source\\repos\\RR.MCPServer\\RR.MCPServer"
-                        });
+                    b.ToTable("DocumentPage", "Core");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.Model", b =>
@@ -215,7 +169,7 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.HasIndex("AIServiceId");
 
-                    b.ToTable("Model", "AI.Ref");
+                    b.ToTable("Model", "Core.Ref");
 
                     b.HasData(
                         new
@@ -269,8 +223,9 @@ namespace RR.AI_Chat.Repository.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<long>("OutputTokens")
                         .HasColumnType("bigint");
@@ -282,7 +237,7 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Session", "AI");
+                    b.ToTable("Session", "Core");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.User", b =>
@@ -310,6 +265,9 @@ namespace RR.AI_Chat.Repository.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<bool>("IsSuperAdministrator")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -317,13 +275,13 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("User", "AI");
+                    b.ToTable("User", "Core");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.Document", b =>
                 {
                     b.HasOne("RR.AI_Chat.Entity.Session", "Session")
-                        .WithMany()
+                        .WithMany("Documents")
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
@@ -375,6 +333,11 @@ namespace RR.AI_Chat.Repository.Migrations
             modelBuilder.Entity("RR.AI_Chat.Entity.Document", b =>
                 {
                     b.Navigation("Pages");
+                });
+
+            modelBuilder.Entity("RR.AI_Chat.Entity.Session", b =>
+                {
+                    b.Navigation("Documents");
                 });
 #pragma warning restore 612, 618
         }

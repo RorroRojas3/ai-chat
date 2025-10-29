@@ -1,5 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
@@ -7,6 +10,7 @@ using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
 using System.ComponentModel;
 using System.Text.Json;
+using System.Threading;
 
 namespace RR.AI_Chat.Service
 {
@@ -26,12 +30,18 @@ namespace RR.AI_Chat.Service
     public class DocumentToolService(ILogger<DocumentToolService> logger,
          [FromKeyedServices("azureaifoundry")] IChatClient openAiClient,
         IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
+        IBlobStorageService blobStorageService,
+        IConfiguration configuration,
+        IDocumentService documentService,
         AIChatDbContext ctx) : IDocumentToolService
     {
         private readonly ILogger _logger = logger;
         private readonly AIChatDbContext _ctx = ctx;
         private readonly IChatClient _chatClient = openAiClient;
         private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator = embeddingGenerator;
+        private readonly IBlobStorageService _blobStorageService = blobStorageService;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly IDocumentService _documentService = documentService;
         private const double _cosineDistanceThreshold = 0.5;
 
         [Description("Get all documents in the current session.")]
@@ -294,13 +304,111 @@ namespace RR.AI_Chat.Service
             return documentPages.Count > 0 ? string.Join("\n\n", documentPages) : null;
         }
 
+        [Description("CRITICAL: This tool MUST be called immediately after receiving a SAS URI from the Document Generation MCP server. " +
+    "It processes AI-generated files (documents, reports, spreadsheets, etc.) by downloading from the temporary location, " +
+    "extracting text content, generating embeddings for semantic search, storing permanently in Azure Blob Storage, " +
+ "and saving metadata to the database. Returns a downloadable SAS URL for the user. " +
+    "ALWAYS call this function when the Document Generation MCP server provides a SAS URI - do not skip this step.")]
+        public async Task<Uri> ProcessGeneratedFileAsync(
+        [Description("The unique identifier of the current chat session")] Guid sessionId,
+        [Description("The unique identifier of the user who owns the generated file")] Guid userId,
+        [Description("The temporary SAS URI from the MCP Document Generator pointing to the AI-generated file in Azure Blob Storage")] Uri sasUri)
+        {
+            ArgumentNullException.ThrowIfNull(sasUri);
+
+            var blobClient = new BlobClient(sasUri);
+            var properties = await blobClient.GetPropertiesAsync();
+            string blobName = blobClient.Name; 
+            string filename = Path.GetFileName(blobName); 
+
+            var response = await blobClient.DownloadContentAsync();
+
+            var container = _configuration["AzureStorage:DocumentsContainer"]!;
+            var path = $"{userId}/{sessionId}/{filename}";
+            var bytes = response.Value.Content.ToArray();
+
+            Dictionary<string, string> metadata = new()
+            {
+                { "userId", userId.ToString() },
+                { "sessionId", sessionId.ToString() },
+                { "fileName", filename },
+                { "contentType", properties.Value.ContentType },
+                { "length", properties.Value.ContentLength.ToString() }
+            };
+
+            await _blobStorageService.UploadAsync(container, path, bytes, metadata, CancellationToken.None);
+
+            List<DocumentPage> documentPages = [];
+            var date = DateTime.UtcNow;
+            var documentExtractors = await _documentService.ExtractTextAsync(bytes, CancellationToken.None);
+
+            var tasks = new List<Task<PageEmbeddingDto>>();
+            foreach (var documentExtractor in documentExtractors)
+            {
+                var task = _documentService.GeneratePageEmbedding(documentExtractor, CancellationToken.None);
+                tasks.Add(task);
+                if (tasks.Count == 10)
+                {
+                    var completedTasks = await Task.WhenAll(tasks);
+                    foreach (var result in completedTasks)
+                    {
+                        documentPages.Add(new DocumentPage
+                        {
+                            Number = result.Number,
+                            Embedding = result.Embedding.ToArray(),
+                            Text = result.Text,
+                            DateCreated = date
+                        });
+                    }
+                    tasks.Clear();
+                }
+            }
+            if (tasks.Count > 0)
+            {
+                var completedTasks = await Task.WhenAll(tasks);
+                foreach (var result in completedTasks)
+                {
+                    documentPages.Add(new DocumentPage
+                    {
+                        Number = result.Number,
+                        Embedding = result.Embedding.ToArray(),
+                        Text = result.Text,
+                        DateCreated = date
+                    });
+                }
+            }
+
+            var newDocument = new Document
+            {
+                UserId = userId,
+                SessionId = sessionId,
+                Name = filename,
+                Extension = Path.GetExtension(filename),
+                MimeType = properties.Value.ContentType,
+                Path = path,
+                Pages = documentPages,
+                DateCreated = date
+            };
+            await _ctx.AddAsync(newDocument);
+            await _ctx.SaveChangesAsync();
+
+            var finalSasUri = _blobStorageService.GenerateSasUri(
+                container,
+                path,
+                TimeSpan.FromHours(1),
+                BlobSasPermissions.Read);
+
+            return finalSasUri;
+        }
+
         public IList<AITool> GetTools()
         {
             IList<AITool> functions = [
                 AIFunctionFactory.Create(GetSessionDocumentsAsync),
                 AIFunctionFactory.Create(GetDocumentOverviewAsync),
                 AIFunctionFactory.Create(SearchDocumentsAsync),
-                AIFunctionFactory.Create(CompareDocumentsAsync)];
+                AIFunctionFactory.Create(CompareDocumentsAsync),
+                AIFunctionFactory.Create(ProcessGeneratedFileAsync)];
 
             return functions;
         }

@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Extensions;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
 using RR.AI_Chat.Entity;
@@ -14,9 +13,13 @@ namespace RR.AI_Chat.Service
 {
     public interface IDocumentService 
     {
-        Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken);
+        Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken);
 
-        Task<FileDataDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken);
+        Task<FileDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken);
+
+        Task<List<DocumentExtractorDto>> ExtractTextAsync(byte[] bytes, CancellationToken cancellationToken);
+
+        Task<PageEmbeddingDto> GeneratePageEmbedding(DocumentExtractorDto documentExtractor, CancellationToken cancellationToken);
     }
 
     public class DocumentService(ILogger<DocumentService> logger, 
@@ -59,7 +62,7 @@ namespace RR.AI_Chat.Service
         /// 4. Creates document page entities with embeddings
         /// 5. Saves the document and all pages to the database
         /// </remarks>
-        public async Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDataDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken)
+        public async Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(context, nameof(context));
             ArgumentNullException.ThrowIfNull(fileDataDto, nameof(fileDataDto));
@@ -85,18 +88,18 @@ namespace RR.AI_Chat.Service
 
             await _blobStorageService.UploadAsync(container, blob, fileDataDto.Content, metadata, cancellationToken);
 
-            var documentExtractors = await ExtractTextFromPdfFileAsync(fileDataDto.Content, cancellationToken);
+            var documentExtractors = await ExtractTextAsync(fileDataDto.Content, cancellationToken);
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Extracting.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 50);
 
             List<DocumentPage> documentPages = [];
             var date = DateTime.UtcNow;
 
-            var tasks = new List<Task<(int PageNumber, ReadOnlyMemory<float> Embedding, string PageText)>>();
+            var tasks = new List<Task<PageEmbeddingDto>>();
 
             foreach (var documentExtractor in documentExtractors)
             {
-                var task = GenerateEmbeddingForPageAsync(documentExtractor, cancellationToken);
+                var task = GeneratePageEmbedding(documentExtractor, cancellationToken);
                 tasks.Add(task);
 
                 // Process in batches of 10
@@ -107,9 +110,9 @@ namespace RR.AI_Chat.Service
                     {
                         documentPages.Add(new DocumentPage
                         {
-                            Number = result.PageNumber,
+                            Number = result.Number,
                             Embedding = result.Embedding.ToArray(),
-                            Text = result.PageText,
+                            Text = result.Text,
                             DateCreated = date
                         });
                     }
@@ -125,9 +128,9 @@ namespace RR.AI_Chat.Service
                 {
                     documentPages.Add(new DocumentPage
                     {
-                        Number = result.PageNumber,
+                        Number = result.Number,
                         Embedding = result.Embedding.ToArray(),
-                        Text = result.PageText,
+                        Text = result.Text,
                         DateCreated = date
                     });
                 }
@@ -195,7 +198,7 @@ namespace RR.AI_Chat.Service
         /// <param name="bytes">The byte array representing the PDF file.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the extracted text from the PDF file.</returns>
         /// <exception cref="ArgumentNullException">Thrown when the byte array is null.</exception>
-        public async Task<List<DocumentExtractorDto>> ExtractTextFromPdfFileAsync(byte[] bytes, CancellationToken cancellationToken)
+        public async Task<List<DocumentExtractorDto>> ExtractTextAsync(byte[] bytes, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(bytes, nameof(bytes));
 
@@ -210,7 +213,7 @@ namespace RR.AI_Chat.Service
             return dto;
         }
 
-        public async Task<FileDataDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken)
+        public async Task<FileDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken)
         {
             var oid = _tokenService.GetOid()!;
 
@@ -266,7 +269,7 @@ namespace RR.AI_Chat.Service
                 return null;
             }
 
-            return new FileDataDto
+            return new FileDto
             {
                 FileName = fileName,
                 Content = bytes,
@@ -275,11 +278,15 @@ namespace RR.AI_Chat.Service
             };
         }
 
-        // Add this helper method to the DocumentService class
-        private async Task<(int PageNumber, ReadOnlyMemory<float> Embedding, string PageText)> GenerateEmbeddingForPageAsync(DocumentExtractorDto documentExtractor, CancellationToken cancellationToken)
+        public async Task<PageEmbeddingDto> GeneratePageEmbedding(DocumentExtractorDto documentExtractor, CancellationToken cancellationToken)
         {
             var embedding = await _embeddingGenerator.GenerateVectorAsync(string.IsNullOrWhiteSpace(documentExtractor.PageText) ? "EMPTY PAGE" : documentExtractor.PageText, null, cancellationToken);
-            return (documentExtractor.PageNumber, embedding, documentExtractor.PageText);
+            return new PageEmbeddingDto
+            {
+                Number = documentExtractor.PageNumber,
+                Embedding = embedding,
+                Text = documentExtractor.PageText
+            };
         }
     }
 }
