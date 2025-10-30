@@ -191,11 +191,11 @@ export class PromptBoxComponent implements OnDestroy {
   getMcpButtonText(): string {
     const selectedCount = this.storeService.selectedMcps().length;
     if (selectedCount === 0) {
-      return 'MCPs';
+      return 'Tools';
     } else if (selectedCount === 1) {
       return this.storeService.selectedMcps()[0].name;
     } else {
-      return `${selectedCount} MCPs`;
+      return `${selectedCount} Tools`;
     }
   }
 

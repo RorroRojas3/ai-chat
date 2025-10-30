@@ -52,7 +52,7 @@
                   >
                     @if (this.storeService.selectedModel().name) {
                     <i
-                      class="me-1 {{
+                      class="me-2 {{
                         getServiceIcon(
                           this.storeService.selectedModel().aiServiceId
                         )
@@ -62,7 +62,7 @@
                       this.storeService.selectedModel().name
                     }}</span>
                     } @else {
-                    <i class="bi bi-robot me-1"></i>
+                    <i class="bi bi-robot me-2"></i>
                     <span class="d-none d-sm-inline">Models...</span>
                     }
                   </button>
@@ -92,9 +92,9 @@
                     id="mcpDropdownButton"
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
-                    title="Select MCPs"
+                    title="Select Tools"
                   >
-                    <i class="bi bi-robot me-1"></i>
+                    <i class="bi bi-wrench me-2"></i>
                     <span class="d-none d-sm-inline">{{
                       getMcpButtonText()
                     }}</span>
@@ -107,7 +107,7 @@
                     @if (this.storeService.mcps().length === 0) {
                     <li>
                       <span class="dropdown-item-text text-muted"
-                        >No MCPs available</span
+                        >No Tools available</span
                       >
                     </li>
                     } @else { @for (mcp of this.storeService.mcps(); track
@@ -118,7 +118,7 @@
                         (click)="toggleMcpSelection(mcp, $event)"
                         style="cursor: pointer"
                       >
-                        <i class="bi bi-robot me-2"></i>
+                        <i class="bi bi-wrench me-2"></i>
                         <span
                           class="flex-grow-1 text-truncate"
                           [title]="mcp.name"
