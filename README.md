@@ -1,5 +1,11 @@
 # AI Chat Application
 
+[![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![Angular](https://img.shields.io/badge/Angular-19-DD0031?logo=angular)](https://angular.dev/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![SQL Server](https://img.shields.io/badge/SQL%20Server-Vector%20Search-CC2927?logo=microsoft-sql-server)](https://www.microsoft.com/sql-server)
+
 A full-stack AI chat application built with .NET 9 Web API backend and Angular 19 frontend. The application supports multiple AI service providers including Ollama, OpenAI, Azure AI Foundry, and Anthropic, with document management and vector search capabilities.
 
 ## 📋 Table of Contents
@@ -11,9 +17,14 @@ A full-stack AI chat application built with .NET 9 Web API backend and Angular 1
 - [Configuration](#-configuration)
 - [Database Setup](#-database-setup)
 - [API Endpoints](#-api-endpoints)
+- [Examples](#-examples)
 - [Development](#-development)
+- [Testing](#-testing)
 - [Troubleshooting](#-troubleshooting)
 - [Contributing](#-contributing)
+- [License](#-license)
+- [Authors](#-authors)
+- [Acknowledgments](#-acknowledgments)
 
 ## 🚀 Features
 
@@ -222,6 +233,181 @@ The application uses Entity Framework migrations. To set up the database:
 ### Models
 - `GET /api/models` - Get available AI models
 
+## 📝 Examples
+
+### Example 1: Starting a Chat Session
+
+**Backend (C# API Call)**:
+```csharp
+// Create a new chat session
+var session = new SessionDto
+{
+    Name = "My AI Conversation",
+    CreatedAt = DateTime.UtcNow
+};
+
+// POST to /api/sessions
+var response = await httpClient.PostAsJsonAsync("api/sessions", session);
+var createdSession = await response.Content.ReadFromJsonAsync<SessionDto>();
+```
+
+**Frontend (TypeScript/Angular)**:
+```typescript
+// Using the SessionService
+this.sessionService.createSession('My AI Conversation').subscribe(session => {
+  console.log('Session created:', session.id);
+  this.currentSessionId = session.id;
+});
+```
+
+### Example 2: Sending a Chat Message and Streaming Response
+
+**Backend (C# Controller)**:
+```csharp
+[HttpPost("sessions/{sessionId}/stream")]
+public async IAsyncEnumerable<string> StreamChatCompletion(
+    Guid sessionId, 
+    [FromBody] ChatCompletionDto request,
+    [EnumeratorCancellation] CancellationToken cancellationToken)
+{
+    await foreach (var chunk in _chatService.StreamCompletionAsync(
+        sessionId, 
+        request, 
+        cancellationToken))
+    {
+        yield return chunk;
+    }
+}
+```
+
+**Frontend (TypeScript/Angular with SSE)**:
+```typescript
+// Stream chat response
+sendMessage(sessionId: string, message: string, model: string) {
+  const request = {
+    prompt: message,
+    model: model,
+    systemPrompt: 'You are a helpful assistant.'
+  };
+
+  this.chatService.streamCompletion(sessionId, request).subscribe({
+    next: (chunk) => {
+      // Append chunk to message display
+      this.currentMessage += chunk;
+    },
+    complete: () => {
+      console.log('Streaming completed');
+    }
+  });
+}
+```
+
+### Example 3: Document Upload and Vector Search
+
+**Upload a Document**:
+```csharp
+// C# Example
+var formData = new MultipartFormDataContent();
+formData.Add(new StreamContent(fileStream), "file", fileName);
+
+var response = await httpClient.PostAsync("api/documents", formData);
+var document = await response.Content.ReadFromJsonAsync<DocumentDto>();
+```
+
+**Search Documents**:
+```csharp
+// C# Example - Vector search with AI embeddings
+var searchRequest = new DocumentSearchDto
+{
+    Query = "What are the system requirements?",
+    TopK = 5
+};
+
+var response = await httpClient.PostAsJsonAsync("api/documents/search", searchRequest);
+var results = await response.Content.ReadFromJsonAsync<List<DocumentDto>>();
+```
+
+### Example 4: Using Different AI Providers
+
+**OpenAI (GPT-4)**:
+```typescript
+const request = {
+  prompt: 'Explain quantum computing',
+  model: 'gpt-4',
+  systemPrompt: 'You are a physics expert.'
+};
+
+this.chatService.getCompletion(sessionId, request).subscribe(response => {
+  console.log(response.content);
+});
+```
+
+**Ollama (Local Model)**:
+```typescript
+const request = {
+  prompt: 'Write a haiku about coding',
+  model: 'llama3.2:latest',
+  systemPrompt: 'You are a creative poet.'
+};
+
+this.chatService.getCompletion(sessionId, request).subscribe(response => {
+  console.log(response.content);
+});
+```
+
+**Anthropic (Claude)**:
+```typescript
+const request = {
+  prompt: 'Help me debug this code',
+  model: 'claude-3-5-sonnet-20241022',
+  systemPrompt: 'You are an expert programmer.'
+};
+
+this.chatService.getCompletion(sessionId, request).subscribe(response => {
+  console.log(response.content);
+});
+```
+
+### Example 5: Session Management
+
+**List All Sessions**:
+```typescript
+// Get all chat sessions
+this.sessionService.getSessions().subscribe(sessions => {
+  sessions.forEach(session => {
+    console.log(`${session.name} - Created: ${session.createdAt}`);
+  });
+});
+```
+
+**Delete a Session**:
+```typescript
+// Delete a specific session
+this.sessionService.deleteSession(sessionId).subscribe(() => {
+  console.log('Session deleted successfully');
+});
+```
+
+### Example 6: Configuration with User Secrets
+
+**Setting up OpenAI**:
+```bash
+cd RR.AI-Chat/RR.AI-Chat.Api
+dotnet user-secrets set "OpenAI:ApiKey" "sk-proj-xxxxxxxxxxxxx"
+```
+
+**Setting up Azure AI Foundry**:
+```bash
+dotnet user-secrets set "AzureAIFoundry:Url" "https://my-resource.openai.azure.com/"
+dotnet user-secrets set "AzureAIFoundry:ApiKey" "your-azure-key"
+dotnet user-secrets set "AzureAIFoundry:EmbeddingModel" "text-embedding-ada-002"
+```
+
+**Setting up Anthropic**:
+```bash
+dotnet user-secrets set "Anthropic:ApiKey" "sk-ant-xxxxxxxxxxxxx"
+```
+
 ## 🔧 Development
 
 > **Contributing?** See our [Development Guide](DEVELOPMENT.md) for detailed development tips and best practices.
@@ -253,6 +439,51 @@ dotnet publish -c Release -o ./publish
 cd ai-chat-ui
 npm run build
 ```
+
+## 🧪 Testing
+
+### Test Framework
+
+- **Backend**: The project uses .NET testing frameworks. Test projects can be added following the pattern `[ProjectName].Tests`
+- **Frontend**: Angular uses Jasmine and Karma for unit testing
+
+### Running Backend Tests
+
+```bash
+cd RR.AI-Chat
+dotnet test --verbosity normal
+```
+
+### Running Frontend Tests
+
+```bash
+cd ai-chat-ui
+npm test
+```
+
+For continuous test watching during development:
+```bash
+npm test -- --watch
+```
+
+### Code Coverage
+
+To generate code coverage reports:
+
+**Backend (using dotnet-coverage)**:
+```bash
+dotnet tool install -g dotnet-coverage
+cd RR.AI-Chat
+dotnet-coverage collect -f cobertura -o coverage.cobertura.xml dotnet test
+```
+
+**Frontend**:
+```bash
+cd ai-chat-ui
+npm test -- --code-coverage
+```
+
+Coverage reports will be generated in the `coverage/` directory.
 
 ## 🐛 Troubleshooting
 
@@ -325,9 +556,65 @@ npm run build
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+### Code Style Guidelines
+
+- **Backend (.NET)**: Follow standard C# conventions and SOLID principles
+- **Frontend (Angular)**: Follow Angular style guide and use TypeScript strict mode
+- Ensure all tests pass before submitting PR
+- Add tests for new features
+- Update documentation as needed
+
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**Copyright (c) 2025 Rodrigo Ignacio Rojas Garcia**
+
+## 👥 Authors
+
+**Rodrigo Ignacio Rojas Garcia** - *Creator and Maintainer*
+- GitHub: [@RorroRojas3](https://github.com/RorroRojas3)
+
+## 🙏 Acknowledgments
+
+### AI Service Providers
+- [OpenAI](https://openai.com/) - GPT models and embeddings
+- [Anthropic](https://www.anthropic.com/) - Claude AI models
+- [Microsoft Azure AI](https://azure.microsoft.com/en-us/products/ai-services) - Azure OpenAI Service
+- [Ollama](https://ollama.ai/) - Local AI model runtime
+
+### Key Technologies & Libraries
+
+**Backend (.NET)**
+- [ASP.NET Core](https://dotnet.microsoft.com/apps/aspnet) - Web framework
+- [Entity Framework Core](https://docs.microsoft.com/ef/core/) - ORM and database access
+- [Microsoft.Extensions.AI](https://devblogs.microsoft.com/dotnet/introducing-microsoft-extensions-ai-preview/) - AI service abstractions
+- [OllamaSharp](https://github.com/awaescher/OllamaSharp) - Ollama .NET client
+- [Anthropic.SDK](https://github.com/tghamm/Anthropic.SDK) - Anthropic .NET SDK
+- [Swashbuckle](https://github.com/domaindrivendev/Swashbuckle.AspNetCore) - OpenAPI/Swagger documentation
+- [Hangfire](https://www.hangfire.io/) - Background job processing
+
+**Frontend (Angular)**
+- [Angular](https://angular.dev/) - Frontend framework
+- [Bootstrap](https://getbootstrap.com/) - UI component library
+- [Bootstrap Icons](https://icons.getbootstrap.com/) - Icon library
+- [highlight.js](https://highlightjs.org/) - Syntax highlighting
+- [markdown-it](https://github.com/markdown-it/markdown-it) - Markdown parser and renderer
+- [RxJS](https://rxjs.dev/) - Reactive programming library
+- [MSAL Angular](https://github.com/AzureAD/microsoft-authentication-library-for-js) - Microsoft Authentication Library
+
+**Database & Search**
+- [SQL Server](https://www.microsoft.com/sql-server) - Database engine
+- [EFCore.SqlServer.VectorSearch](https://github.com/Giorgi/EFCore.SqlServer.VectorSearch) - Vector search capabilities
+
+**Development Tools**
+- [Visual Studio Code](https://code.visualstudio.com/) - Code editor
+- [.NET SDK](https://dotnet.microsoft.com/download) - Development framework
+- [Node.js](https://nodejs.org/) - JavaScript runtime
+- [Angular CLI](https://angular.dev/tools/cli) - Angular development tools
+
+### Inspiration
+This project combines modern AI capabilities with traditional web development practices to create a flexible, multi-provider chat interface suitable for various AI use cases.
 
 ## 🆘 Support
 
