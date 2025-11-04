@@ -152,7 +152,7 @@ builder.Services.AddSingleton(sp =>
 builder.Services.Configure<List<McpServerSettings>>(builder.Configuration.GetSection("McpServers"));
 
 
-// Register the singleton lock service
+// Singletons
 builder.Services.AddSingleton<ISessionLockService, SessionLockService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IGraphService, GraphService>();
@@ -162,6 +162,7 @@ builder.Services.AddSingleton<IHtmlService, HtmlService>();
 builder.Services.AddSingleton<IPdfService, PdfService>();
 builder.Services.AddSingleton<IWordService, WordService>();
 builder.Services.AddSingleton<IMarkdownService, MarkdownService>();
+builder.Services.AddSingleton<IExcelService, ExcelService>();
 
 // Keep other services as Scoped
 builder.Services.AddScoped<IChatService, ChatService>();

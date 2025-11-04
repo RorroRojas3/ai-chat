@@ -212,10 +212,12 @@ export class PromptBoxComponent implements OnDestroy {
   // Handle multiple files
   private handleFiles(fileList: FileList): void {
     Array.from(fileList).forEach((file) => {
-      // Only accept PDF files
+      // Only accept PDF and CSV files
       if (
         file.type === 'application/pdf' ||
-        file.name.toLowerCase().endsWith('.pdf')
+        file.name.toLowerCase().endsWith('.pdf') ||
+        file.type === 'text/csv' ||
+        file.name.toLowerCase().endsWith('.csv')
       ) {
         const attachedFile: FileUploadDto = {
           id: crypto.randomUUID(),
@@ -227,9 +229,9 @@ export class PromptBoxComponent implements OnDestroy {
         };
         this.attachedFiles.push(attachedFile);
       } else {
-        // Show error message for non-PDF files
+        // Show error message for unsupported files
         console.warn(
-          `File "${file.name}" is not a PDF file and will be ignored.`
+          `File "${file.name}" is not a PDF or CSV file and will be ignored.`
         );
         // You could also show a toast notification or alert here
       }
