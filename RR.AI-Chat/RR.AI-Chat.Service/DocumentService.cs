@@ -17,7 +17,7 @@ namespace RR.AI_Chat.Service
 
         Task<FileDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken);
 
-        Task<List<DocumentExtractorDto>> ExtractTextAsync(byte[] bytes, CancellationToken cancellationToken);
+        Task<List<DocumentExtractorDto>> ExtractTextAsync(byte[] bytes, string contentType, CancellationToken cancellationToken);
 
         Task<PageEmbeddingDto> GeneratePageEmbedding(DocumentExtractorDto documentExtractor, CancellationToken cancellationToken);
     }
@@ -32,6 +32,7 @@ namespace RR.AI_Chat.Service
         IPdfService pdfService,
         IWordService wordService,
         IMarkdownService markdownService,
+        IExcelService excelService,
         AIChatDbContext ctx) : IDocumentService
     {
         private readonly ILogger _logger = logger;
@@ -44,6 +45,7 @@ namespace RR.AI_Chat.Service
         private readonly IPdfService _pdfService = pdfService;
         private readonly IWordService _wordService = wordService;
         private readonly IMarkdownService _markdownService = markdownService;
+        private readonly IExcelService _excelService = excelService;
         private readonly AIChatDbContext _ctx = ctx;
         private const double _cosineDistanceThreshold = 0.3;
 
@@ -88,7 +90,7 @@ namespace RR.AI_Chat.Service
 
             await _blobStorageService.UploadAsync(container, blob, fileDataDto.Content, metadata, cancellationToken);
 
-            var documentExtractors = await ExtractTextAsync(fileDataDto.Content, cancellationToken);
+            var documentExtractors = await ExtractTextAsync(fileDataDto.Content, fileDataDto.ContentType, cancellationToken);
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Extracting.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 50);
 
@@ -198,17 +200,29 @@ namespace RR.AI_Chat.Service
         /// <param name="bytes">The byte array representing the PDF file.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the extracted text from the PDF file.</returns>
         /// <exception cref="ArgumentNullException">Thrown when the byte array is null.</exception>
-        public async Task<List<DocumentExtractorDto>> ExtractTextAsync(byte[] bytes, CancellationToken cancellationToken)
+        public async Task<List<DocumentExtractorDto>> ExtractTextAsync(byte[] bytes, string contentType, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(bytes, nameof(bytes));
 
-            var analyzeResult = await _documentIntelligenceService.ReadAsync(bytes, cancellationToken);
-
-            var dto = analyzeResult.Pages.Select(page => new DocumentExtractorDto
+            List<DocumentExtractorDto> dto = [];
+            switch (contentType.ToLower())
             {
-                PageNumber = page.PageNumber,
-                PageText = string.Join("\n", page.Lines.Select(line => line.Content))
-            }).ToList();
+                case "application/pdf":
+                    var analyzeResult = await _documentIntelligenceService.ReadAsync(bytes, cancellationToken);
+
+                    dto = [.. analyzeResult.Pages.Select(page => new DocumentExtractorDto
+                    {
+                        PageNumber = page.PageNumber,
+                        PageText = string.Join("\n", page.Lines.Select(line => line.Content))
+                    })];
+                    break;
+                case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                case "text/csv":
+                    dto = _excelService.ExtractCsvText(bytes);
+                    break;
+                default:
+                    throw new NotSupportedException($"The content type '{contentType}' is not supported for text extraction.");
+            }
 
             return dto;
         }

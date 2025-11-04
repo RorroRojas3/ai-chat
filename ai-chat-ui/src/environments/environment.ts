@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://rr-ai-chat-api2.azurewebsites.net/api/',
+  apiUrl: 'https://localhost:7045/api/',
   msalConfig: {
     auth: {
       clientId: 'b40defa0-5309-45c4-82fc-cb284010cc10',
@@ -10,6 +10,6 @@ export const environment = {
   },
   apiConfig: {
     scopes: ['api://b40defa0-5309-45c4-82fc-cb284010cc10/access_as_user'],
-    uri: 'https://rr-ai-chat-api2.azurewebsites.net/api/',
+    uri: 'https://localhost:7045/api/',
   },
 };
