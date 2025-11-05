@@ -12,6 +12,7 @@ using Microsoft.Graph;
 using Microsoft.Identity.Web;
 using RR.AI_Chat.Repository;
 using RR.AI_Chat.Service;
+using RR.AI_Chat.Service.Common.Interface;
 using RR.AI_Chat.Service.Middleware;
 using RR.AI_Chat.Service.Settings;
 using System.ClientModel;
@@ -162,7 +163,10 @@ builder.Services.AddSingleton<IHtmlService, HtmlService>();
 builder.Services.AddSingleton<IPdfService, PdfService>();
 builder.Services.AddSingleton<IWordService, WordService>();
 builder.Services.AddSingleton<IMarkdownService, MarkdownService>();
-builder.Services.AddSingleton<IExcelService, ExcelService>();
+builder.Services.AddKeyedSingleton<IFileService, ExcelService>("excel");
+builder.Services.AddKeyedSingleton<IFileService, CommonFileService>("common");
+builder.Services.AddKeyedSingleton<IFileService, WordService>("word");
+
 
 // Keep other services as Scoped
 builder.Services.AddScoped<IChatService, ChatService>();

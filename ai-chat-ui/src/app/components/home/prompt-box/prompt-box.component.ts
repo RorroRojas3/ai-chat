@@ -211,14 +211,23 @@ export class PromptBoxComponent implements OnDestroy {
 
   // Handle multiple files
   private handleFiles(fileList: FileList): void {
+    const allowedExtensions = this.storeService.fileExtensions();
+
+    // Don't accept any files if no extensions are configured
+    if (allowedExtensions.length === 0) {
+      console.warn('No file types are currently allowed for upload.');
+      return;
+    }
+
     Array.from(fileList).forEach((file) => {
-      // Only accept PDF and CSV files
-      if (
-        file.type === 'application/pdf' ||
-        file.name.toLowerCase().endsWith('.pdf') ||
-        file.type === 'text/csv' ||
-        file.name.toLowerCase().endsWith('.csv')
-      ) {
+      const fileName = file.name.toLowerCase();
+
+      // Check if file extension matches any allowed extension
+      const isAllowed = allowedExtensions.some((ext) =>
+        fileName.endsWith(ext.toLowerCase())
+      );
+
+      if (isAllowed) {
         const attachedFile: FileUploadDto = {
           id: crypto.randomUUID(),
           name: file.name,
@@ -230,8 +239,9 @@ export class PromptBoxComponent implements OnDestroy {
         this.attachedFiles.push(attachedFile);
       } else {
         // Show error message for unsupported files
+        const allowedList = allowedExtensions.join(', ');
         console.warn(
-          `File "${file.name}" is not a PDF or CSV file and will be ignored.`
+          `File "${file.name}" is not supported. Allowed types: ${allowedList}`
         );
         // You could also show a toast notification or alert here
       }
@@ -485,6 +495,28 @@ export class PromptBoxComponent implements OnDestroy {
       DocumentFormats.DOCX,
       DocumentFormats.MARKDOWN,
     ];
+  }
+
+  /**
+   * Gets the accepted file types for the file input based on store configuration
+   * @returns Comma-separated string of accepted file extensions, or empty string if none configured
+   */
+  getAcceptedFileTypes(): string {
+    const extensions = this.storeService.fileExtensions();
+    if (extensions.length === 0) {
+      return ''; // Don't accept any files if no extensions configured
+    }
+
+    // Extensions from API already include the dot (e.g., ".pdf", ".csv")
+    return extensions.join(',');
+  }
+
+  /**
+   * Checks if file attachments are allowed based on configured extensions
+   * @returns true if file attachments are allowed
+   */
+  isFileAttachmentAllowed(): boolean {
+    return this.storeService.fileExtensions().length > 0;
   }
 
   /**

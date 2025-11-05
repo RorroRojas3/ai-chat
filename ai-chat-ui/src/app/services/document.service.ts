@@ -132,4 +132,22 @@ export class DocumentService {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   }
+
+  /**
+   * Retrieves a list of supported file extensions from the API.
+   *
+   * @returns An Observable that emits an array of file extension strings.
+   *
+   * @example
+   * ```typescript
+   * this.documentService.getFileExtensions().subscribe(extensions => {
+   *   console.log(extensions); // ['pdf', 'docx', 'txt', ...]
+   * });
+   * ```
+   */
+  getFileExtensions(): Observable<string[]> {
+    return this.http.get<string[]>(
+      `${environment.apiUrl}documents/file-extensions`
+    );
+  }
 }

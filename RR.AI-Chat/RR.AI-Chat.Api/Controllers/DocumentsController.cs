@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
 using RR.AI_Chat.Service;
+using RR.AI_Chat.Common.Extensions;
 
 namespace RR.AI_Chat.Api.Controllers
 {
@@ -77,6 +78,16 @@ namespace RR.AI_Chat.Api.Controllers
             }
 
             return File(dto.Content, dto.ContentType, dto.FileName);
+        }
+
+        [HttpGet("file-extensions")]
+        public IActionResult GetFileExtensions()
+        {
+            var fileExtensions = Enum.GetValues<FileExtensions>()
+                .Select(e => e.GetDescription())
+                .ToList();
+
+            return Ok(fileExtensions);
         }
 
         private static async Task<byte[]> ReadFileAsync(IFormFile file)

@@ -136,6 +136,7 @@
                 </div>
 
                 <!-- File Attachment Button -->
+                @if (isFileAttachmentAllowed()) {
                 <button
                   type="button"
                   class="btn btn-prompt-box"
@@ -144,6 +145,7 @@
                 >
                   <i class="bi bi-paperclip"></i>
                 </button>
+                }
 
                 <!-- Download Conversation History Dropdown -->
                 @if (this.storeService.sessionId() &&
@@ -202,7 +204,7 @@
           multiple
           style="display: none"
           (change)="onFileSelect($event)"
-          accept=".pdf,application/pdf,.csv,text/csv"
+          [accept]="getAcceptedFileTypes()"
         />
       </div>
     </form>

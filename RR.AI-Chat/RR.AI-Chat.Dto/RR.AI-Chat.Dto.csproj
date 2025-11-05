@@ -11,4 +11,8 @@
     <None Include="Actions\Graph\GraphActions.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\RR.AI-Chat.Common\RR.AI-Chat.Common.csproj" />
+  </ItemGroup>
+
 </Project>
