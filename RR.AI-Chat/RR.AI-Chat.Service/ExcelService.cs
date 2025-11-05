@@ -17,13 +17,13 @@ namespace RR.AI_Chat.Service
 
             using var memoryStream = new MemoryStream(bytes);
             var workbook = new Workbook(memoryStream);
-            _logger.LogInformation("Starting text extraction from Excel document {Name}.", fileName);
+            _logger.LogInformation("Starting text extraction from Excel document {FileName}.", fileName);
 
             var worksheets = workbook.Worksheets;
             List<DocumentExtractorDto> dto = [];
             foreach (var worksheet in worksheets)
             {
-                _logger.LogInformation("Processing worksheet: {WorksheetName}", fileName);
+                _logger.LogInformation("Processing worksheet: {FileName}", fileName);
                 var cells = worksheet.Cells;
                 StringBuilder sb = new();
                 for (int row = 0; row <= cells.MaxDataRow; row++)
@@ -47,7 +47,7 @@ namespace RR.AI_Chat.Service
                 });
             }
 
-            _logger.LogInformation("Completed text extraction from Excel document {Name}.", fileName);
+            _logger.LogInformation("Completed text extraction from Excel document {FileName}.", fileName);
             return dto;
         }
     }
