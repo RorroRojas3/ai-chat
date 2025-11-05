@@ -1,6 +1,5 @@
+using RR.AI_Chat.Common.Extensions;
 using RR.AI_Chat.Dto.Enums;
-using System.ComponentModel;
-using System.Reflection;
 
 namespace RR.AI_Chat.Dto
 {
@@ -27,10 +26,7 @@ namespace RR.AI_Chat.Dto
 
             foreach (FileExtensions enumValue in Enum.GetValues<FileExtensions>())
             {
-                var field = enumValue.GetType().GetField(enumValue.ToString());
-                var attribute = field?.GetCustomAttribute<DescriptionAttribute>();
-
-                if (attribute?.Description == extension)
+                if (enumValue.GetDescription() == extension)
                 {
                     return enumValue;
                 }

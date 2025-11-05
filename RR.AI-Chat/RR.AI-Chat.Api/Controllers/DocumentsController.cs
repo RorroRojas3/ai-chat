@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
 using RR.AI_Chat.Service;
-using RR.AI_Chat.Service.Extensions;
+using RR.AI_Chat.Common.Extensions;
 
 namespace RR.AI_Chat.Api.Controllers
 {
