@@ -1,27 +1,42 @@
-using System.Text.Json.Serialization;
+using RR.AI_Chat.Dto.Enums;
+using System.ComponentModel;
+using System.Reflection;
 
 namespace RR.AI_Chat.Dto
 {
     public class FileDto
     {
         public string FileName { get; set; } = null!;
+
         public byte[] Content { get; set; } = [];
-        public string ContentType { get; set; } = null!;
-        public long Length { get; set; }
-    }
 
-    public class FileBase64Dto
-    {
-        [JsonPropertyName("fileName")]
-        public string FileName { get; set; } = null!;
-
-        [JsonPropertyName("base64")]
-        public string Base64 { get; set; } = null!;
-
-        [JsonPropertyName("contentType")]
         public string ContentType { get; set; } = null!;
 
-        [JsonPropertyName("length")]
         public long Length { get; set; }
+
+        public FileExtensions FileExtension => GetFileExtensionFromFileName();
+
+        private FileExtensions GetFileExtensionFromFileName()
+        {
+            var extension = Path.GetExtension(FileName)?.ToLowerInvariant();
+
+            if (string.IsNullOrEmpty(extension))
+            {
+                throw new InvalidOperationException($"Unable to determine file extension from filename: {FileName}");
+            }
+
+            foreach (FileExtensions enumValue in Enum.GetValues<FileExtensions>())
+            {
+                var field = enumValue.GetType().GetField(enumValue.ToString());
+                var attribute = field?.GetCustomAttribute<DescriptionAttribute>();
+
+                if (attribute?.Description == extension)
+                {
+                    return enumValue;
+                }
+            }
+
+            throw new NotSupportedException($"File extension '{extension}' is not supported.");
+        }
     }
 }

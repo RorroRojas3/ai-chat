@@ -1,13 +1,17 @@
-﻿using Hangfire.Server;
+﻿using Azure.AI.DocumentIntelligence;
+using Hangfire.Server;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
+using RR.AI_Chat.Service.Common.Interface;
 using RR.AI_Chat.Service.Extensions;
+using DocumentPage = RR.AI_Chat.Entity.DocumentPage;
 
 namespace RR.AI_Chat.Service
 {
@@ -17,7 +21,7 @@ namespace RR.AI_Chat.Service
 
         Task<FileDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken);
 
-        Task<List<DocumentExtractorDto>> ExtractTextAsync(byte[] bytes, string contentType, CancellationToken cancellationToken);
+        Task<List<DocumentExtractorDto>> ExtractTextAsync(FileDto fileDto, CancellationToken cancellationToken);
 
         Task<PageEmbeddingDto> GeneratePageEmbedding(DocumentExtractorDto documentExtractor, CancellationToken cancellationToken);
     }
@@ -32,7 +36,9 @@ namespace RR.AI_Chat.Service
         IPdfService pdfService,
         IWordService wordService,
         IMarkdownService markdownService,
-        IExcelService excelService,
+        [FromKeyedServices("excel")] IFileService excelService,
+        [FromKeyedServices("common")] IFileService commonFileService,
+        [FromKeyedServices("word")] IFileService wordFileService,
         AIChatDbContext ctx) : IDocumentService
     {
         private readonly ILogger _logger = logger;
@@ -45,7 +51,9 @@ namespace RR.AI_Chat.Service
         private readonly IPdfService _pdfService = pdfService;
         private readonly IWordService _wordService = wordService;
         private readonly IMarkdownService _markdownService = markdownService;
-        private readonly IExcelService _excelService = excelService;
+        private readonly IFileService _excelService = excelService;
+        private readonly IFileService _commonFileService = commonFileService;
+        private readonly IFileService _wordFileService = wordFileService;
         private readonly AIChatDbContext _ctx = ctx;
         private const double _cosineDistanceThreshold = 0.3;
 
@@ -90,7 +98,7 @@ namespace RR.AI_Chat.Service
 
             await _blobStorageService.UploadAsync(container, blob, fileDataDto.Content, metadata, cancellationToken);
 
-            var documentExtractors = await ExtractTextAsync(fileDataDto.Content, fileDataDto.ContentType, cancellationToken);
+            var documentExtractors = await ExtractTextAsync(fileDataDto, cancellationToken);
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Extracting.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 50);
 
@@ -200,28 +208,56 @@ namespace RR.AI_Chat.Service
         /// <param name="bytes">The byte array representing the PDF file.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the extracted text from the PDF file.</returns>
         /// <exception cref="ArgumentNullException">Thrown when the byte array is null.</exception>
-        public async Task<List<DocumentExtractorDto>> ExtractTextAsync(byte[] bytes, string contentType, CancellationToken cancellationToken)
+        public async Task<List<DocumentExtractorDto>> ExtractTextAsync(FileDto fileDto, CancellationToken cancellationToken)
         {
-            ArgumentNullException.ThrowIfNull(bytes, nameof(bytes));
+            ArgumentNullException.ThrowIfNull(fileDto, nameof(fileDto));
 
             List<DocumentExtractorDto> dto = [];
-            switch (contentType.ToLower())
+            if (fileDto.FileExtension == FileExtensions.Cs ||
+                fileDto.FileExtension == FileExtensions.Csproj ||
+                fileDto.FileExtension == FileExtensions.Css ||
+                fileDto.FileExtension == FileExtensions.Html ||
+                fileDto.FileExtension == FileExtensions.Js ||
+                fileDto.FileExtension == FileExtensions.Json ||
+                fileDto.FileExtension == FileExtensions.Jsx ||
+                fileDto.FileExtension == FileExtensions.Log ||
+                fileDto.FileExtension == FileExtensions.Md ||
+                fileDto.FileExtension == FileExtensions.Ps1 ||
+                fileDto.FileExtension == FileExtensions.Py ||
+                fileDto.FileExtension == FileExtensions.Scss ||
+                fileDto.FileExtension == FileExtensions.Sql ||
+                fileDto.FileExtension == FileExtensions.Ts ||
+                fileDto.FileExtension == FileExtensions.Tsx ||
+                fileDto.FileExtension == FileExtensions.Txt ||
+                fileDto.FileExtension == FileExtensions.Yaml ||
+                fileDto.FileExtension == FileExtensions.Yml)
             {
-                case "application/pdf":
-                    var analyzeResult = await _documentIntelligenceService.ReadAsync(bytes, cancellationToken);
-
-                    dto = [.. analyzeResult.Pages.Select(page => new DocumentExtractorDto
+                dto = _commonFileService.ExtractText(fileDto.Content, fileDto.FileName);
+            }
+            else if (fileDto.FileExtension == FileExtensions.Csv ||
+                fileDto.FileExtension == FileExtensions.Xls || 
+                fileDto.FileExtension == FileExtensions.Xlsm || 
+                fileDto.FileExtension == FileExtensions.Xlsx)
+            {
+                dto = _excelService.ExtractText(fileDto.Content, fileDto.FileName);
+            }
+            else if (fileDto.FileExtension == FileExtensions.Pdf)
+            {
+                var analyzeResult = await _documentIntelligenceService.ReadAsync(fileDto.Content, cancellationToken);
+                dto = [.. analyzeResult.Pages.Select(page => new DocumentExtractorDto
                     {
                         PageNumber = page.PageNumber,
                         PageText = string.Join("\n", page.Lines.Select(line => line.Content))
                     })];
-                    break;
-                case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-                case "text/csv":
-                    dto = _excelService.ExtractCsvText(bytes);
-                    break;
-                default:
-                    throw new NotSupportedException($"The content type '{contentType}' is not supported for text extraction.");
+            }
+            else if (fileDto.FileExtension == FileExtensions.Doc ||
+                     fileDto.FileExtension == FileExtensions.Docx)
+            {
+                dto = _wordFileService.ExtractText(fileDto.Content, fileDto.FileName);
+            }
+            else
+            {
+                throw new InvalidOperationException("Extension not supported for text extraction.");
             }
 
             return dto;

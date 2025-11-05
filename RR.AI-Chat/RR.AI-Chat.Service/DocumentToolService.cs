@@ -340,7 +340,13 @@ namespace RR.AI_Chat.Service
 
             List<DocumentPage> documentPages = [];
             var date = DateTime.UtcNow;
-            var documentExtractors = await _documentService.ExtractTextAsync(bytes, properties.Value.ContentType, CancellationToken.None);
+            var fileDto = new FileDto
+            {
+                FileName = filename,
+                ContentType = properties.Value.ContentType,
+                Content = bytes,
+            };
+            var documentExtractors = await _documentService.ExtractTextAsync(fileDto, CancellationToken.None);
 
             var tasks = new List<Task<PageEmbeddingDto>>();
             foreach (var documentExtractor in documentExtractors)

@@ -21,6 +21,7 @@ import {
   EventType,
 } from '@azure/msal-browser';
 import { McpService } from './services/mcp.service';
+import { DocumentService } from './services/document.service';
 
 @Component({
   selector: 'app-root',
@@ -36,7 +37,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private storeService: StoreService,
     private sessionService: SessionService,
     private modelService: ModelService,
-    private mcpService: McpService
+    private mcpService: McpService,
+    private documentService: DocumentService
   ) {}
 
   isIframe = false;
@@ -106,11 +108,13 @@ export class AppComponent implements OnInit, OnDestroy {
         this.modelService.getModels(),
         this.sessionService.searchSessions(''),
         this.mcpService.getMcpServers(),
-      ]).subscribe(([models, sessions, mcps]) => {
+        this.documentService.getFileExtensions(),
+      ]).subscribe(([models, sessions, mcps, fileExtensions]) => {
         this.storeService.models.set(models);
         this.storeService.selectedModel.set(models[0]);
         this.storeService.sessions.set(sessions.items);
         this.storeService.mcps.set(mcps);
+        this.storeService.fileExtensions.set(fileExtensions);
       });
     }
   }

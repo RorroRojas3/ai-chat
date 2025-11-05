@@ -20,6 +20,7 @@ export class StoreService {
   selectedModel = signal<ModelDto>({} as ModelDto);
   mcps = signal<McpDto[]>([]);
   selectedMcps = signal<McpDto[]>([]);
+  fileExtensions = signal<string[]>([]);
 
   // Search functionality
   sessions = signal<SessionDto[]>([]);
