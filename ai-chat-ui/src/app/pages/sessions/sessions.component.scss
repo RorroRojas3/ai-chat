@@ -263,16 +263,6 @@
       color: var(--color-navy);
     }
 
-    &.text-danger {
-      color: #dc3545;
-
-      &:hover,
-      &:focus {
-        background-color: rgba(220, 53, 69, 0.1);
-        color: #dc3545;
-      }
-    }
-
     i {
       opacity: 0.8;
     }

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -23,16 +24,20 @@ namespace RR.AI_Chat.Service
         Task DeactivateSessionAsync(Guid sessionId, CancellationToken cancellationToken);
 
         Task DeactivateSessionBulkAsync(DeactivateSessionBulkActionDto request, CancellationToken cancellationToken);
+
+        Task RenameSessionAsync(RenameSessionActionDto request, CancellationToken cancellationToken);
     }
 
     public class SessionService(ILogger<SessionService> logger,
         [FromKeyedServices("azureaifoundry")] IChatClient openAiClient,
         ITokenService tokenService,
+        IValidator<RenameSessionActionDto> renameSessionValidator,
         AIChatDbContext ctx) : ISessionService
     {
         private readonly ILogger<SessionService> _logger = logger;
         private readonly IChatClient _chatClient = openAiClient;
         private readonly ITokenService _tokenService = tokenService;
+        private readonly IValidator<RenameSessionActionDto> _renameSessionValidator = renameSessionValidator;
         private readonly AIChatDbContext _ctx = ctx;
         private readonly string _defaultSystemPrompt = @"
             You are an advanced AI assistant with comprehensive analytical capabilities and access to a powerful suite of specialized tools. Your primary mission is to provide thorough, insightful, and actionable responses that leverage all available resources to deliver maximum value.
@@ -140,9 +145,9 @@ namespace RR.AI_Chat.Service
 
             var transaction = await _ctx.Database.BeginTransactionAsync(cancellationToken);
             var date = DateTime.UtcNow;
-            var newSession = new Session() 
-            { 
-                UserId= userId,
+            var newSession = new Session()
+            {
+                UserId = userId,
                 DateCreated = date,
                 DateModified = date
             };
@@ -212,7 +217,7 @@ namespace RR.AI_Chat.Service
         public async Task<PaginatedResponseDto<SessionDto>> SearchSessionsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default)
         {
             var userId = _tokenService.GetOid()!.Value;
-            
+
             var query = _ctx.Sessions
                 .AsNoTracking()
                 .Where(x => x.UserId == userId && !x.DateDeactivated.HasValue);
@@ -273,20 +278,20 @@ namespace RR.AI_Chat.Service
             await _ctx.DocumentPages
                 .Where(p => p.Document.SessionId == sessionId && !p.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(p => p
-                    .SetProperty(x => x.DateDeactivated, date), 
+                    .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
             await _ctx.Documents
                 .Where(d => d.SessionId == sessionId && !d.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(d => d
-                    .SetProperty(x => x.DateDeactivated, date), 
+                    .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
             await _ctx.Sessions
                 .Where(s => s.Id == sessionId)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.DateDeactivated, date)
-                    .SetProperty(x => x.DateModified, date), 
+                    .SetProperty(x => x.DateModified, date),
                     cancellationToken);
         }
 
@@ -312,21 +317,46 @@ namespace RR.AI_Chat.Service
             await _ctx.DocumentPages
                 .Where(p => sessionIds.Contains(p.Document.SessionId) && !p.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(p => p
-                    .SetProperty(x => x.DateDeactivated, date), 
+                    .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
             await _ctx.Documents
                 .Where(d => sessionIds.Contains(d.SessionId) && !d.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(d => d
-                    .SetProperty(x => x.DateDeactivated, date), 
+                    .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
             await _ctx.Sessions
                 .Where(s => sessionIds.Contains(s.Id))
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.DateDeactivated, date)
-                    .SetProperty(x => x.DateModified, date), 
+                    .SetProperty(x => x.DateModified, date),
                     cancellationToken);
+        }
+
+        public async Task RenameSessionAsync(RenameSessionActionDto request, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+
+            _renameSessionValidator.ValidateAndThrow(request);
+
+            var userId = _tokenService.GetOid()!.Value;
+
+            var rows = await _ctx.Sessions
+                .Where(x => x.Id == request.Id && x.UserId == userId && !x.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(x => x.Name, request.Name)
+                    .SetProperty(x => x.DateModified, DateTime.UtcNow),
+                    cancellationToken);
+
+            if (rows > 0)
+            {
+                _logger.LogInformation("Session {Id} successfully renamed to {Name}", request.Id, request.Name);
+            }
+            else
+            {
+                _logger.LogWarning("Session {Id} not found or could not be renamed", request.Id);
+            }
         }
     }
 }

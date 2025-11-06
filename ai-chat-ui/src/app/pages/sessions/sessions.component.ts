@@ -15,10 +15,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StoreService } from '../../store/store.service';
 import { SessionDeleteModalComponent } from '../../components/sessions/session-delete-modal/session-delete-modal.component';
 import { DeactivateSessionBulkActionDto } from '../../dtos/actions/session/DeactivateSessionBulkActionDto';
+import { SessionRenameModalComponent } from '../../components/sessions/session-rename-modal/session-rename-modal.component';
+import { RenameSessionActionDto } from '../../dtos/actions/session/RenameSessionActionDto';
 
 @Component({
   selector: 'app-sessions',
-  imports: [CommonModule, FormsModule, SessionDeleteModalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    SessionDeleteModalComponent,
+    SessionRenameModalComponent,
+  ],
   templateUrl: './sessions.component.html',
   styleUrl: './sessions.component.scss',
 })
@@ -35,6 +42,8 @@ export class SessionsComponent implements OnInit {
   hasMoreSessions: boolean = true;
   showDeleteModal: boolean = false;
   selectedSessionIds: string[] = [];
+  showRenameModal: boolean = false;
+  sessionName: string = '';
 
   // Checkbox selection tracking
   hoveredSessionId: string | null = null;
@@ -323,5 +332,48 @@ export class SessionsComponent implements OnInit {
   closeDeleteModal(): void {
     this.showDeleteModal = false;
     this.selectedSessionIds = [];
+  }
+
+  onRenameSession(sessionId: string): void {
+    const session = this.sessions.find((s) => s.id === sessionId);
+    if (session) {
+      this.selectedSessionIds = [sessionId];
+      this.sessionName = session.name;
+      this.showRenameModal = true;
+    }
+  }
+
+  handleRenameSession(newName: string): void {
+    if (this.selectedSessionIds.length !== 1) {
+      this.showRenameModal = false;
+      return;
+    }
+
+    const sessionId = this.selectedSessionIds[0];
+    const request = new RenameSessionActionDto(sessionId, newName);
+
+    this.sessionService
+      .renameSession(request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.showRenameModal = false;
+          this.selectedSessionIds = [];
+          // Reload sessions to sync with server
+          this.loadSessions();
+          // Update store with first 10 sessions (no filters, no skip)
+          this.updateStoreWithLatestSessions();
+        },
+        error: (error) => {
+          console.error('Error renaming session:', error);
+          this.showRenameModal = false;
+          this.selectedSessionIds = [];
+        },
+      });
+  }
+
+  closeRenameModal(): void {
+    this.showRenameModal = false;
+    this.sessionName = '';
   }
 }

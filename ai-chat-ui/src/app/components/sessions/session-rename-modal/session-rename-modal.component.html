@@ -1,0 +1,68 @@
+<div
+  class="modal fade"
+  [class.show]="show"
+  [style.display]="show ? 'block' : 'none'"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="renameSessionModalLabel"
+  aria-hidden="!show"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="renameSessionModalLabel">
+          Rename Chat Session
+        </h5>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="sessionNameInput" class="form-label">Session Name</label>
+          <input
+            type="text"
+            class="form-control"
+            [class.is-invalid]="showError"
+            id="sessionNameInput"
+            [formControl]="sessionName"
+            placeholder="Enter session name"
+            maxlength="256"
+            autofocus
+          />
+          <div class="invalid-feedback">
+            <div *ngIf="sessionName.hasError('required')">
+              Session name is required
+            </div>
+            <div *ngIf="sessionName.hasError('maxlength')">
+              Session name must be 256 characters or less
+            </div>
+          </div>
+          <div class="form-text">{{ characterCount }} / 256 characters</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-lg btn-secondary"
+          (click)="handleClose()"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-lg btn-primary"
+          (click)="handleRename()"
+          [disabled]="sessionName.invalid"
+        >
+          Rename
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop -->
+<div
+  class="modal-backdrop fade"
+  [class.show]="show"
+  [style.display]="show ? 'block' : 'none'"
+  (click)="handleClose()"
+></div>

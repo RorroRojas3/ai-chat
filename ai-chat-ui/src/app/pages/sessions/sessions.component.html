@@ -127,7 +127,10 @@
                     </small>
                   </div>
                 </div>
-                <div class="dropdown ms-2">
+                <div
+                  *ngIf="this.selectedSessionIds.length <= 1"
+                  class="dropdown ms-2"
+                >
                   <button
                     class="btn btn-link p-1 text-white session-dropdown-toggle"
                     type="button"
@@ -147,6 +150,17 @@
                         class="dropdown-item"
                         href="javascript:void(0)"
                         (click)="
+                          onRenameSession(session.id); $event.stopPropagation()
+                        "
+                      >
+                        <i class="bi bi-pencil me-2"></i>Rename
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="javascript:void(0)"
+                        (click)="
                           onClickSession(session.id); $event.stopPropagation()
                         "
                       >
@@ -155,7 +169,7 @@
                     </li>
                     <li>
                       <a
-                        class="dropdown-item text-danger"
+                        class="dropdown-item"
                         href="javascript:void(0)"
                         (click)="
                           onDeleteSession(session.id); $event.stopPropagation()
@@ -212,3 +226,10 @@
   (onDelete)="handleDeleteSession()"
   (onClose)="closeDeleteModal()"
 ></app-session-delete-modal>
+
+<app-session-rename-modal
+  [show]="showRenameModal"
+  [name]="sessionName"
+  (onRename)="handleRenameSession($event)"
+  (onClose)="closeRenameModal()"
+></app-session-rename-modal>
