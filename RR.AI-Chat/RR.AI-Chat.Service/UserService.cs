@@ -62,7 +62,7 @@ namespace RR.AI_Chat.Service
             await _ctx.Users.AddAsync(newUser, cancellationToken);
             await _ctx.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Created new user with ID {UserId} and email {Email}", newUser.Id, newUser.Email);
+            _logger.LogInformation("Created new user with ID {UserId}.", newUser.Id);
         }
 
         /// <inheritdoc />
