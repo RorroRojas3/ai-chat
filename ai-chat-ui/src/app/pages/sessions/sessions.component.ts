@@ -372,8 +372,17 @@ export class SessionsComponent implements OnInit {
       });
   }
 
+  /**
+   * Closes the rename modal and resets the session-related state.
+   *
+   * This method hides the rename modal dialog, clears the session name input,
+   * and empties the array of selected session IDs.
+   *
+   * @returns {void}
+   */
   closeRenameModal(): void {
     this.showRenameModal = false;
     this.sessionName = '';
+    this.selectedSessionIds = [];
   }
 }

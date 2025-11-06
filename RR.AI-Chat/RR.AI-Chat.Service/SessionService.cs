@@ -25,7 +25,7 @@ namespace RR.AI_Chat.Service
         /// <list type="number">
         /// <item><description>Creates a new <see cref="Session"/> entity with the current UTC timestamp</description></item>
         /// <item><description>Persists the session to the database</description></item>
-        /// <item><description>Creates an in-memory <see cref="ChatSesion"/> with the default system prompt</description></item>
+        /// <item><description>Creates an in-memory <see cref="ChatSession"/> with the default system prompt</description></item>
         /// <item><description>Adds the chat session to the chat store for runtime access</description></item>
         /// </list>
         /// The newly created session is initialized with a system message containing the default assistant prompt.
@@ -418,11 +418,11 @@ namespace RR.AI_Chat.Service
 
             if (rows > 0)
             {
-                _logger.LogInformation("Session {Id} successfully renamed to {Name}", request.Id, request.Name);
+                _logger.LogInformation("Session {Id} successfully renamed session.", request.Id);
             }
             else
             {
-                _logger.LogWarning("Session {Id} not found or could not be renamed", request.Id);
+                _logger.LogWarning("Session {Id} not found or could not be renamed.", request.Id);
             }
         }
     }
