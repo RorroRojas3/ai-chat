@@ -6,6 +6,19 @@ namespace RR.AI_Chat.Service
 {
     public interface IMarkdownService
     {
+        /// <summary>
+        /// Generates a Markdown document from the specified HTML content.
+        /// </summary>
+        /// <param name="htmlContent">
+        /// The HTML content to convert. If null or whitespace, the method returns <c>null</c> and a warning is logged.
+        /// </param>
+        /// <returns>
+        /// A UTF-8 encoded byte array containing the converted Markdown; or <c>null</c> if <paramref name="htmlContent"/> is null or whitespace.
+        /// </returns>
+        /// <remarks>
+        /// Conversion uses ReverseMarkdown configured for GitHub-flavored Markdown with smart href handling, pass-through for unknown tags,
+        /// comments preserved, and the default code block language set to <c>csharp</c>.
+        /// </remarks>
         byte[]? GenerateMarkdownFromHtml(string htmlContent);
     }
 
@@ -13,6 +26,7 @@ namespace RR.AI_Chat.Service
     {
         private readonly ILogger<MarkdownService> _logger = logger;
 
+        /// <inheritdoc />
         public byte[]? GenerateMarkdownFromHtml(string htmlContent)
         {
             if (string.IsNullOrWhiteSpace(htmlContent))

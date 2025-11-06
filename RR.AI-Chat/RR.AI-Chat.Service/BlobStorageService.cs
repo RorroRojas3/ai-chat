@@ -7,13 +7,48 @@ namespace RR.AI_Chat.Service
 {
     public interface IBlobStorageService
     {
+        /// <summary>
+        /// Downloads the specified blob from the given container.
+        /// </summary>
+        /// <param name="container">The name of the blob container.</param>
+        /// <param name="blob">The name of the blob to download.</param>
+        /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
+        /// <returns>A byte array containing the blob's content.</returns>
         Task<byte[]> DownloadAsync(string container, string blob, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Uploads a blob to the specified container with optional metadata.
+        /// </summary>
+        /// <param name="container">The name of the blob container.</param>
+        /// <param name="blob">The name of the blob to upload.</param>
+        /// <param name="data">The binary content to upload.</param>
+        /// <param name="metadata">A collection of user-defined metadata to associate with the blob.</param>
+        /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
         Task UploadAsync(string container, string blob, byte[] data, Dictionary<string, string> metadata, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Deletes the specified blob from the given container if it exists.
+        /// </summary>
+        /// <param name="container">The name of the blob container.</param>
+        /// <param name="blob">The name of the blob to delete.</param>
+        /// <param name="cancellationToken">A token to observe while waiting for the task to complete.</param>
+        /// <returns>
+        /// True if the blob was found and deleted; false if the blob did not exist.
+        /// </returns>
         Task<bool> DeleteAsync(string container, string blob, CancellationToken cancellationToken);
 
-        Uri GenerateSasUri(string container, string blob, TimeSpan expiresIn, BlobSasPermissions permissions);
+        /// <summary>
+        /// Generates a Shared Access Signature (SAS) URI for the specified blob.
+        /// </summary>
+        /// <param name="container">The name of the blob container.</param>
+        /// <param name="blob">The name of the blob for which to generate the SAS URI.</param>
+        /// <param name="expiresIn">The duration after which the SAS should expire.</param>
+        /// <param name="permissions">The permissions to include in the SAS token.</param>
+        /// <returns>A URI containing the SAS token granting the specified permissions.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the underlying client is not configured to generate SAS URIs.
+        /// </exception>
+        Uri GenerateSasUri(string container, string blob, TimeSpan expiresIn, Azure.Storage.Sas.BlobSasPermissions permissions);
     }
 
     public class BlobStorageService(ILogger<BlobStorageService> logger, 
@@ -22,6 +57,7 @@ namespace RR.AI_Chat.Service
         private readonly ILogger<BlobStorageService> _logger = logger;
         private readonly BlobServiceClient _blobServiceClient = blobServiceClient;
 
+        /// <inheritdoc />
         public async Task<byte[]> DownloadAsync(string container, string blob, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Downloading blob '{Blob}' from container '{Container}'", blob, container); 
@@ -36,6 +72,7 @@ namespace RR.AI_Chat.Service
             return memoryStream.ToArray();
         }
 
+        /// <inheritdoc />
         public async Task UploadAsync(string container, string blob, byte[] data, Dictionary<string, string> metadata, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Uploading blob '{Blob}' to container '{Container}'", blob, container);
@@ -52,6 +89,7 @@ namespace RR.AI_Chat.Service
             _logger.LogInformation("Blob '{Blob}' uploaded successfully to container '{Container}'", blob, container);
         }
 
+        /// <inheritdoc />
         public async Task<bool> DeleteAsync(string container, string blob, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Deleting blob '{Blob}' from container '{Container}'", blob, container);
@@ -70,6 +108,7 @@ namespace RR.AI_Chat.Service
             return response.Value;
         }
 
+        /// <inheritdoc />
         public Uri GenerateSasUri(string container, string blob, TimeSpan expiresIn, BlobSasPermissions permissions)
         {
             _logger.LogInformation("Generating SAS URI for blob '{Blob}' in container '{Container}' with permissions '{Permissions}' expiring in {ExpiresIn}",
