@@ -13,10 +13,16 @@ export class SessionDeleteModalComponent {
   @Output() onDelete = new EventEmitter<void>();
   @Output() onClose = new EventEmitter<void>();
 
+  /**
+   * Handles the delete action by emitting the delete event.
+   */
   handleDelete(): void {
     this.onDelete.emit();
   }
 
+  /**
+   * Handles the modal close action by emitting the close event.
+   */
   handleClose(): void {
     this.onClose.emit();
   }
