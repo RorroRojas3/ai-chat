@@ -39,5 +39,12 @@ namespace RR.AI_Chat.Api.Controllers
             await _sessionService.DeactivateSessionBulkAsync(request, cancellationToken);
             return NoContent();
         }
+
+        [HttpPut("rename")]
+        public async Task<IActionResult> RenameSessionAsync([FromBody] RenameSessionActionDto request, CancellationToken cancellationToken)
+        {
+            await _sessionService.RenameSessionAsync(request, cancellationToken);
+            return NoContent();
+        }
     }
 }

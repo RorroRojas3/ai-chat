@@ -1,4 +1,3 @@
-<!-- Delete Session Modal -->
 <div
   class="modal fade"
   [class.show]="show"
@@ -24,10 +23,18 @@
         </p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="handleClose()">
+        <button
+          type="button"
+          class="btn btn-lg btn-secondary"
+          (click)="handleClose()"
+        >
           Cancel
         </button>
-        <button type="button" class="btn btn-danger" (click)="handleDelete()">
+        <button
+          type="button"
+          class="btn btn-lg btn-primary"
+          (click)="handleDelete()"
+        >
           Delete
         </button>
       </div>

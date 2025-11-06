@@ -9,6 +9,17 @@ namespace RR.AI_Chat.Service
 {
     public interface IWordService
     {
+        /// <summary>
+        /// Generates a DOCX Word document from the provided HTML content using Aspose.Words.
+        /// </summary>
+        /// <param name="htmlContent">The HTML content to convert (interpreted as UTF-8).</param>
+        /// <returns>
+        /// A byte array containing the generated DOCX document; otherwise, <c>null</c> if
+        /// <paramref name="htmlContent"/> is <c>null</c> or whitespace.
+        /// </returns>
+        /// <remarks>
+        /// Logs a warning when the input is empty and an informational message upon successful generation.
+        /// </remarks>
         byte[]? GenerateWordFromHtml(string htmlContent);
     }
 
@@ -16,6 +27,7 @@ namespace RR.AI_Chat.Service
     {
         private readonly ILogger<WordService> _logger = logger;
 
+        /// <inheritdoc />
         public byte[]? GenerateWordFromHtml(string htmlContent)
         {
             if (string.IsNullOrWhiteSpace(htmlContent))

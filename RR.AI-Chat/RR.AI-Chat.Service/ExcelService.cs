@@ -10,6 +10,7 @@ namespace RR.AI_Chat.Service
     {
         private readonly ILogger<ExcelService> _logger = logger;
 
+        /// <inheritdoc />
         public List<DocumentExtractorDto> ExtractText(byte[] bytes, string fileName)
         {
             ArgumentNullException.ThrowIfNull(bytes);

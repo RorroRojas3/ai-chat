@@ -1,5 +1,4 @@
-﻿using Azure.AI.DocumentIntelligence;
-using Hangfire.Server;
+﻿using Hangfire.Server;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
@@ -229,6 +228,7 @@ namespace RR.AI_Chat.Service
                 fileDto.FileExtension == FileExtensions.Ts ||
                 fileDto.FileExtension == FileExtensions.Tsx ||
                 fileDto.FileExtension == FileExtensions.Txt ||
+                fileDto.FileExtension == FileExtensions.Xml ||
                 fileDto.FileExtension == FileExtensions.Yaml ||
                 fileDto.FileExtension == FileExtensions.Yml)
             {
@@ -241,7 +241,8 @@ namespace RR.AI_Chat.Service
             {
                 dto = _excelService.ExtractText(fileDto.Content, fileDto.FileName);
             }
-            else if (fileDto.FileExtension == FileExtensions.Pdf)
+            else if (fileDto.FileExtension == FileExtensions.Pdf || 
+                     fileDto.FileExtension == FileExtensions.Pptx)
             {
                 var analyzeResult = await _documentIntelligenceService.ReadAsync(fileDto.Content, cancellationToken);
                 dto = [.. analyzeResult.Pages.Select(page => new DocumentExtractorDto

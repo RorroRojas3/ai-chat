@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -12,27 +13,119 @@ namespace RR.AI_Chat.Service
 {
     public interface ISessionService
     {
+        /// <summary>
+        /// Creates a new chat session asynchronously.
+        /// </summary>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains a <see cref="SessionDto"/> 
+        /// with the unique identifier of the newly created session.
+        /// </returns>
+        /// <remarks>
+        /// This method performs the following operations:
+        /// <list type="number">
+        /// <item><description>Creates a new <see cref="Session"/> entity with the current UTC timestamp</description></item>
+        /// <item><description>Persists the session to the database</description></item>
+        /// <item><description>Creates an in-memory <see cref="ChatSession"/> with the default system prompt</description></item>
+        /// <item><description>Adds the chat session to the chat store for runtime access</description></item>
+        /// </list>
+        /// The newly created session is initialized with a system message containing the default assistant prompt.
+        /// </remarks>
+        /// <exception cref="DbUpdateException">Thrown when the database update operation fails.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the entity framework context is in an invalid state.</exception>
         Task<SessionDto> CreateChatSessionAsync(CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Creates a session name asynchronously based on the provided request.
+        /// </summary>
+        /// <param name="sessionId">The unique identifier of the session.</param>
+        /// <param name="request">The request containing the prompt and model ID.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the generated session name.</returns>
+        /// <exception cref="ArgumentException">Thrown when the request is null or empty.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the session name creation fails.</exception>
         Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Searches for sessions asynchronously based on the provided filter, with pagination support.
+        /// </summary>
+        /// <param name="filter">An optional string to filter sessions by name. If null or whitespace, no filtering is applied.</param>
+        /// <param name="skip">The number of sessions to skip for pagination. Defaults to 0.</param>
+        /// <param name="take">The number of sessions to take for pagination. Defaults to 10.</param>
+        /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="PaginatedResponseDto{SessionDto}"/> with the search results.</returns>
+        /// <remarks>
+        /// This method performs the following operations:
+        /// <list type="number">
+        /// <item><description>Retrieves the current user ID from the token service</description></item>
+        /// <item><description>Builds a query to fetch active sessions for the user</description></item>
+        /// <item><description>Applies name filtering if a filter is provided</description></item>
+        /// <item><description>Counts the total number of matching sessions</description></item>
+        /// <item><description>Fetches the paginated list of sessions ordered by creation date descending</description></item>
+        /// <item><description>Constructs and returns a paginated response DTO</description></item>
+        /// </list>
+        /// </remarks>
         Task<PaginatedResponseDto<SessionDto>> SearchSessionsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default);
 
         int GetSystemPromptTokenCount(string modelName);
 
+        /// <summary>
+        /// Deactivates a session asynchronously by setting its deactivation date and updating related entities.
+        /// </summary>
+        /// <param name="sessionId">The unique identifier of the session to deactivate.</param>
+        /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        /// <remarks>
+        /// This method performs the following operations:
+        /// <list type="number">
+        /// <item><description>Checks if the session exists and belongs to the current user and is not already deactivated</description></item>
+        /// <item><description>If the session does not exist or is already deactivated, logs a warning and returns early</description></item>
+        /// <item><description>Deactivates all document pages associated with documents in the session</description></item>
+        /// <item><description>Deactivates all documents associated with the session</description></item>
+        /// <item><description>Deactivates the session itself and updates its modification date</description></item>
+        /// </list>
+        /// </remarks>
         Task DeactivateSessionAsync(Guid sessionId, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Deactivates multiple sessions in bulk asynchronously based on the provided request.
+        /// </summary>
+        /// <param name="request">The request containing the list of session IDs to deactivate.</param>
+        /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        /// <remarks>
+        /// This method performs the following operations:
+        /// <list type="number">
+        /// <item><description>Validates the request and retrieves the current user ID</description></item>
+        /// <item><description>Filters and retrieves valid session IDs that belong to the user and are not already deactivated</description></item>
+        /// <item><description>If no valid sessions are found, logs a warning and returns early</description></item>
+        /// <item><description>Deactivates all document pages associated with the sessions</description></item>
+        /// <item><description>Deactivates all documents associated with the sessions</description></item>
+        /// <item><description>Deactivates the sessions themselves and updates their modification dates</description></item>
+        /// </list>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown when the request is null.</exception>
         Task DeactivateSessionBulkAsync(DeactivateSessionBulkActionDto request, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Renames a session asynchronously based on the provided request.
+        /// </summary>
+        /// <param name="request">The request containing the session ID and the new name.</param>
+        /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when the request is null.</exception>
+        /// <exception cref="ValidationException">Thrown when the request validation fails.</exception>
+        Task RenameSessionAsync(RenameSessionActionDto request, CancellationToken cancellationToken);
     }
 
     public class SessionService(ILogger<SessionService> logger,
         [FromKeyedServices("azureaifoundry")] IChatClient openAiClient,
         ITokenService tokenService,
+        IValidator<RenameSessionActionDto> renameSessionValidator,
         AIChatDbContext ctx) : ISessionService
     {
         private readonly ILogger<SessionService> _logger = logger;
         private readonly IChatClient _chatClient = openAiClient;
         private readonly ITokenService _tokenService = tokenService;
+        private readonly IValidator<RenameSessionActionDto> _renameSessionValidator = renameSessionValidator;
         private readonly AIChatDbContext _ctx = ctx;
         private readonly string _defaultSystemPrompt = @"
             You are an advanced AI assistant with comprehensive analytical capabilities and access to a powerful suite of specialized tools. Your primary mission is to provide thorough, insightful, and actionable responses that leverage all available resources to deliver maximum value.
@@ -114,35 +207,16 @@ namespace RR.AI_Chat.Service
             Operate with invisible mastery: your sophisticated use of these capabilities should enhance every response without ever needing to explicitly mention the tools themselves.
             ";
 
-
-        /// <summary>
-        /// Creates a new chat session asynchronously.
-        /// </summary>
-        /// <returns>
-        /// A task that represents the asynchronous operation. The task result contains a <see cref="SessionDto"/> 
-        /// with the unique identifier of the newly created session.
-        /// </returns>
-        /// <remarks>
-        /// This method performs the following operations:
-        /// <list type="number">
-        /// <item><description>Creates a new <see cref="Session"/> entity with the current UTC timestamp</description></item>
-        /// <item><description>Persists the session to the database</description></item>
-        /// <item><description>Creates an in-memory <see cref="ChatSesion"/> with the default system prompt</description></item>
-        /// <item><description>Adds the chat session to the chat store for runtime access</description></item>
-        /// </list>
-        /// The newly created session is initialized with a system message containing the default assistant prompt.
-        /// </remarks>
-        /// <exception cref="DbUpdateException">Thrown when the database update operation fails.</exception>
-        /// <exception cref="InvalidOperationException">Thrown when the entity framework context is in an invalid state.</exception>
+        /// <inheritdoc />
         public async Task<SessionDto> CreateChatSessionAsync(CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid()!.Value;
 
             var transaction = await _ctx.Database.BeginTransactionAsync(cancellationToken);
             var date = DateTime.UtcNow;
-            var newSession = new Session() 
-            { 
-                UserId= userId,
+            var newSession = new Session()
+            {
+                UserId = userId,
                 DateCreated = date,
                 DateModified = date
             };
@@ -162,14 +236,7 @@ namespace RR.AI_Chat.Service
             return new() { Id = newSession.Id };
         }
 
-        /// <summary>
-        /// Creates a session name asynchronously based on the provided request.
-        /// </summary>
-        /// <param name="sessionId">The unique identifier of the session.</param>
-        /// <param name="request">The request containing the prompt and model ID.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the generated session name.</returns>
-        /// <exception cref="ArgumentException">Thrown when the request is null or empty.</exception>
-        /// <exception cref="InvalidOperationException">Thrown when the session name creation fails.</exception>
+        /// <inheritdoc />
         public async Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken)
         {
             ArgumentException.ThrowIfNullOrEmpty(nameof(request));
@@ -209,10 +276,11 @@ namespace RR.AI_Chat.Service
             return session.Name;
         }
 
+        /// <inheritdoc />
         public async Task<PaginatedResponseDto<SessionDto>> SearchSessionsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default)
         {
             var userId = _tokenService.GetOid()!.Value;
-            
+
             var query = _ctx.Sessions
                 .AsNoTracking()
                 .Where(x => x.UserId == userId && !x.DateDeactivated.HasValue);
@@ -246,6 +314,7 @@ namespace RR.AI_Chat.Service
             };
         }
 
+        /// <inheritdoc />
 
         public int GetSystemPromptTokenCount(string modelName)
         {
@@ -255,6 +324,7 @@ namespace RR.AI_Chat.Service
             return tokenizer.CountTokens(_defaultSystemPrompt);
         }
 
+        /// <inheritdoc />
         public async Task DeactivateSessionAsync(Guid sessionId, CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid()!.Value;
@@ -273,23 +343,24 @@ namespace RR.AI_Chat.Service
             await _ctx.DocumentPages
                 .Where(p => p.Document.SessionId == sessionId && !p.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(p => p
-                    .SetProperty(x => x.DateDeactivated, date), 
+                    .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
             await _ctx.Documents
                 .Where(d => d.SessionId == sessionId && !d.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(d => d
-                    .SetProperty(x => x.DateDeactivated, date), 
+                    .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
             await _ctx.Sessions
                 .Where(s => s.Id == sessionId)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.DateDeactivated, date)
-                    .SetProperty(x => x.DateModified, date), 
+                    .SetProperty(x => x.DateModified, date),
                     cancellationToken);
         }
 
+        /// <inheritdoc />
         public async Task DeactivateSessionBulkAsync(DeactivateSessionBulkActionDto request, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(request);
@@ -312,21 +383,47 @@ namespace RR.AI_Chat.Service
             await _ctx.DocumentPages
                 .Where(p => sessionIds.Contains(p.Document.SessionId) && !p.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(p => p
-                    .SetProperty(x => x.DateDeactivated, date), 
+                    .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
             await _ctx.Documents
                 .Where(d => sessionIds.Contains(d.SessionId) && !d.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(d => d
-                    .SetProperty(x => x.DateDeactivated, date), 
+                    .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
             await _ctx.Sessions
                 .Where(s => sessionIds.Contains(s.Id))
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.DateDeactivated, date)
-                    .SetProperty(x => x.DateModified, date), 
+                    .SetProperty(x => x.DateModified, date),
                     cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task RenameSessionAsync(RenameSessionActionDto request, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+
+            _renameSessionValidator.ValidateAndThrow(request);
+
+            var userId = _tokenService.GetOid()!.Value;
+
+            var rows = await _ctx.Sessions
+                .Where(x => x.Id == request.Id && x.UserId == userId && !x.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(x => x.Name, request.Name)
+                    .SetProperty(x => x.DateModified, DateTime.UtcNow),
+                    cancellationToken);
+
+            if (rows > 0)
+            {
+                _logger.LogInformation("Session {Id} successfully renamed session.", request.Id);
+            }
+            else
+            {
+                _logger.LogWarning("Session {Id} not found or could not be renamed.", request.Id);
+            }
         }
     }
 }

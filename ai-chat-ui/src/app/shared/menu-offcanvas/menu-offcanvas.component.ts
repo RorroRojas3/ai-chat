@@ -1,12 +1,9 @@
 import { Component } from '@angular/core';
 import { StoreService } from '../../store/store.service';
-import { ChatService } from '../../services/chat.service';
 import { SessionService } from '../../services/session.service';
 import markdownit from 'markdown-it';
-import { DomSanitizer } from '@angular/platform-browser';
 import hljs from 'highlight.js';
 import markdown_it_highlightjs from 'markdown-it-highlightjs';
-import { MessageDto } from '../../dtos/MessageDto';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -21,9 +18,7 @@ import { Router } from '@angular/router';
 export class MenuOffcanvasComponent {
   constructor(
     public storeService: StoreService,
-    private chatService: ChatService,
     private sessionService: SessionService,
-    private sanitizer: DomSanitizer,
     private router: Router
   ) {
     this.md = new markdownit({
