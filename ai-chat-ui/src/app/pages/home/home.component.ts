@@ -1,8 +1,8 @@
-import { Component, computed, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PromptBoxComponent } from '../../components/home/prompt-box/prompt-box.component';
 import { StoreService } from '../../store/store.service';
 import { MessageBubbleComponent } from '../../components/home/message-bubble/message-bubble.component';
-import { NgIf } from '@angular/common';
 import { MessageDto } from '../../dtos/MessageDto';
 import markdownit from 'markdown-it';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -10,31 +10,28 @@ import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import hljs from 'highlight.js';
 import { ActivatedRoute } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
-import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-home',
-  imports: [PromptBoxComponent, MessageBubbleComponent, NgIf],
+  imports: [PromptBoxComponent, MessageBubbleComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
-export class HomeComponent implements OnInit, OnDestroy {
-  markdown?: SafeHtml;
-  stream?: string;
-  messages = signal<MessageDto[]>([]);
-  md: markdownit;
-  private destroy$ = new Subject<void>();
+export class HomeComponent implements OnInit {
+  // Inject dependencies using Angular 19 pattern
+  public readonly storeService = inject(StoreService);
+  private readonly chatService = inject(ChatService);
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly md: markdownit;
 
   canHighlight = computed(() => {
     return this.storeService.isStreaming();
   });
 
-  constructor(
-    public storeService: StoreService,
-    private chatService: ChatService,
-    private sanitizer: DomSanitizer,
-    private route: ActivatedRoute
-  ) {
+  constructor() {
     this.md = new markdownit({
       html: true,
       linkify: true,
@@ -44,17 +41,14 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Listen to route parameter changes to load conversation when sessionId changes
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      const sessionId = params['sessionId'];
-      if (sessionId) {
-        this.loadSessionConversation(sessionId);
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.route.params
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        const sessionId = params['sessionId'];
+        if (sessionId) {
+          this.loadSessionConversation(sessionId);
+        }
+      });
   }
 
   /**
@@ -89,16 +83,22 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handles changes to the markdown content by updating the local markdown property
-   * and synchronizing the change with the stream message in the store service.
+   * Handles changes to the markdown content by synchronizing the change
+   * with the stream message in the store service.
    *
    * @param markdown - The updated markdown content as SafeHtml
    */
   onMarkdownChange(markdown: SafeHtml): void {
-    this.markdown = markdown;
     this.storeService.streamMessage.update((streamMessage) => ({
       ...streamMessage,
       markdown,
     }));
+  }
+
+  /**
+   * TrackBy function for message list to improve performance
+   */
+  trackByMessage(index: number, _message: MessageDto): number {
+    return index;
   }
 }

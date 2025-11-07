@@ -120,12 +120,14 @@ namespace RR.AI_Chat.Service
         [FromKeyedServices("azureaifoundry")] IChatClient openAiClient,
         ITokenService tokenService,
         IValidator<RenameSessionActionDto> renameSessionValidator,
+        IValidator<CreateSessionProjectActionDto> createSessionProjectValidator,
         AIChatDbContext ctx) : ISessionService
     {
         private readonly ILogger<SessionService> _logger = logger;
         private readonly IChatClient _chatClient = openAiClient;
         private readonly ITokenService _tokenService = tokenService;
         private readonly IValidator<RenameSessionActionDto> _renameSessionValidator = renameSessionValidator;
+        private readonly IValidator<CreateSessionProjectActionDto> _createSessionProjectValidator = createSessionProjectValidator;
         private readonly AIChatDbContext _ctx = ctx;
         private readonly string _defaultSystemPrompt = @"
             You are an advanced AI assistant with comprehensive analytical capabilities and access to a powerful suite of specialized tools. Your primary mission is to provide thorough, insightful, and actionable responses that leverage all available resources to deliver maximum value.
@@ -424,6 +426,28 @@ namespace RR.AI_Chat.Service
             {
                 _logger.LogWarning("Session {Id} not found or could not be renamed.", request.Id);
             }
+        }
+
+        public async Task CreateProjectAsync(CreateSessionProjectActionDto request, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+
+            _createSessionProjectValidator.ValidateAndThrow(request);
+
+            var userId = _tokenService.GetOid()!.Value;
+            var date = DateTime.UtcNow;
+            var newProject = new SessionProject()
+            {
+                UserId = userId,
+                Name = request.Name,
+                Instructions = request.Instructions,
+                DateCreated = date,
+                DateModified = date
+            };
+            await _ctx.AddAsync(newProject, cancellationToken);
+            await _ctx.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Session project {Id} successfully created.", newProject.Id);
         }
     }
 }
