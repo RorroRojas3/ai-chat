@@ -19,6 +19,8 @@ namespace RR.AI_Chat.Entity
         public string Instructions { get; set; } = null!;
 
         public User User { get; set; } = null!;
+
+        public List<Session> Sessions { get; set; } = [];
     }
 
     public static class SessionProjectExtensions

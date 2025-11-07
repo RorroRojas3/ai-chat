@@ -9,6 +9,9 @@ namespace RR.AI_Chat.Entity
         [ForeignKey(nameof(User))]
         public Guid UserId { get; set; }
 
+        [ForeignKey(nameof(Project))]
+        public Guid? ProjectId { get; set; }
+
         [StringLength(256)]
         public string Name { get; set; } = "New Chat";
 
@@ -21,6 +24,8 @@ namespace RR.AI_Chat.Entity
         public long TotalTokens => InputTokens + OutputTokens;
 
         public User User { get; set; } = null!;
+
+        public Project? Project { get; set; }
 
         public List<Document> Documents { get; set; } = [];
     }
