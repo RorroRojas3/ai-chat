@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, NgZone } from '@angular/core';
+import { inject, Injectable, NgZone } from '@angular/core';
 import { Observable } from 'rxjs';
 import { SessionConversationDto } from '../dtos/SessionDto';
 import { environment } from '../../environments/environment';
@@ -11,12 +11,10 @@ import { MsalService } from '@azure/msal-angular';
   providedIn: 'root',
 })
 export class ChatService {
-  constructor(
-    private http: HttpClient,
-    private storeService: StoreService,
-    private zone: NgZone,
-    private msalService: MsalService
-  ) {}
+  private readonly http = inject(HttpClient);
+  private readonly storeService = inject(StoreService);
+  private readonly zone = inject(NgZone);
+  private readonly msalService = inject(MsalService);
 
   /**
    * Creates an Observable that streams server-sent events from the chat API.

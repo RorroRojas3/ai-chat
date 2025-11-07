@@ -22,28 +22,4 @@ namespace RR.AI_Chat.Dto.Actions.Session
             RuleFor(x => x.Name).NotEmpty().MaximumLength(256);
         }
     }
-
-    public class UpsertSessionProjectActionDto
-    {
-        public Guid? Id { get; set; }
-
-        public Guid SessionId { get; set; }
-
-        public string Name { get; set; } = null!;   
-
-        public string Description { get; set; } = null!;
-
-        public string Instructions { get; set; } = null!;   
-    }
-
-    public class UpsertSessionProjectActionDtoValidator : AbstractValidator<UpsertSessionProjectActionDto>
-    {
-        public UpsertSessionProjectActionDtoValidator()
-        {
-            RuleFor(x => x.SessionId).NotEmpty();
-            RuleFor(x => x.Name).NotEmpty().MaximumLength(256);
-            RuleFor(x => x.Description).NotEmpty().MaximumLength(1024);
-            RuleFor(x => x.Instructions).NotEmpty().MaximumLength(2048);
-        }
-    }
 }

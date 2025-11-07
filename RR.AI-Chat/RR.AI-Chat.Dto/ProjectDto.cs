@@ -1,6 +1,6 @@
 ﻿namespace RR.AI_Chat.Dto
 {
-    public class SessionProjectDto
+    public class ProjectDto
     {
         public Guid Id { get; set; }
 

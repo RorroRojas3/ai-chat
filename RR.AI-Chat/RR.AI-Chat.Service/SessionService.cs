@@ -351,12 +351,6 @@ namespace RR.AI_Chat.Service
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
-            await _ctx.SessionProjects
-                .Where(sp => sp.SessionId == sessionId && !sp.DateDeactivated.HasValue)
-                .ExecuteUpdateAsync(sp => sp
-                    .SetProperty(x => x.DateModified, date),
-                    cancellationToken);
-
             await _ctx.Sessions
                 .Where(s => s.Id == sessionId)
                 .ExecuteUpdateAsync(s => s

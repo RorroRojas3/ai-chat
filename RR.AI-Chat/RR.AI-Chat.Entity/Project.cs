@@ -4,11 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RR.AI_Chat.Entity
 {
-    public class SessionProject : BaseModifiedEntity
+    public class Project : BaseModifiedEntity
     {
-        [ForeignKey(nameof(Session))]
-        public Guid SessionId { get; set; }
-
         [ForeignKey(nameof(User))]
         public Guid UserId { get; set; }
 
@@ -21,16 +18,14 @@ namespace RR.AI_Chat.Entity
         [StringLength(2048)]
         public string Instructions { get; set; } = null!;
 
-        public Session Session { get; set; } = null!;
-
         public User User { get; set; } = null!;
     }
 
     public static class SessionProjectExtensions
     {
-        public static SessionProjectDto MapToSessionProjectDto(this SessionProject source)
+        public static ProjectDto MapToProjectDto(this Project source)
         {
-            return new SessionProjectDto
+            return new ProjectDto
             {
                 Id = source.Id,
                 Name = source.Name,
