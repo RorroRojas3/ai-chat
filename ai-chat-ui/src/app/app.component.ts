@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { StoreService } from './store/store.service';
 import { MenuOffcanvasComponent } from './shared/menu-offcanvas/menu-offcanvas.component';
+import { NotificationComponent } from './shared/components/notification/notification.component';
 import { filter, forkJoin, Subject, takeUntil } from 'rxjs';
 import { ModelService } from './services/model.service';
 import { SessionService } from './services/session.service';
@@ -25,7 +26,7 @@ import { DocumentService } from './services/document.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavbarComponent, MenuOffcanvasComponent],
+  imports: [RouterOutlet, NavbarComponent, MenuOffcanvasComponent, NotificationComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })

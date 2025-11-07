@@ -1,0 +1,39 @@
+.notification-container {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: 100%;
+  max-width: 600px;
+  padding: 1rem;
+  pointer-events: none;
+
+  &.position-top {
+    top: 1rem;
+  }
+
+  &.position-bottom {
+    bottom: 1rem;
+  }
+
+  .alert {
+    pointer-events: auto;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease-out;
+    
+    i.bi {
+      font-size: 1.25rem;
+    }
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
