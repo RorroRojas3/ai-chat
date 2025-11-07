@@ -133,7 +133,7 @@ namespace RR.AI_Chat.Service
                 throw new InvalidOperationException($"Session not found or already deactivated.");
             }
 
-            var date = DateTime.UtcNow;
+            var date = DateTimeOffset.UtcNow;
             var newProject = new SessionProject()
             {
                 SessionId = request.SessionId,
@@ -162,7 +162,10 @@ namespace RR.AI_Chat.Service
             var userId = _tokenService.GetOid()!.Value;
 
             var existingProject = await _ctx.SessionProjects
-                .Where(x => x.Id == request.SessionId && x.UserId == userId && !x.DateDeactivated.HasValue)
+                .Where(x => x.Id == request.Id && 
+                        x.SessionId == request.SessionId && 
+                        x.UserId == userId && 
+                        !x.DateDeactivated.HasValue)
                 .FirstOrDefaultAsync(cancellationToken);
             if (existingProject == null)
             {
@@ -173,7 +176,7 @@ namespace RR.AI_Chat.Service
             existingProject.Name = request.Name;
             existingProject.Description = request.Description;
             existingProject.Instructions = request.Instructions;
-            existingProject.DateModified = DateTime.UtcNow;
+            existingProject.DateModified = DateTimeOffset.UtcNow;
             await _ctx.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation("Session project {Id} successfully updated.", existingProject.Id);

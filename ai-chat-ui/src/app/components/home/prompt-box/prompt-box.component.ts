@@ -18,7 +18,7 @@ import {
 } from 'rxjs';
 import markdownit from 'markdown-it';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { MessageDto, createMessage } from '../../../dtos/MessageDto';
+import { createMessage } from '../../../dtos/MessageDto';
 import hljs from 'highlight.js';
 import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import { SessionService } from '../../../services/session.service';

@@ -49,7 +49,7 @@ namespace RR.AI_Chat.Service
 
             var user = await _graphService.CreateUserAsync(graphRequest, cancellationToken);
 
-            var date = DateTime.UtcNow;
+            var date = DateTimeOffset.UtcNow;
             var newUser = new User
             {
                 Id = Guid.Parse(user.Id!),
