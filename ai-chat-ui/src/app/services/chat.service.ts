@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, NgZone } from '@angular/core';
 import { Observable } from 'rxjs';
-import { SessionCoversationDto } from '../dtos/SessionDto';
+import { SessionConversationDto } from '../dtos/SessionDto';
 import { environment } from '../../environments/environment';
 import { StoreService } from '../store/store.service';
 import { ChatStreamRequestDto } from '../dtos/ChatStreamRequestDto';
@@ -131,8 +131,8 @@ export class ChatService {
    * @returns An Observable that emits a SessionConversationDto containing the conversation data
    * @throws HttpErrorResponse if the request fails or session is invalid
    */
-  getSessionConversation(): Observable<SessionCoversationDto> {
-    return this.http.get<SessionCoversationDto>(
+  getSessionConversation(): Observable<SessionConversationDto> {
+    return this.http.get<SessionConversationDto>(
       `${
         environment.apiUrl
       }chats/sessions/${this.storeService.sessionId()}/conversations`

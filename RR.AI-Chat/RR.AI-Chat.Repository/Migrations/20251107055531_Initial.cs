@@ -26,8 +26,9 @@ namespace RR.AI_Chat.Repository.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    DateCreated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    DateDeactivated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    Version = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -44,9 +45,10 @@ namespace RR.AI_Chat.Repository.Migrations
                     LastName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
                     IsSuperAdministrator = table.Column<bool>(type: "bit", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    DateCreated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    DateDeactivated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    Version = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    DateModified = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -63,8 +65,9 @@ namespace RR.AI_Chat.Repository.Migrations
                     Name = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: false),
                     Encoding = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: false),
                     IsToolEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    DateCreated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    DateDeactivated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    Version = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -88,9 +91,10 @@ namespace RR.AI_Chat.Repository.Migrations
                     Conversations = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     InputTokens = table.Column<long>(type: "bigint", nullable: false),
                     OutputTokens = table.Column<long>(type: "bigint", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DateModified = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    DateCreated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    DateDeactivated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    Version = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    DateModified = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -116,8 +120,9 @@ namespace RR.AI_Chat.Repository.Migrations
                     MimeType = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     Size = table.Column<long>(type: "bigint", nullable: false),
                     Path = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    DateCreated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    DateDeactivated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    Version = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -137,6 +142,38 @@ namespace RR.AI_Chat.Repository.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SessionProjects",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SessionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: false),
+                    Instructions = table.Column<string>(type: "nvarchar(2048)", maxLength: 2048, nullable: false),
+                    DateCreated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    DateDeactivated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    Version = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    DateModified = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SessionProjects", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SessionProjects_Session_SessionId",
+                        column: x => x.SessionId,
+                        principalSchema: "Core",
+                        principalTable: "Session",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_SessionProjects_User_UserId",
+                        column: x => x.UserId,
+                        principalSchema: "Core",
+                        principalTable: "User",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "DocumentPage",
                 schema: "Core",
                 columns: table => new
@@ -146,8 +183,9 @@ namespace RR.AI_Chat.Repository.Migrations
                     Number = table.Column<int>(type: "int", nullable: false),
                     Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Embedding = table.Column<string>(type: "vector(1536)", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DateDeactivated = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    DateCreated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    DateDeactivated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    Version = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -164,7 +202,7 @@ namespace RR.AI_Chat.Repository.Migrations
                 schema: "Core.Ref",
                 table: "AIService",
                 columns: new[] { "Id", "DateCreated", "DateDeactivated", "Name" },
-                values: new object[] { new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "AzureAIFoundry" });
+                values: new object[] { new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"), new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, "AzureAIFoundry" });
 
             migrationBuilder.InsertData(
                 schema: "Core.Ref",
@@ -172,9 +210,9 @@ namespace RR.AI_Chat.Repository.Migrations
                 columns: new[] { "Id", "AIServiceId", "DateCreated", "DateDeactivated", "Encoding", "IsToolEnabled", "Name" },
                 values: new object[,]
                 {
-                    { new Guid("0b3948f5-70df-4697-a033-ae70971e1796"), new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "o200k_harmony", true, "gpt-5-chat" },
-                    { new Guid("c36e22ed-262a-47a1-b2ba-06a38355ae0f"), new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "o200k_harmony", true, "gpt-5-mini" },
-                    { new Guid("fd01b615-1e9f-46af-957f-e4eaeff02766"), new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"), new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "o200k_harmony", true, "gpt-5-nano" }
+                    { new Guid("0b3948f5-70df-4697-a033-ae70971e1796"), new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"), new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, "o200k_harmony", true, "gpt-5-chat" },
+                    { new Guid("c36e22ed-262a-47a1-b2ba-06a38355ae0f"), new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"), new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, "o200k_harmony", true, "gpt-5-mini" },
+                    { new Guid("fd01b615-1e9f-46af-957f-e4eaeff02766"), new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"), new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, "o200k_harmony", true, "gpt-5-nano" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -206,6 +244,16 @@ namespace RR.AI_Chat.Repository.Migrations
                 schema: "Core",
                 table: "Session",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SessionProjects_SessionId",
+                table: "SessionProjects",
+                column: "SessionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SessionProjects_UserId",
+                table: "SessionProjects",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -218,6 +266,9 @@ namespace RR.AI_Chat.Repository.Migrations
             migrationBuilder.DropTable(
                 name: "Model",
                 schema: "Core.Ref");
+
+            migrationBuilder.DropTable(
+                name: "SessionProjects");
 
             migrationBuilder.DropTable(
                 name: "Document",

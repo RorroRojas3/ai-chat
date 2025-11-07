@@ -1,13 +1,15 @@
 import { SafeHtml } from '@angular/platform-browser';
 
-export class MessageDto {
+export interface MessageDto {
   content?: string;
-  isOutgoing!: boolean;
+  isOutgoing: boolean;
   markdown?: SafeHtml;
+}
 
-  constructor(content: string, isOutgoing: boolean, markdown?: SafeHtml) {
-    this.content = content;
-    this.isOutgoing = isOutgoing;
-    this.markdown = markdown;
-  }
+export function createMessage(
+  content: string,
+  isOutgoing: boolean,
+  markdown?: SafeHtml
+): MessageDto {
+  return { content, isOutgoing, markdown };
 }

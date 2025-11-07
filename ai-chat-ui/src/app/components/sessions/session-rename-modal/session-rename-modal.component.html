@@ -1,11 +1,11 @@
 <div
   class="modal fade"
-  [class.show]="show"
-  [style.display]="show ? 'block' : 'none'"
+  [class.show]="show()"
+  [style.display]="show() ? 'block' : 'none'"
   tabindex="-1"
   role="dialog"
   aria-labelledby="renameSessionModalLabel"
-  aria-hidden="!show"
+  [attr.aria-hidden]="!show()"
 >
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -24,15 +24,23 @@
             id="sessionNameInput"
             [formControl]="sessionName"
             placeholder="Enter chat name"
-            maxlength="256"
+            [attr.maxlength]="MAX_NAME_LENGTH"
+            aria-describedby="sessionNameHelp sessionNameError"
             autofocus
           />
-          <div class="invalid-feedback">
-            <div *ngIf="sessionName.hasError('required')">
-              Chat name is required.
-            </div>
+          @if (sessionName.hasError('required') && showError()) {
+          <div
+            id="sessionNameError"
+            class="invalid-feedback"
+            role="alert"
+            aria-live="polite"
+          >
+            Chat name is required.
           </div>
-          <div class="form-text">{{ characterCount() }} / 256 characters</div>
+          }
+          <div id="sessionNameHelp" class="form-text">
+            {{ characterCount() }} / {{ MAX_NAME_LENGTH }} characters
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -40,6 +48,7 @@
           type="button"
           class="btn btn-lg btn-secondary"
           (click)="handleClose()"
+          aria-label="Cancel rename"
         >
           Cancel
         </button>
@@ -48,6 +57,7 @@
           class="btn btn-lg btn-primary"
           (click)="handleRename()"
           [disabled]="sessionName.invalid"
+          aria-label="Confirm rename chat"
         >
           Rename
         </button>
@@ -59,7 +69,8 @@
 <!-- Backdrop -->
 <div
   class="modal-backdrop fade"
-  [class.show]="show"
-  [style.display]="show ? 'block' : 'none'"
+  [class.show]="show()"
+  [style.display]="show() ? 'block' : 'none'"
   (click)="handleClose()"
+  [attr.aria-hidden]="true"
 ></div>

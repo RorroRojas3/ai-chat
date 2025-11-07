@@ -1,3 +1,3 @@
-export class McpDto {
-  name!: string;
+export interface McpDto {
+  name: string;
 }

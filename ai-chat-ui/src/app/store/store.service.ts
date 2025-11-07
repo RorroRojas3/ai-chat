@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { MessageDto } from '../dtos/MessageDto';
+import { MessageDto, createMessage } from '../dtos/MessageDto';
 import { ModelDto } from '../dtos/ModelDto';
 import { SessionDto } from '../dtos/SessionDto';
 import { McpDto } from '../dtos/McpDto';
@@ -15,7 +15,7 @@ export class StoreService {
   isStreaming = signal<boolean>(false);
   stream = signal<string>('');
   messages = signal<MessageDto[]>([]);
-  streamMessage = signal<MessageDto>(new MessageDto('', false, undefined));
+  streamMessage = signal<MessageDto>(createMessage('', false, undefined));
   models = signal<ModelDto[]>([]);
   selectedModel = signal<ModelDto>({} as ModelDto);
   mcps = signal<McpDto[]>([]);
@@ -47,7 +47,7 @@ export class StoreService {
     this.disablePromptButton.set(false);
     this.isStreaming.set(false);
     this.stream.set('');
-    this.streamMessage.set(new MessageDto('', false, undefined));
+    this.streamMessage.set(createMessage('', false, undefined));
   }
 
   /**

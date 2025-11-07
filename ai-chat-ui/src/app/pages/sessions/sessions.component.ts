@@ -107,12 +107,11 @@ export class SessionsComponent implements OnInit {
     this.totalCount = totalCount;
     this.hasMoreSessions = this.currentSkip + this.PAGE_SIZE < totalCount;
 
-    const mappedSessions = items.map((session) => new SessionDto(session));
-
+    // API already returns SessionDto-shaped objects
     if (append) {
-      this.sessions = [...this.sessions, ...mappedSessions];
+      this.sessions = [...this.sessions, ...items];
     } else {
-      this.sessions = mappedSessions;
+      this.sessions = items;
     }
   }
 
@@ -325,10 +324,8 @@ export class SessionsComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          const latestSessions = response.items.map(
-            (session) => new SessionDto(session)
-          );
-          this.storeService.updateSessions(latestSessions);
+          // API already returns SessionDto-shaped objects
+          this.storeService.updateSessions(response.items);
         },
       });
   }

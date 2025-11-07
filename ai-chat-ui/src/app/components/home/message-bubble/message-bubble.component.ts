@@ -1,16 +1,16 @@
-import { NgClass, NgIf } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { NgClass } from '@angular/common';
+import { Component, input, inject } from '@angular/core';
 import { MessageDto } from '../../../dtos/MessageDto';
 import { StoreService } from '../../../store/store.service';
 
 @Component({
   selector: 'app-message-bubble',
-  imports: [NgClass, NgIf],
+  imports: [NgClass],
   templateUrl: './message-bubble.component.html',
   styleUrl: './message-bubble.component.scss',
 })
 export class MessageBubbleComponent {
-  @Input() message!: MessageDto;
+  message = input.required<MessageDto>();
 
-  constructor(public storeService: StoreService) {}
+  public readonly storeService = inject(StoreService);
 }

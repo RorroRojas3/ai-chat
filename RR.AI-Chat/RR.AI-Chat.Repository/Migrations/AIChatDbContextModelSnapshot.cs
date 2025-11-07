@@ -28,16 +28,22 @@ namespace RR.AI_Chat.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("DateCreated")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTime?>("DateDeactivated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("DateDeactivated")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(25)
                         .HasColumnType("nvarchar(25)");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.HasKey("Id");
 
@@ -47,7 +53,7 @@ namespace RR.AI_Chat.Repository.Migrations
                         new
                         {
                             Id = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateCreated = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Name = "AzureAIFoundry"
                         });
                 });
@@ -58,11 +64,11 @@ namespace RR.AI_Chat.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("DateCreated")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTime?>("DateDeactivated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("DateDeactivated")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Extension")
                         .IsRequired()
@@ -92,6 +98,12 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SessionId");
@@ -107,11 +119,11 @@ namespace RR.AI_Chat.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("DateCreated")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTime?>("DateDeactivated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("DateDeactivated")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("DocumentId")
                         .HasColumnType("uniqueidentifier");
@@ -126,6 +138,12 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.HasKey("Id");
 
@@ -143,11 +161,11 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<Guid>("AIServiceId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("DateCreated")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTime?>("DateDeactivated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("DateDeactivated")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Encoding")
                         .IsRequired()
@@ -162,6 +180,12 @@ namespace RR.AI_Chat.Repository.Migrations
                         .HasMaxLength(25)
                         .HasColumnType("nvarchar(25)");
 
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AIServiceId");
@@ -173,7 +197,7 @@ namespace RR.AI_Chat.Repository.Migrations
                         {
                             Id = new Guid("c36e22ed-262a-47a1-b2ba-06a38355ae0f"),
                             AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateCreated = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Encoding = "o200k_harmony",
                             IsToolEnabled = true,
                             Name = "gpt-5-mini"
@@ -182,7 +206,7 @@ namespace RR.AI_Chat.Repository.Migrations
                         {
                             Id = new Guid("fd01b615-1e9f-46af-957f-e4eaeff02766"),
                             AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateCreated = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Encoding = "o200k_harmony",
                             IsToolEnabled = true,
                             Name = "gpt-5-nano"
@@ -191,7 +215,7 @@ namespace RR.AI_Chat.Repository.Migrations
                         {
                             Id = new Guid("0b3948f5-70df-4697-a033-ae70971e1796"),
                             AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
-                            DateCreated = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DateCreated = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Encoding = "o200k_harmony",
                             IsToolEnabled = true,
                             Name = "gpt-5-chat"
@@ -207,14 +231,14 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<string>("Conversations")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("DateCreated")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTime?>("DateDeactivated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("DateDeactivated")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTime>("DateModified")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("DateModified")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<long>("InputTokens")
                         .HasColumnType("bigint");
@@ -230,11 +254,68 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("Session", "Core");
+                });
+
+            modelBuilder.Entity("RR.AI_Chat.Entity.SessionProject", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("DateCreated")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("DateDeactivated")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("DateModified")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
+
+                    b.Property<string>("Instructions")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SessionProjects");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.User", b =>
@@ -243,14 +324,14 @@ namespace RR.AI_Chat.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("DateCreated")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTime?>("DateDeactivated")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("DateDeactivated")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTime>("DateModified")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset>("DateModified")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -269,6 +350,12 @@ namespace RR.AI_Chat.Repository.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.HasKey("Id");
 
@@ -323,6 +410,25 @@ namespace RR.AI_Chat.Repository.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("RR.AI_Chat.Entity.SessionProject", b =>
+                {
+                    b.HasOne("RR.AI_Chat.Entity.Session", "Session")
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("RR.AI_Chat.Entity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Session");
 
                     b.Navigation("User");
                 });

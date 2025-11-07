@@ -3,7 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PromptBoxComponent } from '../../components/home/prompt-box/prompt-box.component';
 import { StoreService } from '../../store/store.service';
 import { MessageBubbleComponent } from '../../components/home/message-bubble/message-bubble.component';
-import { MessageDto } from '../../dtos/MessageDto';
+import { MessageDto, createMessage } from '../../dtos/MessageDto';
+import { SessionMessageDto } from '../../dtos/SessionDto';
 import markdownit from 'markdown-it';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import markdown_it_highlightjs from 'markdown-it-highlightjs';
@@ -64,14 +65,16 @@ export class HomeComponent implements OnInit {
     this.storeService.disablePromptButton.set(true);
     this.chatService.getSessionConversation().subscribe({
       next: (response) => {
-        const mappedMessages = response.messages.map((message) => {
-          if (message.role === 1) {
-            const html = this.md.render(message.text);
-            const sanitizeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
-            return new MessageDto('', false, sanitizeHtml);
+        const mappedMessages = response.messages.map(
+          (message: SessionMessageDto) => {
+            if (message.role === 1) {
+              const html = this.md.render(message.text);
+              const sanitizeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
+              return createMessage('', false, sanitizeHtml);
+            }
+            return createMessage(message.text, true, undefined);
           }
-          return new MessageDto(message.text, true, undefined);
-        });
+        );
         this.storeService.messages.set(mappedMessages);
         this.storeService.disablePromptButton.set(false);
       },

@@ -1,9 +1,10 @@
 import {
   Component,
-  EventEmitter,
-  Input,
-  Output,
-  OnChanges,
+  input,
+  output,
+  effect,
+  signal,
+  computed,
 } from '@angular/core';
 import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -14,28 +15,30 @@ import { CommonModule } from '@angular/common';
   templateUrl: './session-rename-modal.component.html',
   styleUrl: './session-rename-modal.component.scss',
 })
-export class SessionRenameModalComponent implements OnChanges {
-  @Input() show: boolean = false;
-  @Input() name: string = '';
-  @Output() onRename = new EventEmitter<string>();
-  @Output() onClose = new EventEmitter<void>();
+export class SessionRenameModalComponent {
+  // Constants
+  readonly MAX_NAME_LENGTH = 256;
+
+  show = input<boolean>(false);
+  name = input<string>('');
+  onRename = output<string>();
+  onClose = output<void>();
 
   sessionName = new FormControl('', [
     Validators.required,
     Validators.minLength(1),
-    Validators.maxLength(256),
+    Validators.maxLength(this.MAX_NAME_LENGTH),
   ]);
 
-  /**
-   * Lifecycle hook that responds to changes in input properties.
-   * Resets the session name form control when the modal is shown.
-   */
-  ngOnChanges(): void {
-    if (this.show) {
-      this.sessionName.setValue(this.name);
-      this.sessionName.markAsUntouched();
-      this.sessionName.markAsPristine();
-    }
+  constructor() {
+    // Use effect to respond to input changes
+    effect(() => {
+      if (this.show()) {
+        this.sessionName.setValue(this.name());
+        this.sessionName.markAsUntouched();
+        this.sessionName.markAsPristine();
+      }
+    });
   }
 
   /**
@@ -61,7 +64,9 @@ export class SessionRenameModalComponent implements OnChanges {
    * Handles the rename action by emitting the trimmed session name value.
    */
   handleRename(): void {
-    this.onRename.emit(this.sessionName.value!.trim());
+    if (this.sessionName.valid && this.sessionName.value) {
+      this.onRename.emit(this.sessionName.value.trim());
+    }
   }
 
   /**

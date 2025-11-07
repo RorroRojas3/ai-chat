@@ -1,19 +1,24 @@
-import { Component, EventEmitter, OnDestroy, Output } from '@angular/core';
+import {
+  Component,
+  output,
+  OnDestroy,
+  inject,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StoreService } from '../../../store/store.service';
 import { ChatService } from '../../../services/chat.service';
 import { FormsModule } from '@angular/forms';
 import {
   firstValueFrom,
-  Subject,
   Subscription,
   interval,
-  takeUntil,
   switchMap,
   takeWhile,
 } from 'rxjs';
 import markdownit from 'markdown-it';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { MessageDto } from '../../../dtos/MessageDto';
+import { MessageDto, createMessage } from '../../../dtos/MessageDto';
 import hljs from 'highlight.js';
 import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import { SessionService } from '../../../services/session.service';
@@ -37,34 +42,40 @@ import { CommonModule } from '@angular/common';
   styleUrl: './prompt-box.component.scss',
 })
 export class PromptBoxComponent implements OnDestroy {
-  constructor(
-    public storeService: StoreService,
-    private chatService: ChatService,
-    private sanitizer: DomSanitizer,
-    private sessionService: SessionService,
-    private documentService: DocumentService,
-    private location: Location
-  ) {
+  // Constants
+  readonly JOB_POLLING_INTERVAL_MS = 5000;
+
+  // Inject dependencies using Angular 19 pattern
+  public readonly storeService = inject(StoreService);
+  private readonly chatService = inject(ChatService);
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly sessionService = inject(SessionService);
+  private readonly documentService = inject(DocumentService);
+  private readonly location = inject(Location);
+  private readonly destroyRef = inject(DestroyRef);
+
+  // Use Angular 19 output() function
+  markdown = output<SafeHtml>();
+
+  prompt = '';
+  message = '';
+  private readonly md: markdownit;
+  private sseSubscription: Subscription | undefined;
+  sanitizeHtml!: SafeHtml;
+
+  // File handling properties
+  attachedFiles: FileUploadDto[] = [];
+  showAttachedFiles = true;
+  isDragOver = false;
+  private jobPollingSubscriptions: Map<string, Subscription> = new Map();
+
+  constructor() {
     this.md = new markdownit({
       html: true,
       linkify: true,
       typographer: true,
     }).use(markdown_it_highlightjs, { hljs });
   }
-
-  prompt: string = '';
-  message?: string = '';
-  md: markdownit;
-  sseSubscription: Subscription | undefined;
-  private destroy$ = new Subject<void>();
-  @Output() markdown = new EventEmitter<SafeHtml>();
-  sanitizeHtml!: SafeHtml;
-
-  // File handling properties
-  attachedFiles: FileUploadDto[] = [];
-  showAttachedFiles: boolean = true;
-  isDragOver: boolean = false;
-  private jobPollingSubscriptions: Map<string, Subscription> = new Map();
 
   async onClickCreateSession(): Promise<void> {
     if (!this.prompt.trim() || this.storeService.disablePromptButton()) {
@@ -86,7 +97,7 @@ export class PromptBoxComponent implements OnDestroy {
       this.showAttachedFiles = false;
       this.storeService.messages.update((messages) => [
         ...messages,
-        new MessageDto(this.prompt, true, undefined),
+        createMessage(this.prompt, true, undefined),
       ]);
 
       // Upload attached files to the session
@@ -114,12 +125,12 @@ export class PromptBoxComponent implements OnDestroy {
             this.storeService.stream.set('');
             this.storeService.messages.update((messages) => [
               ...messages,
-              new MessageDto('', false, this.sanitizeHtml),
+              createMessage('', false, this.sanitizeHtml),
             ]);
             this.storeService.disablePromptButton.set(false);
             this.storeService.isStreaming.set(false);
             this.storeService.streamMessage.set(
-              new MessageDto('', false, undefined)
+              createMessage('', false, undefined)
             );
             // Refresh sessions based on current search state
             if (this.storeService.hasSearchFilter()) {
@@ -139,7 +150,7 @@ export class PromptBoxComponent implements OnDestroy {
             this.storeService.disablePromptButton.set(false);
             this.storeService.isStreaming.set(false);
             this.storeService.streamMessage.set(
-              new MessageDto('', false, undefined)
+              createMessage('', false, undefined)
             );
           },
         });
@@ -311,10 +322,10 @@ export class PromptBoxComponent implements OnDestroy {
     attachedFile: FileUploadDto
   ): Promise<void> {
     return new Promise((resolve, reject) => {
-      const subscription = interval(5000) // Poll every 5 seconds
+      const subscription = interval(this.JOB_POLLING_INTERVAL_MS)
         .pipe(
           switchMap(() => this.documentService.getUploadStatus(job)),
-          takeUntil(this.destroy$),
+          takeUntilDestroyed(this.destroyRef),
           takeWhile(
             (status: JobStatusDto) =>
               status.state !== JobState.Succeeded &&
@@ -437,20 +448,14 @@ export class PromptBoxComponent implements OnDestroy {
   onDownloadConversationHistory(format: DocumentFormats): void {
     const sessionId = this.storeService.sessionId();
     if (!sessionId) {
-      console.error('No active session to download conversation history');
       return;
     }
 
     this.documentService
       .getConversationHistory(sessionId, format)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: ({ blob, fileName }) => {
-          this.documentService.downloadFile(blob, fileName);
-        },
-        error: (error) => {
-          console.error('Error downloading conversation history:', error);
-        },
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((response) => {
+        this.documentService.downloadFile(response.blob, response.fileName);
       });
   }
 
@@ -524,9 +529,6 @@ export class PromptBoxComponent implements OnDestroy {
    * Cleans up the SSE (Server-Sent Events) subscription to prevent memory leaks.
    */
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-
     if (this.sseSubscription) {
       this.sseSubscription.unsubscribe();
     }

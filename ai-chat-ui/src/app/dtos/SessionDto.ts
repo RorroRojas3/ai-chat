@@ -1,21 +1,23 @@
-export class SessionDto {
-  id!: string;
-  name!: string;
-  dateCreated!: Date;
-  dateModified!: Date;
-
-  constructor(init?: Partial<SessionDto>) {
-    if (init) {
-      Object.assign(this, init);
-    }
-  }
+export interface SessionDto {
+  id: string;
+  name: string;
+  dateCreated: string; // ISO date string from API
+  dateModified: string; // ISO date string from API
 }
 
-export class SessionMessageDto extends SessionDto {
-  text!: string;
-  role!: number;
+export interface SessionMessageDto {
+  id: string;
+  name: string;
+  dateCreated: string;
+  dateModified: string;
+  text: string;
+  role: number;
 }
 
-export class SessionCoversationDto extends SessionDto {
-  messages!: SessionMessageDto[];
+export interface SessionConversationDto {
+  id: string;
+  name: string;
+  dateCreated: string;
+  dateModified: string;
+  messages: SessionMessageDto[];
 }

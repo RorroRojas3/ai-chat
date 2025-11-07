@@ -177,6 +177,7 @@ builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IModelService, ModelService>();
 builder.Services.AddScoped<IMcpServerService, McpServerService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ISessionProjectService, SessionProjectService>();
 
 // Fluent Validators
 builder.Services.AddValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
