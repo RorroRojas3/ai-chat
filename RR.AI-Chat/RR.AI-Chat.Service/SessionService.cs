@@ -213,7 +213,7 @@ namespace RR.AI_Chat.Service
             var userId = _tokenService.GetOid()!.Value;
 
             var transaction = await _ctx.Database.BeginTransactionAsync(cancellationToken);
-            var date = DateTime.UtcNow;
+            var date = DateTimeOffset.UtcNow;
             var newSession = new Session()
             {
                 UserId = userId,
@@ -270,7 +270,7 @@ namespace RR.AI_Chat.Service
 
             var name = response.Messages.Last().Text?.Trim() ?? string.Empty;
             session.Name = name;
-            session.DateModified = DateTime.UtcNow;
+            session.DateModified = DateTimeOffset.UtcNow;
             await _ctx.SaveChangesAsync(cancellationToken);
 
             return session.Name;
@@ -315,7 +315,6 @@ namespace RR.AI_Chat.Service
         }
 
         /// <inheritdoc />
-
         public int GetSystemPromptTokenCount(string modelName)
         {
             ArgumentException.ThrowIfNullOrEmpty(modelName);
@@ -328,7 +327,7 @@ namespace RR.AI_Chat.Service
         public async Task DeactivateSessionAsync(Guid sessionId, CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid()!.Value;
-            var date = DateTime.UtcNow;
+            var date = DateTimeOffset.UtcNow;
 
             var sessionExists = await _ctx.Sessions
                 .Where(x => x.Id == sessionId && x.UserId == userId && !x.DateDeactivated.HasValue)
@@ -352,6 +351,12 @@ namespace RR.AI_Chat.Service
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
+            await _ctx.SessionProjects
+                .Where(sp => sp.SessionId == sessionId && !sp.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(sp => sp
+                    .SetProperty(x => x.DateModified, date),
+                    cancellationToken);
+
             await _ctx.Sessions
                 .Where(s => s.Id == sessionId)
                 .ExecuteUpdateAsync(s => s
@@ -366,7 +371,7 @@ namespace RR.AI_Chat.Service
             ArgumentNullException.ThrowIfNull(request);
 
             var userId = _tokenService.GetOid()!.Value;
-            var date = DateTime.UtcNow;
+            var date = DateTimeOffset.UtcNow;
 
             var sessionIds = await _ctx.Sessions
                 .Where(x => request.SessionIds.Contains(x.Id) && x.UserId == userId && !x.DateDeactivated.HasValue)
@@ -413,7 +418,7 @@ namespace RR.AI_Chat.Service
                 .Where(x => x.Id == request.Id && x.UserId == userId && !x.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.Name, request.Name)
-                    .SetProperty(x => x.DateModified, DateTime.UtcNow),
+                    .SetProperty(x => x.DateModified, DateTimeOffset.UtcNow),
                     cancellationToken);
 
             if (rows > 0)

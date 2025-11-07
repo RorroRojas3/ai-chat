@@ -18,6 +18,8 @@ namespace RR.AI_Chat.Repository
 
         public DbSet<Session> Sessions { get; set; }
 
+        public DbSet<SessionProject> SessionProjects { get; set; }
+
         public DbSet<User> Users { get; set; }
         #endregion
 

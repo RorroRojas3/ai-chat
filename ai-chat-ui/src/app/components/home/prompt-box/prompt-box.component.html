@@ -4,13 +4,15 @@
   (dragover)="onDragOver($event)"
   (dragleave)="onDragLeave($event)"
   (drop)="onDrop($event)"
+  role="region"
+  aria-label="Message input area"
 >
   <div class="card-body">
     <!-- Drag and drop overlay -->
     @if (isDragOver) {
-    <div class="drag-overlay">
+    <div class="drag-overlay" aria-live="polite">
       <div class="drag-content">
-        <i class="bi bi-files drag-icon"></i>
+        <i class="bi bi-files drag-icon" aria-hidden="true"></i>
         <p class="drag-text">Drop file(s)</p>
       </div>
     </div>
@@ -23,6 +25,9 @@
       <div class="position-relative">
         <div class="row">
           <div class="col-12">
+            <label for="promptInput" class="visually-hidden"
+              >Enter your message</label
+            >
             <textarea
               class="form-control border-0 prompt-box-textarea"
               id="promptInput"
@@ -31,7 +36,11 @@
               [(ngModel)]="prompt"
               [ngModelOptions]="{ standalone: true }"
               (keydown)="onTextareaKeyDown($event)"
+              aria-describedby="promptHelp"
             ></textarea>
+            <span id="promptHelp" class="visually-hidden"
+              >Press Enter to send, Shift+Enter for new line</span
+            >
           </div>
         </div>
         <div class="row">
@@ -49,20 +58,24 @@
                     id="dropdownMenuButton"
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
+                    [attr.aria-label]="
+                      storeService.selectedModel().name
+                        ? 'Selected model: ' + storeService.selectedModel().name
+                        : 'Select a model'
+                    "
                   >
-                    @if (this.storeService.selectedModel().name) {
+                    @if (storeService.selectedModel().name) {
                     <i
                       class="me-2 {{
-                        getServiceIcon(
-                          this.storeService.selectedModel().aiServiceId
-                        )
+                        getServiceIcon(storeService.selectedModel().aiServiceId)
                       }}"
+                      aria-hidden="true"
                     ></i>
                     <span class="d-none d-sm-inline">{{
-                      this.storeService.selectedModel().name
+                      storeService.selectedModel().name
                     }}</span>
                     } @else {
-                    <i class="bi bi-robot me-2"></i>
+                    <i class="bi bi-robot me-2" aria-hidden="true"></i>
                     <span class="d-none d-sm-inline">Models...</span>
                     }
                   </button>
@@ -71,11 +84,12 @@
                     style="background-color: var(--color-light-blue)"
                     aria-labelledby="dropdownMenuButton"
                   >
-                    @for (model of this.storeService.models(); track model) {
+                    @for (model of storeService.models(); track model.id) {
                     <li>
                       <a class="dropdown-item" (click)="onModelChange(model)">
                         <i
                           class="me-2 {{ getServiceIcon(model.aiServiceId) }}"
+                          aria-hidden="true"
                         ></i>
                         {{ model.name }}
                       </a>
@@ -92,9 +106,10 @@
                     id="mcpDropdownButton"
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
-                    title="Select Tools"
+                    [attr.title]="'Select Tools - ' + getMcpButtonText()"
+                    [attr.aria-label]="'Tools: ' + getMcpButtonText()"
                   >
-                    <i class="bi bi-wrench me-2"></i>
+                    <i class="bi bi-wrench me-2" aria-hidden="true"></i>
                     <span class="d-none d-sm-inline">{{
                       getMcpButtonText()
                     }}</span>
@@ -104,21 +119,26 @@
                     style="background-color: var(--color-light-blue)"
                     aria-labelledby="mcpDropdownButton"
                   >
-                    @if (this.storeService.mcps().length === 0) {
+                    @if (storeService.mcps().length === 0) {
                     <li>
                       <span class="dropdown-item-text text-muted"
                         >No Tools available</span
                       >
                     </li>
-                    } @else { @for (mcp of this.storeService.mcps(); track
-                    mcp.name) {
+                    } @else { @for (mcp of storeService.mcps(); track mcp.name)
+                    {
                     <li>
                       <a
                         class="dropdown-item d-flex align-items-center"
                         (click)="toggleMcpSelection(mcp, $event)"
                         style="cursor: pointer"
+                        [attr.aria-label]="
+                          isMcpSelected(mcp)
+                            ? 'Deselect tool: ' + mcp.name
+                            : 'Select tool: ' + mcp.name
+                        "
                       >
-                        <i class="bi bi-wrench me-2"></i>
+                        <i class="bi bi-wrench me-2" aria-hidden="true"></i>
                         <span
                           class="flex-grow-1 text-truncate"
                           [title]="mcp.name"
@@ -127,6 +147,7 @@
                         @if (isMcpSelected(mcp)) {
                         <i
                           class="bi bi-check-circle-fill ms-2 text-success"
+                          aria-hidden="true"
                         ></i>
                         }
                       </a>
@@ -141,16 +162,18 @@
                   type="button"
                   class="btn btn-prompt-box"
                   (click)="fileInput.click()"
-                  title="Attach files"
+                  [attr.title]="
+                    'Attach files - Allowed types: ' + getAcceptedFileTypes()
+                  "
+                  aria-label="Attach files"
                 >
-                  <i class="bi bi-paperclip"></i>
+                  <i class="bi bi-paperclip" aria-hidden="true"></i>
                 </button>
                 }
 
                 <!-- Download Conversation History Dropdown -->
-                @if (this.storeService.sessionId() &&
-                this.storeService.messages().length > 2 &&
-                !this.storeService.isStreaming()) {
+                @if (storeService.sessionId() && storeService.messages().length
+                > 2 && !storeService.isStreaming()) {
                 <div class="dropdown">
                   <button
                     class="btn btn-prompt-box dropdown-toggle"
@@ -159,8 +182,9 @@
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
                     title="Download conversation history"
+                    aria-label="Download conversation history"
                   >
-                    <i class="bi bi-download"></i>
+                    <i class="bi bi-download" aria-hidden="true"></i>
                   </button>
                   <ul
                     class="dropdown-menu"
@@ -173,7 +197,10 @@
                         class="dropdown-item"
                         (click)="onDownloadConversationHistory(format)"
                       >
-                        <i class="me-2 {{ getFormatIcon(format) }}"></i>
+                        <i
+                          class="me-2 {{ getFormatIcon(format) }}"
+                          aria-hidden="true"
+                        ></i>
                         {{ getFormatName(format) }}
                       </a>
                     </li>
@@ -188,11 +215,16 @@
                 <button
                   type="submit"
                   class="btn btn-prompt-box"
-                  [disabled]="this.storeService.disablePromptButton()"
+                  [disabled]="storeService.disablePromptButton()"
                   (click)="onClickCreateSession()"
                   title="Send message"
+                  [attr.aria-label]="
+                    storeService.disablePromptButton()
+                      ? 'Send message (disabled)'
+                      : 'Send message'
+                  "
                 >
-                  <i class="bi bi-send"></i>
+                  <i class="bi bi-send" aria-hidden="true"></i>
                 </button>
               </div>
             </div>
@@ -205,24 +237,34 @@
           style="display: none"
           (change)="onFileSelect($event)"
           [accept]="getAcceptedFileTypes()"
+          aria-label="File input for attachments"
         />
       </div>
     </form>
 
     <!-- File cards display -->
     @if (attachedFiles.length > 0 && showAttachedFiles) {
-    <div class="file-cards-container mt-1">
+    <div
+      class="file-cards-container mt-1"
+      role="list"
+      aria-label="Attached files"
+    >
       <div class="file-cards-scroll">
         @for (file of attachedFiles; track file.id) {
-        <div class="file-card card">
+        <div class="file-card card" role="listitem">
           <div class="file-card-body card-body text-center">
             <div class="file-card-remove">
-              <span class="badge bg-danger" (click)="removeFile(file.id)">
-                <i class="bi bi-x"></i>
-              </span>
+              <button
+                type="button"
+                class="badge bg-danger border-0"
+                (click)="removeFile(file.id)"
+                [attr.aria-label]="'Remove file: ' + file.name"
+              >
+                <i class="bi bi-x" aria-hidden="true"></i>
+              </button>
             </div>
             <div class="file-card-icon">
-              <i class="bi bi-file-earmark-pdf"></i>
+              <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
             </div>
             <div class="file-card-name">{{ file.name }}</div>
             <div class="file-card-size">{{ formatFileSize(file.size) }}</div>

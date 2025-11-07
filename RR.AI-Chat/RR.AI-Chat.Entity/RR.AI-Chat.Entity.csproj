@@ -11,4 +11,8 @@
     <PackageReference Include="Microsoft.Extensions.AI" Version="9.10.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\RR.AI-Chat.Dto\RR.AI-Chat.Dto.csproj" />
+  </ItemGroup>
+
 </Project>

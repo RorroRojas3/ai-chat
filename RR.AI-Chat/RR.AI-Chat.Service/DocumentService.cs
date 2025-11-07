@@ -102,7 +102,7 @@ namespace RR.AI_Chat.Service
             context.SetJobParameter(JobName.Progress.ToString(), 50);
 
             List<DocumentPage> documentPages = [];
-            var date = DateTime.UtcNow;
+            var date = DateTimeOffset.UtcNow;
 
             var tasks = new List<Task<PageEmbeddingDto>>();
 

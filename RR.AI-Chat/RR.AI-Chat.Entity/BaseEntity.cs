@@ -7,13 +7,16 @@ namespace RR.AI_Chat.Entity
         [Key]
         public Guid Id { get; set; }
 
-        public DateTime DateCreated { get; set; }
+        public DateTimeOffset DateCreated { get; set; }
 
-        public DateTime? DateDeactivated { get; set; }
+        public DateTimeOffset? DateDeactivated { get; set; }
+
+        [Timestamp]
+        public byte[] Version { get; set; } = null!;
     }
 
     public class BaseModifiedEntity : BaseEntity
     {
-        public DateTime DateModified { get; set; }
+        public DateTimeOffset DateModified { get; set; }
     }
 }

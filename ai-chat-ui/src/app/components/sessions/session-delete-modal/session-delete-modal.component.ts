@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -8,10 +8,10 @@ import { CommonModule } from '@angular/common';
   styleUrl: './session-delete-modal.component.scss',
 })
 export class SessionDeleteModalComponent {
-  @Input() show: boolean = false;
-  @Input() sessionCount: number = 0;
-  @Output() onDelete = new EventEmitter<void>();
-  @Output() onClose = new EventEmitter<void>();
+  show = input<boolean>(false);
+  sessionCount = input<number>(0);
+  onDelete = output<void>();
+  onClose = output<void>();
 
   /**
    * Handles the delete action by emitting the delete event.

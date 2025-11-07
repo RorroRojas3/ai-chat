@@ -1,5 +1,5 @@
-export class ModelDto {
-  id!: string;
-  name!: string;
-  aiServiceId!: string;
+export interface ModelDto {
+  id: string;
+  name: string;
+  aiServiceId: string;
 }

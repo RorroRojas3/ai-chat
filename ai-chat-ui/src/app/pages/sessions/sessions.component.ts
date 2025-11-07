@@ -30,36 +30,41 @@ import { RenameSessionActionDto } from '../../dtos/actions/session/RenameSession
   styleUrl: './sessions.component.scss',
 })
 export class SessionsComponent implements OnInit {
+  // Constants
+  readonly PAGE_SIZE = 10;
+  readonly SEARCH_DEBOUNCE_MS = 600;
+  readonly STORE_SYNC_LIMIT = 10;
+
+  // Inject dependencies using Angular 19 pattern
+  private readonly sessionService = inject(SessionService);
+  private readonly router = inject(Router);
+  private readonly storeService = inject(StoreService);
+  private readonly destroyRef = inject(DestroyRef);
+
   sessions: SessionDto[] = [];
-  searchFilter: string = '';
-  isSearching: boolean = false;
-  isLoadingMore: boolean = false;
+  searchFilter = '';
+  isSearching = false;
+  isLoadingMore = false;
 
   // Virtual scrolling properties
-  pageSize: number = 10;
-  currentSkip: number = 0;
-  totalCount: number = 0;
-  hasMoreSessions: boolean = true;
-  showDeleteModal: boolean = false;
+  currentSkip = 0;
+  totalCount = 0;
+  hasMoreSessions = true;
+  showDeleteModal = false;
   selectedSessionIds: string[] = [];
-  showRenameModal: boolean = false;
-  sessionName: string = '';
+  showRenameModal = false;
+  sessionName = '';
 
   // Checkbox selection tracking
   hoveredSessionId: string | null = null;
 
   private searchSubject = new Subject<string>();
-  private destroyRef = inject(DestroyRef);
 
-  constructor(
-    private sessionService: SessionService,
-    private router: Router,
-    private storeService: StoreService
-  ) {
+  constructor() {
     // Set up debounced search with switchMap to avoid race conditions
     this.searchSubject
       .pipe(
-        debounceTime(600),
+        debounceTime(this.SEARCH_DEBOUNCE_MS),
         distinctUntilChanged(),
         tap(() => {
           this.isSearching = true;
@@ -71,22 +76,14 @@ export class SessionsComponent implements OnInit {
           return this.sessionService.searchSessions(
             filter,
             this.currentSkip,
-            this.pageSize
+            this.PAGE_SIZE
           );
         }),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
         next: (response) => {
-          // Update metadata
-          this.totalCount = response.totalCount;
-          this.hasMoreSessions =
-            this.currentSkip + this.pageSize < response.totalCount;
-
-          // Map plain objects to SessionDto instances
-          this.sessions = response.items.map(
-            (session) => new SessionDto(session)
-          );
+          this.handleSessionsResponse(response.items, response.totalCount);
           this.isSearching = false;
         },
         error: () => {
@@ -100,6 +97,25 @@ export class SessionsComponent implements OnInit {
   }
 
   /**
+   * Handles session response and updates component state
+   */
+  private handleSessionsResponse(
+    items: SessionDto[],
+    totalCount: number,
+    append = false
+  ): void {
+    this.totalCount = totalCount;
+    this.hasMoreSessions = this.currentSkip + this.PAGE_SIZE < totalCount;
+
+    // API already returns SessionDto-shaped objects
+    if (append) {
+      this.sessions = [...this.sessions, ...items];
+    } else {
+      this.sessions = items;
+    }
+  }
+
+  /**
    * Loads initial sessions
    */
   private loadSessions(): void {
@@ -108,19 +124,11 @@ export class SessionsComponent implements OnInit {
     this.sessions = [];
 
     this.sessionService
-      .searchSessions(this.searchFilter, this.currentSkip, this.pageSize)
+      .searchSessions(this.searchFilter, this.currentSkip, this.PAGE_SIZE)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          // Update metadata
-          this.totalCount = response.totalCount;
-          this.hasMoreSessions =
-            this.currentSkip + this.pageSize < response.totalCount;
-
-          // Map plain objects to SessionDto instances
-          this.sessions = response.items.map(
-            (session) => new SessionDto(session)
-          );
+          this.handleSessionsResponse(response.items, response.totalCount);
           this.isSearching = false;
         },
         error: () => {
@@ -132,8 +140,9 @@ export class SessionsComponent implements OnInit {
   /**
    * Handles search input changes
    */
-  onSearchChange(value: string): void {
-    this.searchSubject.next(value);
+  onSearchChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.searchSubject.next(target.value);
   }
 
   /**
@@ -145,7 +154,14 @@ export class SessionsComponent implements OnInit {
   }
 
   /**
-   * Loads more sessions (next 10) and appends them to the existing list
+   * TrackBy function for session list to improve performance
+   */
+  trackBySessionId(_index: number, session: SessionDto): string {
+    return session.id;
+  }
+
+  /**
+   * Loads more sessions (next page) and appends them to the existing list
    */
   loadMoreSessions(): void {
     if (!this.hasMoreSessions || this.isLoadingMore) {
@@ -153,23 +169,18 @@ export class SessionsComponent implements OnInit {
     }
 
     this.isLoadingMore = true;
-    this.currentSkip += this.pageSize;
+    this.currentSkip += this.PAGE_SIZE;
 
     this.sessionService
-      .searchSessions(this.searchFilter, this.currentSkip, this.pageSize)
+      .searchSessions(this.searchFilter, this.currentSkip, this.PAGE_SIZE)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          // Update metadata
-          this.totalCount = response.totalCount;
-          this.hasMoreSessions =
-            this.currentSkip + this.pageSize < response.totalCount;
-
-          // Append new sessions to the existing list
-          const newSessions = response.items.map(
-            (session) => new SessionDto(session)
+          this.handleSessionsResponse(
+            response.items,
+            response.totalCount,
+            true
           );
-          this.sessions = [...this.sessions, ...newSessions];
           this.isLoadingMore = false;
         },
         error: () => {
@@ -258,7 +269,7 @@ export class SessionsComponent implements OnInit {
 
   handleDeleteSession(): void {
     if (this.selectedSessionIds.length === 0) {
-      this.showDeleteModal = false;
+      this.closeDeleteModal();
       return;
     }
 
@@ -270,17 +281,10 @@ export class SessionsComponent implements OnInit {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
-            this.showDeleteModal = false;
-            this.selectedSessionIds = [];
-            // Reload sessions to sync with server
-            this.loadSessions();
-            // Update store with first 10 sessions (no filters, no skip)
-            this.updateStoreWithLatestSessions();
+            this.handleDeleteSuccess();
           },
-          error: (error) => {
-            console.error('Error deleting session:', error);
-            this.showDeleteModal = false;
-            this.selectedSessionIds = [];
+          error: () => {
+            this.closeDeleteModal();
           },
         });
     } else {
@@ -293,38 +297,35 @@ export class SessionsComponent implements OnInit {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
-            this.showDeleteModal = false;
-            this.selectedSessionIds = [];
-            // Reload sessions to sync with server
-            this.loadSessions();
-            // Update store with first 10 sessions (no filters, no skip)
-            this.updateStoreWithLatestSessions();
+            this.handleDeleteSuccess();
           },
-          error: (error) => {
-            console.error('Error deleting sessions:', error);
-            this.showDeleteModal = false;
-            this.selectedSessionIds = [];
+          error: () => {
+            this.closeDeleteModal();
           },
         });
     }
   }
 
   /**
-   * Updates the store with the first 10 sessions (no filters, no skip)
+   * Handles successful deletion by reloading sessions and updating store
+   */
+  private handleDeleteSuccess(): void {
+    this.closeDeleteModal();
+    this.loadSessions();
+    this.updateStoreWithLatestSessions();
+  }
+
+  /**
+   * Updates the store with the first page of sessions (no filters, no skip)
    */
   private updateStoreWithLatestSessions(): void {
     this.sessionService
-      .searchSessions('', 0, 10)
+      .searchSessions('', 0, this.STORE_SYNC_LIMIT)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          const latestSessions = response.items.map(
-            (session) => new SessionDto(session)
-          );
-          this.storeService.updateSessions(latestSessions);
-        },
-        error: (error) => {
-          console.error('Error updating store sessions:', error);
+          // API already returns SessionDto-shaped objects
+          this.storeService.updateSessions(response.items);
         },
       });
   }
@@ -345,7 +346,7 @@ export class SessionsComponent implements OnInit {
 
   handleRenameSession(newName: string): void {
     if (this.selectedSessionIds.length !== 1) {
-      this.showRenameModal = false;
+      this.closeRenameModal();
       return;
     }
 
@@ -357,19 +358,21 @@ export class SessionsComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.showRenameModal = false;
-          this.selectedSessionIds = [];
-          // Reload sessions to sync with server
-          this.loadSessions();
-          // Update store with first 10 sessions (no filters, no skip)
-          this.updateStoreWithLatestSessions();
+          this.handleRenameSuccess();
         },
-        error: (error) => {
-          console.error('Error renaming session:', error);
-          this.showRenameModal = false;
-          this.selectedSessionIds = [];
+        error: () => {
+          this.closeRenameModal();
         },
       });
+  }
+
+  /**
+   * Handles successful rename by reloading sessions and updating store
+   */
+  private handleRenameSuccess(): void {
+    this.closeRenameModal();
+    this.loadSessions();
+    this.updateStoreWithLatestSessions();
   }
 
   /**

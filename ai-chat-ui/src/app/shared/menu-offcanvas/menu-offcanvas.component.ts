@@ -1,13 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StoreService } from '../../store/store.service';
 import { SessionService } from '../../services/session.service';
-import markdownit from 'markdown-it';
-import hljs from 'highlight.js';
-import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { SessionDto } from '../../dtos/SessionDto';
 
 @Component({
   selector: 'app-menu-offcanvas',
@@ -15,28 +14,31 @@ import { Router } from '@angular/router';
   templateUrl: './menu-offcanvas.component.html',
   styleUrl: './menu-offcanvas.component.scss',
 })
-export class MenuOffcanvasComponent {
-  constructor(
-    public storeService: StoreService,
-    private sessionService: SessionService,
-    private router: Router
-  ) {
-    this.md = new markdownit({
-      html: true,
-      linkify: true,
-      typographer: true,
-    }).use(markdown_it_highlightjs, { hljs });
+export class MenuOffcanvasComponent implements OnInit {
+  // Constants
+  readonly MAX_SESSION_NAME_LENGTH = 40;
+  readonly SEARCH_DEBOUNCE_MS = 600;
 
-    // Set up debounced search
+  // Inject dependencies using Angular 19 pattern
+  public readonly storeService = inject(StoreService);
+  private readonly sessionService = inject(SessionService);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private searchSubject = new Subject<string>();
+
+  ngOnInit(): void {
+    // Set up debounced search with automatic cleanup
     this.searchSubject
-      .pipe(debounceTime(600), distinctUntilChanged())
-      .subscribe((filter) => {
+      .pipe(
+        debounceTime(this.SEARCH_DEBOUNCE_MS),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((filter: string) => {
         this.performSearch(filter);
       });
   }
-
-  md: markdownit;
-  private searchSubject = new Subject<string>();
 
   /**
    * Performs search using the session service
@@ -66,8 +68,10 @@ export class MenuOffcanvasComponent {
    * Loads all sessions without search filter
    */
   private loadAllSessions(): void {
-    this.sessionService.searchSessions('').subscribe((response) => {
-      this.storeService.sessions.set(response.items);
+    this.sessionService.searchSessions('').subscribe({
+      next: (response) => {
+        this.storeService.sessions.set(response.items);
+      },
     });
   }
 
@@ -80,6 +84,22 @@ export class MenuOffcanvasComponent {
     } else {
       this.loadAllSessions();
     }
+  }
+
+  /**
+   * TrackBy function for session list to improve performance
+   */
+  trackBySessionId(_index: number, session: SessionDto): string {
+    return session.id;
+  }
+
+  /**
+   * Truncates session name if it exceeds max length
+   */
+  getTruncatedSessionName(session: SessionDto): string {
+    return session.name.length > this.MAX_SESSION_NAME_LENGTH
+      ? session.name.slice(0, this.MAX_SESSION_NAME_LENGTH) + '...'
+      : session.name;
   }
 
   onClickSession(sessionId: string): void {
@@ -101,8 +121,9 @@ export class MenuOffcanvasComponent {
   /**
    * Handles search input changes
    */
-  onSearchChange(value: string): void {
-    this.searchSubject.next(value);
+  onSearchChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.searchSubject.next(target.value);
   }
 
   /**

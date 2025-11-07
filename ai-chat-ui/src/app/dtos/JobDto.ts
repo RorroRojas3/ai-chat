@@ -1,3 +1,3 @@
-export class JobDto {
-  id!: string;
+export interface JobDto {
+  id: string;
 }

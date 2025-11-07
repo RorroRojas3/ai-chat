@@ -47,49 +47,64 @@
 
     <!-- Search functionality -->
     <div class="mb-3">
+      <label for="session-search" class="visually-hidden">Search chats</label>
       <div class="input-group">
-        <span class="input-group-text menu-search__icon">
+        <span class="input-group-text menu-search__icon" aria-hidden="true">
           <i class="bi bi-search"></i>
         </span>
         <input
+          id="session-search"
           type="text"
           class="form-control menu-search__input"
           placeholder="Search chats..."
           [value]="storeService.searchFilter()"
-          (input)="onSearchChange($any($event.target).value)"
+          (input)="onSearchChange($event)"
+          aria-label="Search chat sessions"
+          aria-describedby="search-help"
         />
         @if (storeService.searchFilter()) {
         <button
           class="btn btn-outline-secondary menu-search__clear"
           type="button"
           (click)="clearSearch()"
+          aria-label="Clear search"
         >
           <i class="bi bi-x"></i>
         </button>
         }
       </div>
+      <span id="search-help" class="visually-hidden"
+        >Type to search your chat sessions</span
+      >
     </div>
 
     <h6 class="offcanvas-title menu-section-title">Recent Chats</h6>
-    <ul class="list-group menu-list">
+    <ul class="list-group menu-list" role="list">
       @if (storeService.isSearching()) {
-      <li class="list-group-item menu-list__item menu-list__item--loading">
+      <li
+        class="list-group-item menu-list__item menu-list__item--loading"
+        role="status"
+        aria-live="polite"
+      >
         <i class="bi bi-search me-2"></i>
         Searching...
       </li>
-      } @else { @for (session of storeService.sessions(); track session) {
+      } @else { @for (session of storeService.sessions(); track
+      trackBySessionId($index, session)) {
       <a
         href="javascript:void(0);"
         class="list-group-item list-group-item-action menu-list__item"
         (click)="onClickSession(session.id)"
-        >{{
-          session.name && session.name.length > 40
-            ? session.name.slice(0, 40) + "..."
-            : session.name || "Untitled Chat"
-        }}</a
+        role="listitem"
+        [attr.aria-label]="'Open chat: ' + session.name"
+        >{{ getTruncatedSessionName(session) }}</a
       >
       } @empty { @if (storeService.searchFilter()) {
-      <li class="list-group-item menu-list__item menu-list__item--no-results">
+      <li
+        class="list-group-item menu-list__item menu-list__item--no-results"
+        role="status"
+        aria-live="polite"
+      >
         <i class="bi bi-search me-2"></i>
         No chats found for "{{ storeService.searchFilter() }}"
       </li>

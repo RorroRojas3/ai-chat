@@ -4,20 +4,28 @@
 >
   <div class="flex-grow-1 d-flex flex-column overflow-hidden px-3">
     <!-- Scrollable conversation area -->
-    <div #scrollContainer class="flex-grow-1 overflow-y-auto py-3">
-      @for (message of this.storeService.messages(); track message) {
+    <div
+      #scrollContainer
+      class="flex-grow-1 overflow-y-auto py-3"
+      role="log"
+      aria-live="polite"
+      aria-label="Chat conversation"
+    >
+      @for (message of storeService.messages(); track trackByMessage($index,
+      message)) {
       <app-message-bubble [message]="message"></app-message-bubble>
-      }
-      <div *ngIf="this.storeService.isStreaming() && this.storeService.disablePromptButton()">
-        <app-message-bubble
-          [message]="this.storeService.streamMessage()"
-        ></app-message-bubble>
-      </div>
-      <div *ngIf="!this.storeService.isStreaming() && this.storeService.disablePromptButton()" class="d-flex justify-content-start">
+      } @if (storeService.isStreaming() && storeService.disablePromptButton()) {
+      <app-message-bubble
+        [message]="storeService.streamMessage()"
+      ></app-message-bubble>
+      } @if (!storeService.isStreaming() && storeService.disablePromptButton())
+      {
+      <div class="d-flex justify-content-start">
         <div class="spinner-border streaming-spinner" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
       </div>
+      }
     </div>
 
     <!-- Sticky prompt box at bottom of chat container -->

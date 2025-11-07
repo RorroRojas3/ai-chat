@@ -14,27 +14,40 @@
 
       <!-- Search functionality -->
       <div class="mb-4">
+        <label for="sessions-search" class="visually-hidden"
+          >Search chat sessions</label
+        >
         <div class="input-group">
-          <span class="input-group-text sessions-search__icon">
+          <span
+            class="input-group-text sessions-search__icon"
+            aria-hidden="true"
+          >
             <i class="bi bi-search"></i>
           </span>
           <input
+            id="sessions-search"
             type="text"
             class="form-control sessions-search__input"
             placeholder="Search chats..."
             [value]="searchFilter"
-            (input)="onSearchChange($any($event.target).value)"
+            (input)="onSearchChange($event)"
+            aria-label="Search chat sessions"
+            aria-describedby="sessions-search-help"
           />
           @if (searchFilter) {
           <button
             class="btn btn-outline-secondary sessions-search__clear"
             type="button"
             (click)="clearSearch()"
+            aria-label="Clear search"
           >
             <i class="bi bi-x"></i>
           </button>
           }
         </div>
+        <span id="sessions-search-help" class="visually-hidden"
+          >Type to search your chat sessions by name or content</span
+        >
       </div>
 
       <!-- Total count display -->
@@ -73,19 +86,21 @@
 
       <!-- Sessions list with scrollable container -->
       <div class="sessions-list-container mb-5">
-        <div class="sessions-list pe-2">
+        <div class="sessions-list pe-2" role="list" aria-label="Chat sessions">
           @if (isSearching) {
-          <div class="alert alert-info">
+          <div class="alert alert-info" role="status" aria-live="polite">
             <i class="bi bi-search me-2"></i>
             Searching...
           </div>
           } @else { @if (sessions.length > 0) {
           <ul class="list-group">
-            @for (session of sessions; track session.id) {
+            @for (session of sessions; track trackBySessionId($index, session))
+            {
             <li
               class="mb-2 p-3 list-group-item list-group-item-action sessions-list__item rounded-3"
               (mouseenter)="onSessionMouseEnter(session.id)"
               (mouseleave)="onSessionMouseLeave()"
+              role="listitem"
             >
               <div
                 class="d-flex w-100 justify-content-between align-items-start"
@@ -101,6 +116,7 @@
                       [checked]="isSessionSelected(session.id)"
                       (change)="toggleSessionSelection(session.id, $event)"
                       (click)="$event.stopPropagation()"
+                      [attr.aria-label]="'Select session: ' + session.name"
                     />
                   </div>
                   }
@@ -115,26 +131,35 @@
                       class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-1 gap-md-0"
                     >
                       <span>
-                        <i class="bi bi-calendar-check me-1"></i>
+                        <i
+                          class="bi bi-calendar-check me-1"
+                          aria-hidden="true"
+                        ></i>
                         <strong>Modified:</strong>
-                        {{ session.dateModified | date : "MMM d, y, h:mm a" }}
+                        <time [attr.datetime]="session.dateModified">{{
+                          session.dateModified | date : "MMM d, y, h:mm a"
+                        }}</time>
                       </span>
                       <span class="ms-md-3">
-                        <i class="bi bi-calendar-plus me-1"></i>
+                        <i
+                          class="bi bi-calendar-plus me-1"
+                          aria-hidden="true"
+                        ></i>
                         <strong>Created:</strong>
-                        {{ session.dateCreated | date : "MMM d, y, h:mm a" }}
+                        <time [attr.datetime]="session.dateCreated">{{
+                          session.dateCreated | date : "MMM d, y, h:mm a"
+                        }}</time>
                       </span>
                     </small>
                   </div>
                 </div>
-                <div
-                  *ngIf="this.selectedSessionIds.length <= 1"
-                  class="dropdown ms-2"
-                >
+                @if (selectedSessionIds.length <= 1) {
+                <div class="dropdown ms-2">
                   <button
                     class="btn btn-link p-1 text-white session-dropdown-toggle"
                     type="button"
                     [attr.id]="'dropdownMenu-' + session.id"
+                    [attr.aria-label]="'Actions for ' + session.name"
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
                     (click)="$event.stopPropagation()"
@@ -180,6 +205,7 @@
                     </li>
                   </ul>
                 </div>
+                }
               </div>
             </li>
             }
@@ -193,6 +219,9 @@
               class="btn btn-primary sessions-load-more"
               (click)="loadMoreSessions()"
               [disabled]="isLoadingMore"
+              [attr.aria-label]="
+                isLoadingMore ? 'Loading more sessions' : 'Show more sessions'
+              "
             >
               @if (isLoadingMore) {
               <span
@@ -206,7 +235,11 @@
             </button>
           </div>
           } } @else {
-          <div class="alert alert-secondary sessions-list__no-results">
+          <div
+            class="alert alert-secondary sessions-list__no-results"
+            role="status"
+            aria-live="polite"
+          >
             @if (searchFilter) {
             <i class="bi bi-search me-2"></i>
             No chats found for "{{ searchFilter }}" } @else {
