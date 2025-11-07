@@ -28,4 +28,8 @@ export class ProjectService {
       params: { filter, skip, take },
     });
   }
+
+  deactivateProject(id: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}projects/${id}`);
+  }
 }

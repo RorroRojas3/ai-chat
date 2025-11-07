@@ -15,6 +15,8 @@ namespace RR.AI_Chat.Service
         Task<ProjectDto> CreateProjectAsync(UpsertProjectActionDto request, CancellationToken cancellationToken);
 
         Task<ProjectDto> UpdateProjectAsync(UpsertProjectActionDto request, CancellationToken cancellationToken);
+
+        Task DeactivateProjectAsync(Guid id, CancellationToken cancellationToken);
     }
 
     public class ProjectService(ILogger<ProjectService> logger,
@@ -115,6 +117,46 @@ namespace RR.AI_Chat.Service
             _logger.LogInformation("Project {Id} successfully updated.", existingProject.Id);
 
             return existingProject.MapToProjectDto();
+        }
+
+        public async Task DeactivateProjectAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var userId = _tokenService.GetOid()!.Value;
+
+            var projectExists = await _ctx.Projects
+                .Where(x => x.Id == id &&
+                        x.UserId == userId &&
+                        !x.DateDeactivated.HasValue)
+                .AnyAsync(cancellationToken);
+
+            if (!projectExists)
+            {
+                _logger.LogWarning("Project with id {Id} not found or already deactivated.", id);
+                throw new InvalidOperationException($"Session project not found or already deactivated.");
+            }
+
+            var date = DateTimeOffset.UtcNow;
+            using var transaction = await _ctx.Database.BeginTransactionAsync(cancellationToken);
+
+            await _ctx.Projects
+                .Where(x => x.Id == id)
+                .ExecuteUpdateAsync(p => p
+                    .SetProperty(x => x.DateDeactivated, date)
+                    .SetProperty(x => x.DateModified, date),
+                    cancellationToken);
+
+            await _ctx.Sessions
+                .Where(s => s.ProjectId == id &&
+                            s.UserId == userId &&
+                            !s.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(x => x.ProjectId, (Guid?)null)
+                    .SetProperty(x => x.DateModified, date),
+                    cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+
+            _logger.LogInformation("Project {Id} successfully deactivated.", id);
         }
     }
 }

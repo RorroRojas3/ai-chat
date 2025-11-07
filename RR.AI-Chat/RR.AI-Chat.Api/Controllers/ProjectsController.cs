@@ -32,5 +32,12 @@ namespace RR.AI_Chat.Api.Controllers
             var response = await _projectService.UpdateProjectAsync(request, cancellationToken);
             return Ok(response);
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeactivateProjectAsync(Guid id,  CancellationToken cancellationToken)
+        {
+            await _projectService.DeactivateProjectAsync(id, cancellationToken);
+            return NoContent();
+        }
     }
 }
