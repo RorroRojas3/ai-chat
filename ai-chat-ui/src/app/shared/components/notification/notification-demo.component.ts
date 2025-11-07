@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { NotificationService } from '../../../shared/services/notification.service';
+import { NotificationService } from '../../../services/notification.service';
 import { CommonModule } from '@angular/common';
 
 /**
@@ -139,7 +139,7 @@ import { CommonModule } from '@angular/common';
         <div class="card-body">
           <h6>Basic Usage</h6>
           <pre class="bg-light p-3 rounded"><code>import {{ '{' }} Component, inject {{ '}' }} from '@angular/core';
-import {{ '{' }} NotificationService {{ '}' }} from './shared/services/notification.service';
+import {{ '{' }} NotificationService {{ '}' }} from './services/notification.service';
 
 export class MyComponent {{ '{' }}
   private notificationService = inject(NotificationService);

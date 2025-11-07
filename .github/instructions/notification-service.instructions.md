@@ -158,7 +158,7 @@ export class ErrorInterceptor implements HttpInterceptor {
 
 If you need additional notification types:
 
-1. Update `NotificationType` in `src/app/shared/models/notification.model.ts`:
+1. Update `NotificationType` in `src/app/models/notification.model.ts`:
 ```typescript
 export type NotificationType = 'success' | 'info' | 'warning' | 'danger' | 'custom';
 ```
@@ -235,14 +235,15 @@ describe('MyComponent', () => {
 ## File Structure
 
 ```
-src/app/shared/
+src/app/
 ├── models/
 │   └── notification.model.ts           # Types and interfaces
 ├── services/
 │   ├── notification.service.ts         # Main service
 │   └── notification.service.spec.ts    # Service tests
-└── components/
-    └── notification/
+└── shared/
+    └── components/
+        └── notification/
         ├── notification.component.ts        # Component
         ├── notification.component.html      # Template
         ├── notification.component.scss      # Styles
@@ -265,7 +266,7 @@ src/app/shared/
 
 For comprehensive documentation, examples, and advanced usage, see:
 - **Full Documentation**: `ai-chat-ui/docs/NOTIFICATION_SERVICE.md`
-- **Service Source**: `ai-chat-ui/src/app/shared/services/notification.service.ts`
+- **Service Source**: `ai-chat-ui/src/app/services/notification.service.ts`
 - **Component Source**: `ai-chat-ui/src/app/shared/components/notification/notification.component.ts`
 
 ## Support

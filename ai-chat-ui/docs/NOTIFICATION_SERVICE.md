@@ -22,18 +22,19 @@ The notification service provides a centralized way to display Bootstrap-styled 
 ### Files Structure
 
 ```
-src/app/shared/
+src/app/
 ├── models/
 │   └── notification.model.ts          # Type definitions and interfaces
 ├── services/
 │   ├── notification.service.ts        # Core notification service
 │   └── notification.service.spec.ts   # Service unit tests
-└── components/
-    └── notification/
-        ├── notification.component.ts       # Display component
-        ├── notification.component.html     # Template
-        ├── notification.component.scss     # Styles
-        └── notification.component.spec.ts  # Component unit tests
+└── shared/
+    └── components/
+        └── notification/
+            ├── notification.component.ts       # Display component
+            ├── notification.component.html     # Template
+            ├── notification.component.scss     # Styles
+            └── notification.component.spec.ts  # Component unit tests
 ```
 
 ### Models
@@ -75,7 +76,7 @@ The service is provided at root level, so you can inject it anywhere:
 
 ```typescript
 import { Component, inject } from '@angular/core';
-import { NotificationService } from './shared/services/notification.service';
+import { NotificationService } from './services/notification.service';
 
 @Component({
   selector: 'app-my-component',
@@ -429,7 +430,7 @@ describe('NotificationService', () => {
 
 ```typescript
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NotificationService } from './shared/services/notification.service';
+import { NotificationService } from './services/notification.service';
 import { MyComponent } from './my.component';
 
 describe('MyComponent', () => {

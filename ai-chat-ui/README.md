@@ -19,7 +19,7 @@ The application includes a reusable notification service for displaying Bootstra
 
 ```typescript
 import { Component, inject } from '@angular/core';
-import { NotificationService } from './shared/services/notification.service';
+import { NotificationService } from './services/notification.service';
 
 export class MyComponent {
   private notificationService = inject(NotificationService);
