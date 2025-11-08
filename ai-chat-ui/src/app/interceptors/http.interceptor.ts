@@ -58,7 +58,6 @@ function displayErrorByStatus(
     case 401:
       errorMessage = message || 'Unauthorized, you must log in again.';
       notificationService.error(errorMessage);
-      // TODO: Redirect to login page or clear auth tokens
       break;
     case 403:
       errorMessage =
