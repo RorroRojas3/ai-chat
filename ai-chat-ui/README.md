@@ -2,6 +2,36 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.0.6.
 
+## Features
+
+### Notification Service
+
+The application includes a reusable notification service for displaying Bootstrap-styled alerts:
+
+- **Signal-based state management** using Angular 19 signals
+- **Multiple notification types**: success, info, warning, error
+- **Auto-dismiss** with configurable timeouts
+- **Manual dismiss** with close buttons
+- **Duplicate prevention** and maximum notification limits
+- **Accessibility features** with ARIA attributes
+
+#### Quick Usage Example
+
+```typescript
+import { Component, inject } from '@angular/core';
+import { NotificationService } from './services/notification.service';
+
+export class MyComponent {
+  private notificationService = inject(NotificationService);
+  
+  showNotification() {
+    this.notificationService.success('Operation completed successfully!');
+  }
+}
+```
+
+For complete documentation, see [docs/NOTIFICATION_SERVICE.md](docs/NOTIFICATION_SERVICE.md).
+
 ## Development server
 
 To start a local development server, run:
@@ -57,3 +87,4 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+

@@ -1,0 +1,21 @@
+<div class="notification-container" [class.position-top]="config().position === 'top'" [class.position-bottom]="config().position === 'bottom'">
+  @for (notification of notifications(); track notification.id) {
+    <div 
+      class="alert alert-dismissible fade show d-flex align-items-center mb-3" 
+      [ngClass]="getAlertClass(notification.type)"
+      role="alert"
+      [attr.aria-live]="notification.type === 'danger' ? 'assertive' : 'polite'"
+      [attr.aria-atomic]="true">
+      <i class="bi me-2" [ngClass]="getAlertIcon(notification.type)"></i>
+      <div class="flex-grow-1">{{ notification.message }}</div>
+      @if (notification.dismissible) {
+        <button 
+          type="button" 
+          class="btn-close" 
+          (click)="dismiss(notification.id)"
+          [attr.aria-label]="'Close notification: ' + notification.message">
+        </button>
+      }
+    </div>
+  }
+</div>
