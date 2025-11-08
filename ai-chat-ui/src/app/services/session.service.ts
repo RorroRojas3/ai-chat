@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { SessionDto } from '../dtos/SessionDto';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -11,7 +11,7 @@ import { RenameSessionActionDto } from '../dtos/actions/session/RenameSessionAct
   providedIn: 'root',
 })
 export class SessionService {
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   /**
    * Creates a new session by sending a POST request to the sessions endpoint.

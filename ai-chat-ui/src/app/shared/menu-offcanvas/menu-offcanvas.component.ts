@@ -142,4 +142,16 @@ export class MenuOffcanvasComponent implements OnInit {
   onClickGoToChats(): void {
     this.router.navigate(['sessions']);
   }
+
+  /**
+   * Navigates to the projects page.
+   *
+   * This method is typically called when the user clicks on a menu item
+   * to navigate to the projects route.
+   *
+   * @returns {void}
+   */
+  onClickGoToProjects(): void {
+    this.router.navigate(['projects']);
+  }
 }

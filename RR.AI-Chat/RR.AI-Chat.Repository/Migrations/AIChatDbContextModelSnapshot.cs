@@ -222,52 +222,7 @@ namespace RR.AI_Chat.Repository.Migrations
                         });
                 });
 
-            modelBuilder.Entity("RR.AI_Chat.Entity.Session", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Conversations")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("DateCreated")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset?>("DateDeactivated")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset>("DateModified")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<long>("InputTokens")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<long>("OutputTokens")
-                        .HasColumnType("bigint");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<byte[]>("Version")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Session", "Core");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.SessionProject", b =>
+            modelBuilder.Entity("RR.AI_Chat.Entity.Project", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -297,7 +252,52 @@ namespace RR.AI_Chat.Repository.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<Guid>("SessionId")
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("RR.AI_Chat.Entity.Session", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Conversations")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("DateCreated")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("DateDeactivated")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("DateModified")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("InputTokens")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<long>("OutputTokens")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("ProjectId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("UserId")
@@ -311,11 +311,11 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SessionId");
+                    b.HasIndex("ProjectId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SessionProjects");
+                    b.ToTable("Session", "Core");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.User", b =>
@@ -403,7 +403,7 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Navigation("AIService");
                 });
 
-            modelBuilder.Entity("RR.AI_Chat.Entity.Session", b =>
+            modelBuilder.Entity("RR.AI_Chat.Entity.Project", b =>
                 {
                     b.HasOne("RR.AI_Chat.Entity.User", "User")
                         .WithMany()
@@ -414,13 +414,12 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("RR.AI_Chat.Entity.SessionProject", b =>
+            modelBuilder.Entity("RR.AI_Chat.Entity.Session", b =>
                 {
-                    b.HasOne("RR.AI_Chat.Entity.Session", "Session")
-                        .WithMany()
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                    b.HasOne("RR.AI_Chat.Entity.Project", "Project")
+                        .WithMany("Sessions")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("RR.AI_Chat.Entity.User", "User")
                         .WithMany()
@@ -428,7 +427,7 @@ namespace RR.AI_Chat.Repository.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.Navigation("Session");
+                    b.Navigation("Project");
 
                     b.Navigation("User");
                 });
@@ -436,6 +435,11 @@ namespace RR.AI_Chat.Repository.Migrations
             modelBuilder.Entity("RR.AI_Chat.Entity.Document", b =>
                 {
                     b.Navigation("Pages");
+                });
+
+            modelBuilder.Entity("RR.AI_Chat.Entity.Project", b =>
+                {
+                    b.Navigation("Sessions");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.Session", b =>

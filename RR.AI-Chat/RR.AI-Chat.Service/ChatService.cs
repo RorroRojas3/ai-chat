@@ -55,6 +55,7 @@ namespace RR.AI_Chat.Service
             using (lockReleaser)
             {
                 var session = await _ctx.Sessions
+                                .AsNoTracking()
                                 .SingleOrDefaultAsync(x => x.Id == sessionId && 
                                     x.UserId == userId && 
                                     !x.DateDeactivated.HasValue, cancellationToken);
@@ -67,17 +68,24 @@ namespace RR.AI_Chat.Service
                 if (session.Conversations.Count == 1)
                 {
                     var sessionName = await _sessionService.CreateSessionNameAsync(sessionId, request, cancellationToken);
-                    session.Name = sessionName;
+                    await _ctx.Sessions
+                        .Where(x => x.Id == sessionId)
+                        .ExecuteUpdateAsync(s => s
+                            .SetProperty(x => x.Name, sessionName)
+                            .SetProperty(x => x.DateModified, DateTimeOffset.UtcNow), cancellationToken);
                 }
 
-                session.Conversations.Add(new Conversation(ChatRole.User, request.Prompt));
+                var conversations = new List<ChatMessage>(session.Conversations.Select(x => new ChatMessage(x.Role, x.Content)))
+                {
+                    new(ChatRole.User, request.Prompt)
+                };
 
                 var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId, cancellationToken);
                 var chatClient = _azureAIFoundry;
                 var chatOptions = await CreateChatOptions(sessionId, model, request.McpServers, cancellationToken).ConfigureAwait(false);
                 StringBuilder sb = new();
                 long totalInputTokens = 0, totalOutputTokens = 0;
-                await foreach (var message in chatClient.GetStreamingResponseAsync(session.Conversations.Select(x => new ChatMessage(x.Role, x.Content)) ?? [], chatOptions, cancellationToken))
+                await foreach (var message in chatClient.GetStreamingResponseAsync(conversations, chatOptions, cancellationToken))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -100,15 +108,21 @@ namespace RR.AI_Chat.Service
                     yield return message.Text;
                 }
 
-                // Update token counts once at the end
-                session.InputTokens += totalInputTokens;
-                session.OutputTokens += totalOutputTokens;
+                // Build updated conversation list
+                var updatedConversations = new List<Conversation>(session.Conversations)
+                {
+                    new(ChatRole.User, request.Prompt),
+                    new(ChatRole.Assistant, sb.ToString())
+                };
 
-                session.Conversations?.Add(new Conversation(ChatRole.Assistant, sb.ToString()));
-                session.DateModified = DateTime.UtcNow;
-                _ctx.Entry(session).Property(e => e.Conversations).IsModified = true;
-
-                await _ctx.SaveChangesAsync(cancellationToken);
+                await _ctx.Sessions
+                    .Where(s => s.Id == sessionId)
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(x => x.Conversations, updatedConversations)
+                        .SetProperty(x => x.InputTokens, x => x.InputTokens + totalInputTokens)
+                        .SetProperty(x => x.OutputTokens, x => x.OutputTokens + totalOutputTokens)
+                        .SetProperty(x => x.DateModified, DateTimeOffset.UtcNow),
+                        cancellationToken);
             }
         }
 
