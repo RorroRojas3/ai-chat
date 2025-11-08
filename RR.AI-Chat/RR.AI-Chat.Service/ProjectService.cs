@@ -10,12 +10,48 @@ namespace RR.AI_Chat.Service
 {
     public interface IProjectService
     {
+        /// <summary>
+        /// Searches for active projects belonging to the current user with optional filtering and pagination.
+        /// </summary>
+        /// <param name="filter">Optional filter string to search project names using a LIKE pattern.</param>
+        /// <param name="skip">Number of records to skip for pagination. Default is 0.</param>
+        /// <param name="take">Number of records to take for pagination. Default is 10.</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>A paginated response containing matching projects ordered by creation date descending.</returns>
         Task<PaginatedResponseDto<ProjectDto>> SearchProjectsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Creates a new project for the current authenticated user.
+        /// </summary>
+        /// <param name="request">The project creation request containing name, description, and instructions.</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>The created project as a <see cref="ProjectDto"/>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when the request is null.</exception>
+        /// <exception cref="ValidationException">Thrown when the request fails validation.</exception>
         Task<ProjectDto> CreateProjectAsync(UpsertProjectActionDto request, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Updates an existing active project belonging to the current user.
+        /// </summary>
+        /// <param name="request">The project update request containing the project ID and updated values.</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>The updated project as a <see cref="ProjectDto"/>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when the request is null.</exception>
+        /// <exception cref="ValidationException">Thrown when the request fails validation.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the project is not found or already deactivated.</exception>
         Task<ProjectDto> UpdateProjectAsync(UpsertProjectActionDto request, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Deactivates a project and removes its association from all related sessions.
+        /// </summary>
+        /// <param name="id">The unique identifier of the project to deactivate.</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when the project is not found or already deactivated.</exception>
+        /// <remarks>
+        /// This operation is transactional. The project's DateDeactivated is set, and all associated sessions 
+        /// have their ProjectId set to null within a single database transaction.
+        /// </remarks>
         Task DeactivateProjectAsync(Guid id, CancellationToken cancellationToken);
     }
 
@@ -104,8 +140,8 @@ namespace RR.AI_Chat.Service
                 .FirstOrDefaultAsync(cancellationToken);
             if (existingProject == null)
             {
-                _logger.LogWarning("Project with id {Id} not found or already deactivated.", request.Id);
-                throw new InvalidOperationException($"Session project not found or already deactivated.");
+                _logger.LogWarning("Project not found or already deactivated.");
+                throw new InvalidOperationException($"Project not found or already deactivated.");
             }
 
             existingProject.Name = request.Name;
@@ -119,6 +155,7 @@ namespace RR.AI_Chat.Service
             return existingProject.MapToProjectDto();
         }
 
+        /// <inheritdoc />
         public async Task DeactivateProjectAsync(Guid id, CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid()!.Value;
@@ -132,7 +169,7 @@ namespace RR.AI_Chat.Service
             if (!projectExists)
             {
                 _logger.LogWarning("Project with id {Id} not found or already deactivated.", id);
-                throw new InvalidOperationException($"Session project not found or already deactivated.");
+                throw new InvalidOperationException($"Project not found or already deactivated.");
             }
 
             var date = DateTimeOffset.UtcNow;

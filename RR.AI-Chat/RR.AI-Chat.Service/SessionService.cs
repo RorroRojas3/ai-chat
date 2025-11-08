@@ -239,7 +239,7 @@ namespace RR.AI_Chat.Service
         /// <inheritdoc />
         public async Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken)
         {
-            ArgumentException.ThrowIfNullOrEmpty(nameof(request));
+            ArgumentNullException.ThrowIfNull(request);
 
             var session = await _ctx.Sessions.FindAsync([sessionId], cancellationToken);
             if (session == null)
@@ -261,7 +261,7 @@ namespace RR.AI_Chat.Service
 
             var response = await _chatClient.GetResponseAsync([
                                  new ChatMessage(ChatRole.System, _defaultSystemPrompt),
-                                 new ChatMessage(ChatRole.User, $"Create a session name based on the following prompt, please make it 25 maximum and make it a string. Do not hav the name on the session nor the id. Just the name based on the prompt. The result must be a string, not markdown. Prompt: {request.Prompt}")
+                                 new ChatMessage(ChatRole.User, $"Create a session name based on the following prompt, please make it 25 maximum and make it a string. Do not have the name on the session nor the id. Just the name based on the prompt. The result must be a string, not markdown. Prompt: {request.Prompt}")
                              ], new() { ModelId = modelName }, cancellationToken);
             if (response == null)
             {
