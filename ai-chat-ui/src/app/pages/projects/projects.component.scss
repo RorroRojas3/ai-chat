@@ -1,0 +1,147 @@
+.projects-container {
+  background-color: var(--color-light-blue);
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.projects-list-container {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0; // Important for flex children to scroll
+  margin-bottom: 1rem;
+
+  // Custom scrollbar styling
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(28, 60, 98, 0.1);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-accent);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--color-navy);
+    }
+  }
+}
+
+.projects-search {
+  &__icon {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+  }
+
+  &__input {
+    background-color: white;
+    border-color: var(--color-accent);
+
+    &:focus {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 0.2rem rgba(28, 60, 98, 0.25);
+    }
+  }
+
+  &__clear {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+
+    &:hover {
+      background-color: var(--color-navy);
+      border-color: var(--color-navy);
+      color: white;
+    }
+  }
+}
+
+.projects-list {
+  &__item {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: var(--color-navy);
+      color: white;
+      border-color: var(--color-navy);
+    }
+
+    &:focus {
+      background-color: var(--color-navy);
+      color: white;
+      border-color: var(--color-navy);
+      box-shadow: none;
+    }
+  }
+
+  &__content {
+    flex: 1;
+  }
+
+  &__title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  &__dates {
+    margin-top: 0.5rem;
+    opacity: 0.9;
+  }
+
+  &__no-results {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: white;
+  }
+}
+
+.projects-load-more {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+  padding: 0.5rem 1.5rem;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-navy);
+    border-color: var(--color-navy);
+    color: white;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.project-dropdown-toggle {
+  color: white;
+  text-decoration: none;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+.project-dropdown-menu {
+  background-color: var(--color-accent);
+  border: 1px solid var(--color-navy);
+
+  .dropdown-item {
+    color: white;
+
+    &:hover,
+    &:focus {
+      background-color: var(--color-navy);
+      color: white;
+    }
+  }
+}

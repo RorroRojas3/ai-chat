@@ -1,1 +1,223 @@
-<p>projects works!</p>
+<div class="container-fluid projects-container">
+  <div class="row h-100">
+    <div class="col-12 d-flex flex-column h-100 p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Your Projects</h2>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="onClickCreateNewProject()"
+        >
+          <i class="bi bi-plus-circle"></i>&nbsp;New Project
+        </button>
+      </div>
+
+      <!-- Search functionality -->
+      <div class="mb-4">
+        <label for="projects-search" class="visually-hidden"
+          >Search projects</label
+        >
+        <div class="input-group">
+          <span
+            class="input-group-text projects-search__icon"
+            aria-hidden="true"
+          >
+            <i class="bi bi-search"></i>
+          </span>
+          <input
+            id="projects-search"
+            type="text"
+            class="form-control projects-search__input"
+            placeholder="Search projects..."
+            [value]="searchFilter"
+            (input)="onSearchChange($event)"
+            aria-label="Search projects"
+            aria-describedby="projects-search-help"
+          />
+          @if (searchFilter) {
+          <button
+            class="btn btn-outline-secondary projects-search__clear"
+            type="button"
+            (click)="clearSearch()"
+            aria-label="Clear search"
+          >
+            <i class="bi bi-x"></i>
+          </button>
+          }
+        </div>
+        <span id="projects-search-help" class="visually-hidden"
+          >Type to search your projects by name or description</span
+        >
+      </div>
+
+      <!-- Total count display -->
+      <div class="mb-2">
+        <p class="text-muted mb-0 d-flex align-items-center">
+          @if (searchFilter) {
+          <i class="bi bi-search me-2"></i>{{ totalCount }} projects matching
+          "{{ searchFilter }}" } @else { <i class="bi bi-folder me-2"></i
+          >{{ totalCount }} projects }
+        </p>
+      </div>
+
+      <!-- Projects list with scrollable container -->
+      <div class="projects-list-container mb-5">
+        <div class="projects-list pe-2" role="list" aria-label="Projects">
+          @if (isSearching) {
+          <div
+            class="alert projects-list__no-results"
+            role="status"
+            aria-live="polite"
+          >
+            <i class="bi bi-search me-2"></i>
+            Searching...
+          </div>
+          } @else { @if (projects.length > 0) {
+          <ul class="list-group">
+            @for (project of projects; track trackByProjectId($index, project))
+            {
+            <li
+              class="mb-2 p-3 list-group-item list-group-item-action projects-list__item rounded-3"
+              (click)="onClickProject(project.id)"
+              (mouseenter)="onProjectMouseEnter(project.id)"
+              (mouseleave)="onProjectMouseLeave()"
+              role="listitem"
+              style="cursor: pointer"
+            >
+              <div
+                class="d-flex w-100 justify-content-between align-items-start"
+              >
+                <div class="flex-grow-1 projects-list__content">
+                  <h5 class="mb-2 projects-list__title">
+                    <i class="bi bi-folder-fill me-2"></i>{{ project.name }}
+                  </h5>
+                  @if (project.description) {
+                  <p class="mb-2 text-muted">{{ project.description }}</p>
+                  }
+                  <div class="projects-list__dates">
+                    <small
+                      class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-1 gap-md-0"
+                    >
+                      <span>
+                        <i
+                          class="bi bi-calendar-check me-1"
+                          aria-hidden="true"
+                        ></i>
+                        <strong>Modified:</strong>
+                        <time [attr.datetime]="project.dateModified">{{
+                          project.dateModified | date : "MMM d, y, h:mm a"
+                        }}</time>
+                      </span>
+                      <span class="ms-md-3">
+                        <i
+                          class="bi bi-calendar-plus me-1"
+                          aria-hidden="true"
+                        ></i>
+                        <strong>Created:</strong>
+                        <time [attr.datetime]="project.dateCreated">{{
+                          project.dateCreated | date : "MMM d, y, h:mm a"
+                        }}</time>
+                      </span>
+                    </small>
+                  </div>
+                </div>
+                <div class="dropdown ms-2">
+                  <button
+                    class="btn btn-link p-1 text-white project-dropdown-toggle"
+                    type="button"
+                    [attr.id]="'dropdownMenu-' + project.id"
+                    [attr.aria-label]="'Actions for ' + project.name"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    (click)="$event.stopPropagation()"
+                  >
+                    <i class="bi bi-three-dots-vertical"></i>
+                  </button>
+                  <ul
+                    class="dropdown-menu project-dropdown-menu"
+                    [attr.aria-labelledby]="'dropdownMenu-' + project.id"
+                  >
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="javascript:void(0)"
+                        (click)="onEditProject(project.id, $event)"
+                      >
+                        <i class="bi bi-pencil me-2"></i>Edit
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="javascript:void(0)"
+                        (click)="
+                          onClickProject(project.id); $event.stopPropagation()
+                        "
+                      >
+                        <i class="bi bi-folder-open me-2"></i>Open Project
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        class="dropdown-item"
+                        href="javascript:void(0)"
+                        (click)="onDeleteProject(project.id, $event)"
+                      >
+                        <i class="bi bi-trash me-2"></i>Delete
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </li>
+            }
+          </ul>
+
+          <!-- Show More Button -->
+          @if (hasMoreProjects && !isSearching) {
+          <div class="d-flex justify-content-center mt-1">
+            <button
+              type="button"
+              class="btn btn-primary projects-load-more"
+              (click)="loadMoreProjects()"
+              [disabled]="isLoadingMore"
+              [attr.aria-label]="
+                isLoadingMore ? 'Loading more projects' : 'Show more projects'
+              "
+            >
+              @if (isLoadingMore) {
+              <span
+                class="spinner-border spinner-border-sm me-2"
+                role="status"
+                aria-hidden="true"
+              ></span>
+              Loading... } @else {
+              <i class="bi bi-arrow-down-circle me-2"></i>
+              Show More }
+            </button>
+          </div>
+          } } @else {
+          <div
+            class="alert projects-list__no-results"
+            role="status"
+            aria-live="polite"
+          >
+            @if (searchFilter) {
+            <i class="bi bi-search me-2"></i>
+            No projects found for "{{ searchFilter }}" } @else {
+            <i class="bi bi-folder me-2"></i>
+            No projects available. Create your first project to get started! }
+          </div>
+          } }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-project-delete-modal
+  [show]="showDeleteModal"
+  [projectName]="getSelectedProjectName()"
+  (onDelete)="handleDeleteProject()"
+  (onClose)="closeDeleteModal()"
+></app-project-delete-modal>

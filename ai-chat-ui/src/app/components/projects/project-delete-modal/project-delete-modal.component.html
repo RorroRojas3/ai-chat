@@ -1,0 +1,56 @@
+<div
+  class="modal fade"
+  [class.show]="show()"
+  [style.display]="show() ? 'block' : 'none'"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="deleteProjectModalLabel"
+  [attr.aria-hidden]="!show()"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="deleteProjectModalLabel">
+          Delete Project
+        </h5>
+      </div>
+      <div class="modal-body">
+        <p>
+          Are you sure you want to delete
+          <strong>"{{ projectName() }}"</strong>?
+        </p>
+        <p class="text-danger mb-0">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          This action cannot be undone.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-lg btn-secondary"
+          (click)="closeModal()"
+          aria-label="Cancel deletion"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-lg btn-primary"
+          (click)="confirmDelete()"
+          aria-label="Confirm delete project"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop -->
+<div
+  class="modal-backdrop fade"
+  [class.show]="show()"
+  [style.display]="show() ? 'block' : 'none'"
+  (click)="closeModal()"
+  [attr.aria-hidden]="true"
+></div>
