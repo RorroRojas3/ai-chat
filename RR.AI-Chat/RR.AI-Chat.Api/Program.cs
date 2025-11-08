@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Graph;
 using Microsoft.Identity.Web;
+using RR.AI_Chat.Api.Middlewares;
 using RR.AI_Chat.Repository;
 using RR.AI_Chat.Service;
 using RR.AI_Chat.Service.Common.Interface;
@@ -216,6 +217,8 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
     //Authorization = new[] { new HangfireAuthorizationFilter() }
 });
+
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.UseHttpsRedirection();
 
