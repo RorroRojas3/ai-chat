@@ -1,29 +1,51 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule, NgClass } from '@angular/common';
 import { NotificationService } from '../../../services/notification.service';
+import { NotificationType } from '../../../models/notification.model';
 
 /**
  * Component that displays notification alerts using Bootstrap styling.
- * Uses Angular Signals for reactive updates.
+ * Uses Angular Signals for reactive updates with OnPush change detection.
  */
 @Component({
   selector: 'app-notification',
-  imports: [CommonModule],
+  imports: [NgClass],
   templateUrl: './notification.component.html',
-  styleUrls: ['./notification.component.scss']
+  styleUrls: ['./notification.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotificationComponent {
-  private notificationService = inject(NotificationService);
+  private readonly notificationService = inject(NotificationService);
 
   /**
    * Signal containing all active notifications
    */
-  notifications = this.notificationService.notifications;
+  readonly notifications = this.notificationService.notifications;
 
   /**
    * Signal containing the notification service configuration
    */
-  config = this.notificationService.config;
+  readonly config = this.notificationService.config;
+
+  /**
+   * Map of notification types to Bootstrap alert classes
+   */
+  private readonly alertClassMap: Record<NotificationType, string> = {
+    success: 'alert-success',
+    info: 'alert-info',
+    warning: 'alert-warning',
+    danger: 'alert-danger',
+  };
+
+  /**
+   * Map of notification types to Bootstrap icon classes
+   */
+  private readonly iconClassMap: Record<NotificationType, string> = {
+    success: 'bi-check-circle-fill',
+    info: 'bi-info-circle-fill',
+    warning: 'bi-exclamation-triangle-fill',
+    danger: 'bi-x-circle-fill',
+  };
 
   /**
    * Dismisses a notification by its ID
@@ -35,25 +57,29 @@ export class NotificationComponent {
   /**
    * Gets the Bootstrap alert class for a notification type
    */
-  getAlertClass(type: string): string {
-    return `alert-${type}`;
+  getAlertClass(type: NotificationType): string {
+    return this.alertClassMap[type] || this.alertClassMap.info;
   }
 
   /**
    * Gets the Bootstrap icon for a notification type
    */
-  getAlertIcon(type: string): string {
-    switch (type) {
-      case 'success':
-        return 'bi-check-circle-fill';
-      case 'info':
-        return 'bi-info-circle-fill';
-      case 'warning':
-        return 'bi-exclamation-triangle-fill';
-      case 'danger':
-        return 'bi-x-circle-fill';
-      default:
-        return 'bi-info-circle-fill';
-    }
+  getAlertIcon(type: NotificationType): string {
+    return this.iconClassMap[type] || this.iconClassMap.info;
+  }
+
+  /**
+   * Gets the appropriate ARIA live region value based on notification type
+   */
+  getAriaLive(type: NotificationType): 'assertive' | 'polite' {
+    return type === 'danger' ? 'assertive' : 'polite';
+  }
+
+  /**
+   * Gets a descriptive label for screen readers
+   */
+  getAriaLabel(type: NotificationType, message: string): string {
+    const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+    return `${typeLabel} notification: ${message}`;
   }
 }
