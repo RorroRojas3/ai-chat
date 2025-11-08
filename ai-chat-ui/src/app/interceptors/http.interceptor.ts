@@ -11,86 +11,21 @@ export const httpInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      let errorMessage: string;
-
       if (error.error instanceof ErrorEvent) {
         // Client-side or network error
-        errorMessage = `Network error: ${error.error.message}`;
-        notificationService.error(errorMessage);
+        notificationService.error(`Network error: ${error.error.message}`);
       } else {
-        const apiError = extractErrorFromDto(error);
+        // Try to extract errors from ErrorDto
+        const apiErrors = extractErrorsFromDto(error);
 
-        // Backend returned an unsuccessful response code
-        switch (error.status) {
-          case 400:
-            errorMessage =
-              apiError || 'Bad request. Please check your input and try again.';
-            notificationService.error(errorMessage);
-            break;
-          case 401:
-            errorMessage = apiError || 'Unauthorized, you must log in again.';
-            notificationService.error(errorMessage);
-            // TODO: Redirect to login page or clear auth tokens
-            break;
-          case 403:
-            errorMessage =
-              apiError ||
-              'Forbidden. You do not have permission to access this resource.';
-            notificationService.error(errorMessage);
-            break;
-          case 404:
-            errorMessage = apiError || 'Resource not found.';
-            notificationService.error(errorMessage);
-            break;
-          case 408:
-            errorMessage = apiError || 'Request timeout. Please try again.';
-            notificationService.warning(errorMessage);
-            break;
-          case 422:
-            errorMessage =
-              apiError || 'Validation error. Please check your input.';
-            notificationService.error(errorMessage);
-            break;
-          case 429:
-            errorMessage =
-              apiError || 'Too many requests. Please wait and try again.';
-            notificationService.warning(errorMessage);
-            break;
-          case 500:
-            errorMessage =
-              apiError ||
-              'An unexpected error occurred on the server. Please try again later.';
-            notificationService.error(errorMessage);
-            break;
-          case 502:
-            errorMessage =
-              apiError || 'Bad gateway. The server is temporarily unavailable.';
-            notificationService.error(errorMessage);
-            break;
-          case 503:
-            errorMessage =
-              apiError || 'Service unavailable. Please try again later.';
-            notificationService.error(errorMessage);
-            break;
-          case 504:
-            errorMessage =
-              apiError ||
-              'Gateway timeout. The server took too long to respond.';
-            notificationService.error(errorMessage);
-            break;
-          case 0:
-            errorMessage =
-              'Unable to connect to the server. Please check your internet connection.';
-            notificationService.error(errorMessage);
-            break;
-          default:
-            errorMessage =
-              apiError ||
-              `An error occurred: ${error.status} - ${
-                error.statusText || 'Unknown error'
-              }`;
-            notificationService.error(errorMessage);
-            break;
+        if (apiErrors && apiErrors.length > 0) {
+          // Display each error as a separate notification
+          apiErrors.forEach((errorMsg) => {
+            displayErrorByStatus(error.status, errorMsg, notificationService);
+          });
+        } else {
+          // No ErrorDto, use default message
+          displayErrorByStatus(error.status, null, notificationService);
         }
 
         if (!environment.production) {
@@ -105,9 +40,84 @@ export const httpInterceptor: HttpInterceptorFn = (req, next) => {
 };
 
 /**
- * Extracts error message(s) from ErrorDto structure
+ * Displays error notification based on HTTP status code
  */
-function extractErrorFromDto(error: HttpErrorResponse): string | null {
+function displayErrorByStatus(
+  status: number,
+  message: string | null,
+  notificationService: NotificationService
+): void {
+  let errorMessage: string;
+
+  switch (status) {
+    case 400:
+      errorMessage =
+        message || 'Bad request. Please check your input and try again.';
+      notificationService.error(errorMessage);
+      break;
+    case 401:
+      errorMessage = message || 'Unauthorized, you must log in again.';
+      notificationService.error(errorMessage);
+      // TODO: Redirect to login page or clear auth tokens
+      break;
+    case 403:
+      errorMessage =
+        message ||
+        'Forbidden. You do not have permission to access this resource.';
+      notificationService.error(errorMessage);
+      break;
+    case 404:
+      errorMessage = message || 'Resource not found.';
+      notificationService.error(errorMessage);
+      break;
+    case 408:
+      errorMessage = message || 'Request timeout. Please try again.';
+      notificationService.warning(errorMessage);
+      break;
+    case 422:
+      errorMessage = message || 'Validation error. Please check your input.';
+      notificationService.error(errorMessage);
+      break;
+    case 429:
+      errorMessage = message || 'Too many requests. Please wait and try again.';
+      notificationService.warning(errorMessage);
+      break;
+    case 500:
+      errorMessage =
+        message ||
+        'An unexpected error occurred on the server. Please try again later.';
+      notificationService.error(errorMessage);
+      break;
+    case 502:
+      errorMessage =
+        message || 'Bad gateway. The server is temporarily unavailable.';
+      notificationService.error(errorMessage);
+      break;
+    case 503:
+      errorMessage = message || 'Service unavailable. Please try again later.';
+      notificationService.error(errorMessage);
+      break;
+    case 504:
+      errorMessage =
+        message || 'Gateway timeout. The server took too long to respond.';
+      notificationService.error(errorMessage);
+      break;
+    case 0:
+      errorMessage =
+        'Unable to connect to the server. Please check your internet connection.';
+      notificationService.error(errorMessage);
+      break;
+    default:
+      errorMessage = message || `An error occurred: ${status} - Unknown error`;
+      notificationService.error(errorMessage);
+      break;
+  }
+}
+
+/**
+ * Extracts error messages array from ErrorDto structure
+ */
+function extractErrorsFromDto(error: HttpErrorResponse): string[] | null {
   if (!error.error) {
     return null;
   }
@@ -120,10 +130,7 @@ function extractErrorFromDto(error: HttpErrorResponse): string | null {
     Array.isArray(errorDto.errors) &&
     errorDto.errors.length > 0
   ) {
-    // Join multiple errors with line breaks or return first error
-    return errorDto.errors.length === 1
-      ? errorDto.errors[0]
-      : errorDto.errors.join('\n\n');
+    return errorDto.errors;
   }
 
   return null;
