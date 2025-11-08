@@ -3,6 +3,7 @@ import { HomeComponent } from './pages/home/home.component';
 import { MsalGuard } from '@azure/msal-angular';
 import { SessionsComponent } from './pages/sessions/sessions.component';
 import { ProjectsComponent } from './pages/projects/projects.component';
+import { ProjectsCreateComponent } from './pages/projects/projects-create/projects-create.component';
 
 export const routes: Routes = [
   {
@@ -28,6 +29,11 @@ export const routes: Routes = [
   {
     path: 'projects',
     component: ProjectsComponent,
+    canActivate: [MsalGuard],
+  },
+  {
+    path: 'projects/create',
+    component: ProjectsCreateComponent,
     canActivate: [MsalGuard],
   },
   {

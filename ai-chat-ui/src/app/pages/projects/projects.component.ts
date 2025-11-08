@@ -182,7 +182,7 @@ export class ProjectsComponent implements OnInit {
    * Navigates to create new project page
    */
   onClickCreateNewProject(): void {
-    this.router.navigate(['projects', 'new']);
+    this.router.navigate(['projects', 'create']);
   }
 
   /**
