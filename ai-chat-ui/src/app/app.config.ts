@@ -5,6 +5,7 @@ import {
   HTTP_INTERCEPTORS,
   provideHttpClient,
   withFetch,
+  withInterceptors,
   withInterceptorsFromDi,
 } from '@angular/common/http';
 import {
@@ -26,6 +27,7 @@ import {
   MsalBroadcastService,
 } from '@azure/msal-angular';
 import { environment } from '../environments/environment';
+import { httpInterceptor } from './interceptors/http.interceptor';
 
 export function loggerCallback(logLevel: LogLevel, message: string) {
   console.log(message);
@@ -80,7 +82,11 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptorsFromDi(), withFetch()),
+    provideHttpClient(
+      withInterceptors([httpInterceptor]),
+      withInterceptorsFromDi(),
+      withFetch()
+    ),
     {
       provide: HTTP_INTERCEPTORS,
       useClass: MsalInterceptor,
