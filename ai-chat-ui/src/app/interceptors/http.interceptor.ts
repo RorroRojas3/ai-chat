@@ -9,7 +9,7 @@ export const httpInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      let errorMessage = '';
+      let errorMessage: string;
 
       if (error.error instanceof ErrorEvent) {
         // Client-side or network error
@@ -24,7 +24,7 @@ export const httpInterceptor: HttpInterceptorFn = (req, next) => {
             notificationService.error(errorMessage);
             break;
           case 401:
-            errorMessage = 'Unauthorized, you must login again.';
+            errorMessage = 'Unauthorized, you must log in again.';
             notificationService.error(errorMessage);
             // TODO: Redirect to login page or clear auth tokens
             break;
@@ -51,7 +51,7 @@ export const httpInterceptor: HttpInterceptorFn = (req, next) => {
             break;
           case 500:
             errorMessage =
-              'Unexpected error occurred on the server. Please try again later.';
+              'An unexpected error occurred on the server. Please try again later.';
             notificationService.error(errorMessage);
             break;
           case 502:

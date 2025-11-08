@@ -1,5 +1,5 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule, NgClass } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { NotificationService } from '../../../services/notification.service';
 import { NotificationType } from '../../../models/notification.model';
 

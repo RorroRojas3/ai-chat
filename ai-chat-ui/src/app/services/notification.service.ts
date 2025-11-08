@@ -2,7 +2,6 @@ import {
   Injectable,
   signal,
   computed,
-  effect,
   DestroyRef,
   inject,
 } from '@angular/core';
