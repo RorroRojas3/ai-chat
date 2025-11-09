@@ -114,7 +114,6 @@ namespace RR.AI_Chat.Service
         /// <exception cref="ArgumentNullException">Thrown when the request is null.</exception>
         Task DeactivateSessionBulkAsync(DeactivateSessionBulkActionDto request, CancellationToken cancellationToken);
 
-
         /// <summary>
         /// Updates an existing chat session asynchronously with the provided information.
         /// </summary>
