@@ -45,6 +45,7 @@ export class StoreService {
     this.sessionId.set('');
     this.messages.set([]);
     this.isStreaming.set(false);
+    this.showStreamLoader.set(false);
     this.stream.set('');
     this.streamMessage.set(createMessage('', false, undefined));
   }

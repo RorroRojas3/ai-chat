@@ -86,39 +86,27 @@ namespace RR.AI_Chat.Service
                 StringBuilder sb = new();
                 long totalInputTokens = 0, totalOutputTokens = 0;
 
-                try
+                await foreach (var message in chatClient.GetStreamingResponseAsync(conversations, chatOptions, cancellationToken))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                    await foreach (var message in chatClient.GetStreamingResponseAsync(conversations, chatOptions, cancellationToken))
+                    if (!string.IsNullOrEmpty(message.Text))
                     {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        if (!string.IsNullOrEmpty(message.Text))
-                        {
-                            sb.Append(message.Text);
-                        }
-
-                        if (message.Contents != null &&
-                            message.Contents.Count > 0)
-                        {
-                            // Check for usage content to track token consumption during streaming
-                            var usageContent = message.Contents.OfType<UsageContent>().FirstOrDefault();
-                            if (usageContent != null)
-                            {
-                                totalInputTokens += usageContent.Details?.InputTokenCount ?? 0;
-                                totalOutputTokens += usageContent.Details?.OutputTokenCount ?? 0;
-                            }
-                        }
-                        yield return message.Text;
+                        sb.Append(message.Text);
                     }
-                }
-                finally
-                {
-                    if (cancellationToken.IsCancellationRequested)
+
+                    if (message.Contents != null &&
+                        message.Contents.Count > 0)
                     {
-                        _logger.LogInformation("Streaming for session {SessionId} was cancelled.", sessionId);
-                        lockReleaser.Dispose();
+                        // Check for usage content to track token consumption during streaming
+                        var usageContent = message.Contents.OfType<UsageContent>().FirstOrDefault();
+                        if (usageContent != null)
+                        {
+                            totalInputTokens += usageContent.Details?.InputTokenCount ?? 0;
+                            totalOutputTokens += usageContent.Details?.OutputTokenCount ?? 0;
+                        }
                     }
+                    yield return message.Text;
                 }
 
                 // Build updated conversation list
