@@ -132,7 +132,6 @@ export class SessionService {
     this.storeService.setPageSessionSearching(true);
     this.storeService.setPageSessionSearchFilter(filter);
     this.storeService.setPageSessionSkip(skip);
-    this.storeService.setPageSessionTotalCount(take);
     this.searchSessions(filter, skip, take)
       .pipe(
         catchError(() => {

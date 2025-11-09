@@ -36,7 +36,6 @@ import { NotificationService } from '../../services/notification.service';
 export class SessionsComponent implements OnInit {
   // Constants
   readonly SEARCH_DEBOUNCE_MS = 600;
-  readonly STORE_SYNC_LIMIT = 10;
 
   // Inject dependencies using Angular 19 pattern
   public readonly storeService = inject(StoreService);
@@ -66,21 +65,16 @@ export class SessionsComponent implements OnInit {
       .pipe(
         debounceTime(this.SEARCH_DEBOUNCE_MS),
         distinctUntilChanged(),
-        tap(() => {
-          this.storeService.setPageSessionSearching(true);
-          this.sessionService.clearPageSessions();
-        }),
-        switchMap((filter) => {
-          this.sessionService.loadPageSessions(
-            filter,
-            0,
-            this.storeService.SESSION_PAGE_SIZE
-          );
-          return EMPTY;
-        }),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe();
+      .subscribe((filter) => {
+        this.sessionService.clearPageSessions();
+        this.sessionService.loadPageSessions(
+          filter,
+          this.storeService.pageSessionSkip(),
+          this.storeService.SESSION_PAGE_SIZE
+        );
+      });
 
     // Load initial sessions
     this.sessionService.loadPageSessions(
@@ -279,7 +273,7 @@ export class SessionsComponent implements OnInit {
   private handleDeleteSuccess(): void {
     this.closeDeleteModal();
     this.sessionService.loadPageSessions(
-      '',
+      this.storeService.pageSessionSearchFilter(),
       0,
       this.storeService.SESSION_PAGE_SIZE
     );
@@ -332,7 +326,7 @@ export class SessionsComponent implements OnInit {
   private handleRenameSuccess(): void {
     this.closeRenameModal();
     this.sessionService.loadPageSessions(
-      '',
+      this.storeService.pageSessionSearchFilter(),
       0,
       this.storeService.SESSION_PAGE_SIZE
     );
