@@ -12,10 +12,10 @@ namespace RR.AI_Chat.Dto.Actions.Session
         public string Name { get; set; } = null!;
 
         [JsonPropertyName("description")]
-        public string Description { get; set; } = null!;
+        public string? Description { get; set; }
 
         [JsonPropertyName("instructions")]
-        public string Instructions { get; set; } = null!;
+        public string? Instructions { get; set; } 
     }
 
     public class UpsertProjectActionDtoValidator : AbstractValidator<UpsertProjectActionDto>
@@ -23,8 +23,12 @@ namespace RR.AI_Chat.Dto.Actions.Session
         public UpsertProjectActionDtoValidator()
         {
             RuleFor(x => x.Name).NotEmpty().MaximumLength(256);
-            RuleFor(x => x.Description).NotEmpty().MaximumLength(1024);
-            RuleFor(x => x.Instructions).NotEmpty().MaximumLength(2048);
+            RuleFor(x => x.Description)
+                .MaximumLength(1024)
+                .When(x => !string.IsNullOrWhiteSpace(x.Description));
+            RuleFor(x => x.Instructions)
+                .MaximumLength(2048)
+                .When(x => !string.IsNullOrWhiteSpace(x.Instructions));
         }
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.Tokenizers;
 using RR.AI_Chat.Dto;
+using RR.AI_Chat.Dto.Actions.Chat;
 using RR.AI_Chat.Dto.Actions.Session;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
@@ -42,7 +43,7 @@ namespace RR.AI_Chat.Service
         /// <returns>A task that represents the asynchronous operation. The task result contains the generated session name.</returns>
         /// <exception cref="ArgumentException">Thrown when the request is null or empty.</exception>
         /// <exception cref="InvalidOperationException">Thrown when the session name creation fails.</exception>
-        Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken);
+        Task<string> CreateSessionNameAsync(Guid sessionId, CreateChatStreamActionDto request, CancellationToken cancellationToken);
 
         /// <summary>
         /// Searches for sessions asynchronously based on the provided filter, with pagination support.
@@ -120,12 +121,16 @@ namespace RR.AI_Chat.Service
         [FromKeyedServices("azureaifoundry")] IChatClient openAiClient,
         ITokenService tokenService,
         IValidator<RenameSessionActionDto> renameSessionValidator,
+        IValidator<CreateChatStreamActionDto> createChatStreamValidator,
+        IValidator<DeactivateSessionBulkActionDto> deactivateSessionBulkValidator,
         AIChatDbContext ctx) : ISessionService
     {
         private readonly ILogger<SessionService> _logger = logger;
         private readonly IChatClient _chatClient = openAiClient;
         private readonly ITokenService _tokenService = tokenService;
         private readonly IValidator<RenameSessionActionDto> _renameSessionValidator = renameSessionValidator;
+        private readonly IValidator<CreateChatStreamActionDto> _createChatStreamValidator = createChatStreamValidator;
+        private readonly IValidator<DeactivateSessionBulkActionDto> _deactivateSessionBulkValidator = deactivateSessionBulkValidator;
         private readonly AIChatDbContext _ctx = ctx;
         private readonly string _defaultSystemPrompt = @"
             You are an advanced AI assistant with comprehensive analytical capabilities and access to a powerful suite of specialized tools. Your primary mission is to provide thorough, insightful, and actionable responses that leverage all available resources to deliver maximum value.
@@ -237,9 +242,11 @@ namespace RR.AI_Chat.Service
         }
 
         /// <inheritdoc />
-        public async Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken)
+        public async Task<string> CreateSessionNameAsync(Guid sessionId, CreateChatStreamActionDto request, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(request);
+
+            _createChatStreamValidator.ValidateAndThrow(request);
 
             var session = await _ctx.Sessions.FindAsync([sessionId], cancellationToken);
             if (session == null)
@@ -364,6 +371,8 @@ namespace RR.AI_Chat.Service
         public async Task DeactivateSessionBulkAsync(DeactivateSessionBulkActionDto request, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(request);
+
+            _deactivateSessionBulkValidator.ValidateAndThrow(request);
 
             var userId = _tokenService.GetOid()!.Value;
             var date = DateTimeOffset.UtcNow;
