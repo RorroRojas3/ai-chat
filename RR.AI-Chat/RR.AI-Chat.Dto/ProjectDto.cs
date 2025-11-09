@@ -6,9 +6,9 @@
 
         public string Name { get; set; } = null!;
 
-        public string Description { get; set; } = null!;
+        public string? Description { get; set; }
 
-        public string Instructions { get; set; } = null!;
+        public string? Instructions { get; set; }
 
         public DateTimeOffset DateCreated { get; set; }
 

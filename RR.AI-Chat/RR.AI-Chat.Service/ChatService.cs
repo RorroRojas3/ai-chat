@@ -8,15 +8,53 @@ using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using RR.AI_Chat.Entity;
 using Microsoft.EntityFrameworkCore;
+using RR.AI_Chat.Dto.Actions.Chat;
+using FluentValidation;
 
 namespace RR.AI_Chat.Service
 {
     public interface IChatService 
     {
-        IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken);
+        /// <summary>
+        /// Streams chat responses asynchronously for a given session and user prompt.
+        /// </summary>
+        /// <param name="sessionId">The unique identifier of the chat session.</param>
+        /// <param name="request">The chat stream request containing the user prompt, model ID, service ID, and optional MCP servers.</param>
+        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+        /// <returns>An asynchronous enumerable of strings representing the streamed chat response chunks.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is null.</exception>
+        /// <exception cref="ValidationException">Thrown when the request validation fails.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the session is already being processed or the session is not found.</exception>
+        /// <remarks>
+        /// This method performs the following operations:
+        /// <list type="number">
+        /// <item><description>Validates the request and acquires an exclusive lock on the session</description></item>
+        /// <item><description>Retrieves the session and validates it belongs to the current user</description></item>
+        /// <item><description>Updates the session name if this is the first conversation</description></item>
+        /// <item><description>Streams the AI response and tracks token usage</description></item>
+        /// <item><description>Updates the session with the new conversation and token counts</description></item>
+        /// </list>
+        /// </remarks>
+        IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, CreateChatStreamActionDto request, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Retrieves the conversation history for a specific chat session.
+        /// </summary>
+        /// <param name="sessionId">The unique identifier of the chat session.</param>
+        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the session conversation details including all messages.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when the session is not found or does not belong to the current user.</exception>
+        /// <remarks>
+        /// This method retrieves all non-system messages from the session and maps them to DTOs.
+        /// System messages are excluded from the returned conversation history.
+        /// </remarks>
         Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Checks whether a session is currently locked and being processed.
+        /// </summary>
+        /// <param name="sessionId">The unique identifier of the session to check.</param>
+        /// <returns><c>true</c> if the session is currently locked and busy; otherwise, <c>false</c>.</returns>
         bool IsSessionBusy(Guid sessionId);
     }
 
@@ -28,22 +66,30 @@ namespace RR.AI_Chat.Service
         IMcpServerService mcpServerService,
         ISessionLockService sessionLockService,
         ITokenService tokenService,
+        IValidator<CreateChatStreamActionDto> createChatStreamActionValidator,
         AIChatDbContext ctx) : IChatService
     {
-        private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        private readonly IChatClient _azureAIFoundry = azureAIFoundry ?? throw new ArgumentNullException(nameof(azureAIFoundry));      
-        private readonly IDocumentToolService _documentToolService = documentToolService ?? throw new ArgumentNullException(nameof(documentToolService));
-        private readonly ISessionService _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
-        private readonly IModelService _modelService = modelService ?? throw new ArgumentNullException(nameof(modelService));
-        private readonly IMcpServerService _mcpServerService = mcpServerService ?? throw new ArgumentNullException(nameof(mcpServerService));
-        private readonly ISessionLockService _sessionLockService = sessionLockService ?? throw new ArgumentNullException(nameof(sessionLockService));
-        private readonly ITokenService _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
+        private readonly ILogger _logger = logger;
+        private readonly IChatClient _azureAIFoundry = azureAIFoundry;    
+        private readonly IDocumentToolService _documentToolService = documentToolService;
+        private readonly ISessionService _sessionService = sessionService;
+        private readonly IModelService _modelService = modelService;
+        private readonly IMcpServerService _mcpServerService = mcpServerService;
+        private readonly ISessionLockService _sessionLockService = sessionLockService;
+        private readonly ITokenService _tokenService = tokenService;
+        private readonly IValidator<CreateChatStreamActionDto> _createChatStreamActionValidator = createChatStreamActionValidator;
         private readonly AIChatDbContext _ctx = ctx;
 
+        /// <inheritdoc />
         public bool IsSessionBusy(Guid sessionId) => _sessionLockService.IsSessionBusy(sessionId);
 
-        public async IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, [EnumeratorCancellation] CancellationToken cancellationToken)
+        /// <inheritdoc />
+        public async IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, CreateChatStreamActionDto request, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
+            ArgumentNullException.ThrowIfNull(request, nameof(request));
+
+            _createChatStreamActionValidator.ValidateAndThrow(request);
+
             var lockReleaser = await _sessionLockService.TryAcquireLockAsync(sessionId, cancellationToken);
             if (lockReleaser == null)
             {
@@ -127,6 +173,7 @@ namespace RR.AI_Chat.Service
             }
         }
 
+        /// <inheritdoc />
         public async Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid()!.Value;
@@ -162,6 +209,23 @@ namespace RR.AI_Chat.Service
             };
         }
 
+        /// <summary>
+        /// Creates chat options configured with the specified model and tools.
+        /// </summary>
+        /// <param name="sessionId">The unique identifier of the chat session.</param>
+        /// <param name="model">The AI model to use for the chat.</param>
+        /// <param name="mcps">A list of MCP server configurations to enable for tool calling.</param>
+        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the configured chat options.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="model"/> is null.</exception>
+        /// <remarks>
+        /// If the model has tools enabled, this method will:
+        /// <list type="number">
+        /// <item><description>Add document tools from the document tool service</description></item>
+        /// <item><description>Create MCP clients for each configured MCP server and retrieve their tools</description></item>
+        /// <item><description>Configure the chat options to allow multiple tool calls</description></item>
+        /// </list>
+        /// </remarks>
         private async Task<ChatOptions> CreateChatOptions(Guid sessionId, ModelDto model, List<McpDto> mcps, CancellationToken cancellationToken)
         {
             if (model == null)

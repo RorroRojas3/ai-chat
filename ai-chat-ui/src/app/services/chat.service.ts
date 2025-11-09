@@ -4,8 +4,8 @@ import { Observable } from 'rxjs';
 import { SessionConversationDto } from '../dtos/SessionDto';
 import { environment } from '../../environments/environment';
 import { StoreService } from '../store/store.service';
-import { ChatStreamRequestDto } from '../dtos/ChatStreamRequestDto';
 import { MsalService } from '@azure/msal-angular';
+import { CreateChatStreamActionDto } from '../dtos/actions/chats/CreateChatStreamActionDto';
 
 @Injectable({
   providedIn: 'root',
@@ -99,7 +99,7 @@ export class ChatService {
                 Authorization: `Bearer ${accessToken}`,
               },
               body: JSON.stringify(
-                new ChatStreamRequestDto(
+                new CreateChatStreamActionDto(
                   prompt,
                   this.storeService.selectedModel().id,
                   this.storeService.selectedModel().aiServiceId,

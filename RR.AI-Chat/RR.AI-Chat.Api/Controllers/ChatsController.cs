@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RR.AI_Chat.Dto;
+using RR.AI_Chat.Dto.Actions.Chat;
 using RR.AI_Chat.Service;
 
 namespace RR.AI_Chat.Api.Controllers
@@ -13,7 +13,7 @@ namespace RR.AI_Chat.Api.Controllers
         private readonly IChatService _chatService = chatService;
 
         [HttpPost("sessions/{sessionId}/stream")]
-        public async Task GetChatStreamingAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken)
+        public async Task GetChatStreamingAsync(Guid sessionId, CreateChatStreamActionDto request, CancellationToken cancellationToken)
         {
             Response.Headers.Append("Content-Type", "text/event-stream");
             Response.Headers.Append("Cache-Control", "no-cache");

@@ -23,9 +23,9 @@ namespace RR.AI_Chat.Service.Middleware
                 if (userId == null)
                 {
                     context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    await context.Response.WriteAsJsonAsync(new ApiResponseDto
+                    await context.Response.WriteAsJsonAsync(new ErrorDto
                     {
-                        Message = "User ID claim not found in token.",
+                        Errors = ["Invalid JWT token."],
                         StatusCode = HttpStatusCode.Unauthorized
                     });
                     return;
@@ -36,9 +36,9 @@ namespace RR.AI_Chat.Service.Middleware
                 if (!userExists)
                 {
                     context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    await context.Response.WriteAsJsonAsync(new ApiResponseDto
+                    await context.Response.WriteAsJsonAsync(new ErrorDto
                     {
-                        Message = "User not found in database.",
+                        Errors = ["User does not have access to this resource."],
                         StatusCode = HttpStatusCode.Unauthorized
                     });
                     return;

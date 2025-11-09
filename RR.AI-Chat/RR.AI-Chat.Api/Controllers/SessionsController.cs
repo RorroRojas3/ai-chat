@@ -13,9 +13,9 @@ namespace RR.AI_Chat.Api.Controllers
         private readonly ISessionService _sessionService = sessionService;  
 
         [HttpPost]
-        public async Task<IActionResult> CreateSessionAsync(CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateSessionAsync(CreateSessionActionDto request, CancellationToken cancellationToken)
         {
-            var response = await _sessionService.CreateChatSessionAsync(cancellationToken);
+            var response = await _sessionService.CreateChatSessionAsync(request, cancellationToken);
             return Created($"api/sessions/{response.Id}", response);
         }
 

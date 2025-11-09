@@ -1,16 +1,16 @@
-import { McpDto } from './McpDto';
+import { McpDto } from '../../McpDto';
 
-export class ChatStreamRequestDto {
+export class CreateChatStreamActionDto {
   prompt!: string;
   modelId!: string;
   serviceId!: string;
-  mcpServers!: McpDto[];
+  mcpServers?: McpDto[];
 
   constructor(
     prompt: string,
     modelId: string,
     serviceId: string,
-    mcpServers: McpDto[]
+    mcpServers?: McpDto[]
   ) {
     this.prompt = prompt;
     this.modelId = modelId;

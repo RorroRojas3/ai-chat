@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
-using RR.AI_Chat.Dto.Actions.Session;
+using RR.AI_Chat.Dto.Actions.Project;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
 

@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.Tokenizers;
 using RR.AI_Chat.Dto;
+using RR.AI_Chat.Dto.Actions.Chat;
 using RR.AI_Chat.Dto.Actions.Session;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
@@ -16,6 +17,8 @@ namespace RR.AI_Chat.Service
         /// <summary>
         /// Creates a new chat session asynchronously.
         /// </summary>
+        /// <param name="request">The request containing optional project ID for session association.</param>
+        /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
         /// <returns>
         /// A task that represents the asynchronous operation. The task result contains a <see cref="SessionDto"/> 
         /// with the unique identifier of the newly created session.
@@ -23,16 +26,22 @@ namespace RR.AI_Chat.Service
         /// <remarks>
         /// This method performs the following operations:
         /// <list type="number">
+        /// <item><description>Validates the request using the create session validator</description></item>
+        /// <item><description>Retrieves the current user ID from the token service</description></item>
+        /// <item><description>If a project ID is provided, verifies the project exists and belongs to the user</description></item>
         /// <item><description>Creates a new <see cref="Session"/> entity with the current UTC timestamp</description></item>
         /// <item><description>Persists the session to the database</description></item>
-        /// <item><description>Creates an in-memory <see cref="ChatSession"/> with the default system prompt</description></item>
-        /// <item><description>Adds the chat session to the chat store for runtime access</description></item>
+        /// <item><description>Initializes the session with a system prompt containing the session and user IDs</description></item>
+        /// <item><description>Creates conversation history with the system message</description></item>
         /// </list>
-        /// The newly created session is initialized with a system message containing the default assistant prompt.
+        /// The newly created session is initialized with a system message containing the default assistant prompt
+        /// formatted with the session ID and user ID.
         /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown when the request is null.</exception>
+        /// <exception cref="ValidationException">Thrown when the request validation fails.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the specified project is not found or doesn't belong to the user.</exception>
         /// <exception cref="DbUpdateException">Thrown when the database update operation fails.</exception>
-        /// <exception cref="InvalidOperationException">Thrown when the entity framework context is in an invalid state.</exception>
-        Task<SessionDto> CreateChatSessionAsync(CancellationToken cancellationToken);
+        Task<SessionDto> CreateChatSessionAsync(CreateSessionActionDto request, CancellationToken cancellationToken);
 
         /// <summary>
         /// Creates a session name asynchronously based on the provided request.
@@ -42,7 +51,7 @@ namespace RR.AI_Chat.Service
         /// <returns>A task that represents the asynchronous operation. The task result contains the generated session name.</returns>
         /// <exception cref="ArgumentException">Thrown when the request is null or empty.</exception>
         /// <exception cref="InvalidOperationException">Thrown when the session name creation fails.</exception>
-        Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken);
+        Task<string> CreateSessionNameAsync(Guid sessionId, CreateChatStreamActionDto request, CancellationToken cancellationToken);
 
         /// <summary>
         /// Searches for sessions asynchronously based on the provided filter, with pagination support.
@@ -119,13 +128,19 @@ namespace RR.AI_Chat.Service
     public class SessionService(ILogger<SessionService> logger,
         [FromKeyedServices("azureaifoundry")] IChatClient openAiClient,
         ITokenService tokenService,
+        IValidator<CreateSessionActionDto> createSessionValidator,
         IValidator<RenameSessionActionDto> renameSessionValidator,
+        IValidator<CreateChatStreamActionDto> createChatStreamValidator,
+        IValidator<DeactivateSessionBulkActionDto> deactivateSessionBulkValidator,
         AIChatDbContext ctx) : ISessionService
     {
         private readonly ILogger<SessionService> _logger = logger;
         private readonly IChatClient _chatClient = openAiClient;
         private readonly ITokenService _tokenService = tokenService;
+        private readonly IValidator<CreateSessionActionDto> _createSessionValidator = createSessionValidator;
         private readonly IValidator<RenameSessionActionDto> _renameSessionValidator = renameSessionValidator;
+        private readonly IValidator<CreateChatStreamActionDto> _createChatStreamValidator = createChatStreamValidator;
+        private readonly IValidator<DeactivateSessionBulkActionDto> _deactivateSessionBulkValidator = deactivateSessionBulkValidator;
         private readonly AIChatDbContext _ctx = ctx;
         private readonly string _defaultSystemPrompt = @"
             You are an advanced AI assistant with comprehensive analytical capabilities and access to a powerful suite of specialized tools. Your primary mission is to provide thorough, insightful, and actionable responses that leverage all available resources to deliver maximum value.
@@ -208,14 +223,33 @@ namespace RR.AI_Chat.Service
             ";
 
         /// <inheritdoc />
-        public async Task<SessionDto> CreateChatSessionAsync(CancellationToken cancellationToken)
+        public async Task<SessionDto> CreateChatSessionAsync(CreateSessionActionDto request, CancellationToken cancellationToken)
         {
+            ArgumentNullException.ThrowIfNull(request);
+
+            _createSessionValidator.ValidateAndThrow(request);
+
             var userId = _tokenService.GetOid()!.Value;
+
+            if (request.ProjectId.HasValue)
+            {
+                var projectExists = await _ctx.Projects
+                    .Where(p => p.Id == request.ProjectId.Value && 
+                            p.UserId == userId && 
+                            !p.DateDeactivated.HasValue)
+                    .AnyAsync(cancellationToken);
+                if (!projectExists)
+                {
+                    _logger.LogError("Project not found.");
+                    throw new InvalidOperationException($"Project with id {request.ProjectId.Value} not found");
+                }
+            }
 
             var transaction = await _ctx.Database.BeginTransactionAsync(cancellationToken);
             var date = DateTimeOffset.UtcNow;
             var newSession = new Session()
             {
+                Name = "New Chat",
                 UserId = userId,
                 DateCreated = date,
                 DateModified = date
@@ -233,13 +267,15 @@ namespace RR.AI_Chat.Service
             await _ctx.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 
-            return new() { Id = newSession.Id };
+            return newSession.MapToSessionDto();
         }
 
         /// <inheritdoc />
-        public async Task<string> CreateSessionNameAsync(Guid sessionId, ChatStreamRequestdto request, CancellationToken cancellationToken)
+        public async Task<string> CreateSessionNameAsync(Guid sessionId, CreateChatStreamActionDto request, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(request);
+
+            _createChatStreamValidator.ValidateAndThrow(request);
 
             var session = await _ctx.Sessions.FindAsync([sessionId], cancellationToken);
             if (session == null)
@@ -297,13 +333,7 @@ namespace RR.AI_Chat.Service
                 .OrderByDescending(x => x.DateCreated)
                 .Skip(skip)
                 .Take(take)
-                .Select(s => new SessionDto
-                {
-                    Id = s.Id,
-                    Name = s.Name!,
-                    DateCreated = s.DateCreated,
-                    DateModified = s.DateModified
-                })
+                .Select(s => s.MapToSessionDto())
                 .ToListAsync(cancellationToken);
 
             return new PaginatedResponseDto<SessionDto>
@@ -364,6 +394,8 @@ namespace RR.AI_Chat.Service
         public async Task DeactivateSessionBulkAsync(DeactivateSessionBulkActionDto request, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(request);
+
+            _deactivateSessionBulkValidator.ValidateAndThrow(request);
 
             var userId = _tokenService.GetOid()!.Value;
             var date = DateTimeOffset.UtcNow;

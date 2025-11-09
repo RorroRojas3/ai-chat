@@ -82,25 +82,27 @@ export class PromptBoxComponent implements OnDestroy {
     }
 
     try {
-      this.storeService.stream.set('');
-      this.storeService.isStreaming.set(true);
-      this.storeService.showStreamLoader.set(true);
       const promptText = this.prompt;
       this.prompt = '';
-
-      if (this.storeService.sessionId() === '') {
-        const session = await firstValueFrom(
-          this.sessionService.createSession()
-        );
-        this.storeService.sessionId.set(session.id);
-        this.location.replaceState(`chat/session/${session.id}`);
-      }
-
       this.showAttachedFiles = false;
       this.storeService.messages.update((messages) => [
         ...messages,
         createMessage(promptText, true, undefined),
       ]);
+
+      this.storeService.stream.set('');
+      this.storeService.isStreaming.set(true);
+      this.storeService.showStreamLoader.set(true);
+
+      if (this.storeService.sessionId() === '') {
+        const session = await firstValueFrom(
+          this.sessionService.createSession({
+            projectId: this.storeService.projectId(),
+          })
+        );
+        this.storeService.sessionId.set(session.id);
+        this.location.replaceState(`chat/session/${session.id}`);
+      }
 
       // Upload attached files to the session
       if (this.attachedFiles.length > 0) {

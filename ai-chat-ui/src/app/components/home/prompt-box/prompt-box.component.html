@@ -215,7 +215,7 @@
                 @if (!storeService.isStreaming()) {
                 <button
                   type="submit"
-                  class="btn btn-primary"
+                  class="btn btn-lg btn-primary"
                   (click)="onClickCreateSession()"
                   title="Send message"
                   [attr.aria-label]="'Send message'"
@@ -224,7 +224,7 @@
                 >} @else {
                 <button
                   type="button"
-                  class="btn btn-primary"
+                  class="btn btn-lg btn-primary"
                   (click)="onClickStopSession()"
                   title="Stop message"
                   [attr.aria-label]="'Stop message'"

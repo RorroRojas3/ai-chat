@@ -13,10 +13,10 @@ namespace RR.AI_Chat.Entity
         public string Name { get; set; } = null!;
 
         [StringLength(1024)]
-        public string Description { get; set; } = null!;
+        public string? Description { get; set; }
 
         [StringLength(2048)]
-        public string Instructions { get; set; } = null!;
+        public string? Instructions { get; set; }
 
         public User User { get; set; } = null!;
 
