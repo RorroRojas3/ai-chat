@@ -53,7 +53,7 @@
                 <!-- Model Dropdown -->
                 <div class="dropdown">
                   <button
-                    class="btn btn-prompt-box dropdown-toggle"
+                    class="btn btn-primary dropdown-toggle"
                     type="button"
                     id="dropdownMenuButton"
                     data-bs-toggle="dropdown"
@@ -101,7 +101,7 @@
                 <!-- MCP Dropdown (Multi-select) -->
                 <div class="dropdown">
                   <button
-                    class="btn btn-prompt-box dropdown-toggle"
+                    class="btn btn-primary dropdown-toggle"
                     type="button"
                     id="mcpDropdownButton"
                     data-bs-toggle="dropdown"
@@ -160,7 +160,7 @@
                 @if (isFileAttachmentAllowed()) {
                 <button
                   type="button"
-                  class="btn btn-prompt-box"
+                  class="btn btn-primary"
                   (click)="fileInput.click()"
                   [attr.title]="
                     'Attach files - Allowed types: ' + getAcceptedFileTypes()
@@ -176,7 +176,7 @@
                 > 2 && !storeService.isStreaming()) {
                 <div class="dropdown">
                   <button
-                    class="btn btn-prompt-box dropdown-toggle"
+                    class="btn btn-primary dropdown-toggle"
                     type="button"
                     id="downloadDropdown"
                     data-bs-toggle="dropdown"
@@ -212,20 +212,26 @@
 
               <!-- Right side: Send button -->
               <div class="ms-auto">
+                @if (!storeService.isStreaming()) {
                 <button
                   type="submit"
-                  class="btn btn-prompt-box"
-                  [disabled]="storeService.disablePromptButton()"
+                  class="btn btn-primary"
                   (click)="onClickCreateSession()"
                   title="Send message"
-                  [attr.aria-label]="
-                    storeService.disablePromptButton()
-                      ? 'Send message (disabled)'
-                      : 'Send message'
-                  "
+                  [attr.aria-label]="'Send message'"
                 >
-                  <i class="bi bi-send" aria-hidden="true"></i>
+                  <i class="bi bi-send" aria-hidden="true"></i></button
+                >} @else {
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  (click)="onClickStopSession()"
+                  title="Stop message"
+                  [attr.aria-label]="'Stop message'"
+                >
+                  <i class="bi bi-stop-circle" aria-hidden="true"></i>
                 </button>
+                }
               </div>
             </div>
           </div>

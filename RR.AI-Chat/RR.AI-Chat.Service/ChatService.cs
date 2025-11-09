@@ -85,6 +85,7 @@ namespace RR.AI_Chat.Service
                 var chatOptions = await CreateChatOptions(sessionId, model, request.McpServers, cancellationToken).ConfigureAwait(false);
                 StringBuilder sb = new();
                 long totalInputTokens = 0, totalOutputTokens = 0;
+
                 await foreach (var message in chatClient.GetStreamingResponseAsync(conversations, chatOptions, cancellationToken))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -94,7 +95,7 @@ namespace RR.AI_Chat.Service
                         sb.Append(message.Text);
                     }
 
-                    if (message.Contents != null && 
+                    if (message.Contents != null &&
                         message.Contents.Count > 0)
                     {
                         // Check for usage content to track token consumption during streaming

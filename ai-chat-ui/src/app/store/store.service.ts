@@ -11,8 +11,8 @@ export class StoreService {
   constructor() {}
 
   sessionId = signal<string>('');
-  disablePromptButton = signal<boolean>(false);
   isStreaming = signal<boolean>(false);
+  showStreamLoader = signal<boolean>(false);
   stream = signal<string>('');
   messages = signal<MessageDto[]>([]);
   streamMessage = signal<MessageDto>(createMessage('', false, undefined));
@@ -44,8 +44,8 @@ export class StoreService {
   clearForNewSession(): void {
     this.sessionId.set('');
     this.messages.set([]);
-    this.disablePromptButton.set(false);
     this.isStreaming.set(false);
+    this.showStreamLoader.set(false);
     this.stream.set('');
     this.streamMessage.set(createMessage('', false, undefined));
   }

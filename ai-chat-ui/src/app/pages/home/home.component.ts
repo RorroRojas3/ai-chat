@@ -62,7 +62,6 @@ export class HomeComponent implements OnInit {
    */
   private loadSessionConversation(sessionId: string): void {
     this.storeService.sessionId.set(sessionId);
-    this.storeService.disablePromptButton.set(true);
     this.chatService.getSessionConversation().subscribe({
       next: (response) => {
         const mappedMessages = response.messages.map(
@@ -76,7 +75,6 @@ export class HomeComponent implements OnInit {
           }
         );
         this.storeService.messages.set(mappedMessages);
-        this.storeService.disablePromptButton.set(false);
       },
       error: () => {
         // If session is invalid or API call fails, reset to a new session

@@ -44,6 +44,21 @@ namespace RR.AI_Chat.Api.Middlewares
         /// <returns>A task representing the asynchronous operation.</returns>
         private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
+            // Handle cancellation exceptions (client disconnect, timeout, etc.)
+            if (exception is OperationCanceledException)
+            {
+                _logger.LogInformation(
+                    "Request was cancelled. TraceId: {TraceId}",
+                    context.TraceIdentifier);
+                
+                // If response has already started (e.g., during streaming), we cannot modify headers
+                if (!context.Response.HasStarted)
+                {
+                    context.Response.StatusCode = StatusCodes.Status499ClientClosedRequest;
+                }
+                return;
+            }
+
             _logger.LogError(exception,
                 "An error occurred: {Message}. TraceId: {TraceId}",
                 exception.Message,

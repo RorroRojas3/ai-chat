@@ -34,6 +34,7 @@ export class ChatService {
     return new Observable((observer) => {
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
       const decoder = new TextDecoder();
+      const abortController = new AbortController();
 
       const readStream = async (
         streamReader: ReadableStreamDefaultReader<Uint8Array>
@@ -47,7 +48,12 @@ export class ChatService {
             this.zone.run(() => observer.next(text));
           }
         } catch (error) {
-          this.zone.run(() => observer.error(error));
+          // Don't emit error if it's an abort error
+          if (error instanceof Error && error.name === 'AbortError') {
+            this.zone.run(() => observer.complete());
+          } else {
+            this.zone.run(() => observer.error(error));
+          }
         } finally {
           this.zone.run(() => observer.complete());
         }
@@ -100,6 +106,7 @@ export class ChatService {
                   this.storeService.selectedMcps()
                 )
               ),
+              signal: abortController.signal,
             }
           );
         })
@@ -114,10 +121,17 @@ export class ChatService {
           return readStream(reader);
         })
         .catch((error) => {
-          this.zone.run(() => observer.error(error));
+          // Don't emit error if it's an abort error
+          if (error instanceof Error && error.name === 'AbortError') {
+            this.zone.run(() => observer.complete());
+          } else {
+            this.zone.run(() => observer.error(error));
+          }
         });
 
+      // Teardown logic: cancel the stream and abort the fetch request
       return () => {
+        abortController.abort();
         reader?.cancel();
       };
     });
