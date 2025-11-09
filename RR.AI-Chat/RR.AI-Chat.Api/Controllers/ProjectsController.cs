@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RR.AI_Chat.Dto.Actions.Session;
+using RR.AI_Chat.Dto.Actions.Project;
 using RR.AI_Chat.Service;
 
 namespace RR.AI_Chat.Api.Controllers

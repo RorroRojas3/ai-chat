@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using RR.AI_Chat.Dto;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RR.AI_Chat.Entity
@@ -28,5 +29,20 @@ namespace RR.AI_Chat.Entity
         public Project? Project { get; set; }
 
         public List<Document> Documents { get; set; } = [];
+    }
+
+    public static class SessionExtensions
+    {
+        public static SessionDto MapToSessionDto(this Session source)
+        {
+            return new SessionDto
+            {
+                Id = source.Id,
+                ProjectId = source.ProjectId,
+                Name = source.Name,
+                DateCreated = source.DateCreated,
+                DateModified = source.DateModified
+            };
+        }
     }
 }

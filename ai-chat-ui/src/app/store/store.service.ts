@@ -21,6 +21,7 @@ export class StoreService {
   mcps = signal<McpDto[]>([]);
   selectedMcps = signal<McpDto[]>([]);
   fileExtensions = signal<string[]>([]);
+  projectId = signal<string | undefined>(undefined);
 
   // Search functionality
   sessions = signal<SessionDto[]>([]);

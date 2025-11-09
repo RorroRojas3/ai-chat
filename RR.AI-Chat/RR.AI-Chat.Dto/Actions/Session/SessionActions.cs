@@ -2,6 +2,19 @@
 
 namespace RR.AI_Chat.Dto.Actions.Session
 {
+    public class CreateSessionActionDto
+    {
+        public Guid? ProjectId { get; set; }
+    }
+
+    public class CreateSessionActionDtoValidator : AbstractValidator<CreateSessionActionDto>
+    {
+        public CreateSessionActionDtoValidator()
+        {
+            RuleFor(x => x.ProjectId).NotEmpty().When(x => x.ProjectId.HasValue);
+        }
+    }
+
     public class DeactivateSessionBulkActionDto
     {
         public List<Guid> SessionIds { get; set; } = [];

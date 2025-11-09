@@ -1,6 +1,7 @@
 export interface SessionDto {
   id: string;
   name: string;
+  projectId?: string;
   dateCreated: string; // ISO date string from API
   dateModified: string; // ISO date string from API
 }

@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { PaginatedResponseDto } from '../dtos/PaginatedResponseDto';
 import { DeactivateSessionBulkActionDto } from '../dtos/actions/session/DeactivateSessionBulkActionDto';
 import { RenameSessionActionDto } from '../dtos/actions/session/RenameSessionActionDto';
+import { CreateSessionActioDto } from '../dtos/actions/session/CreateSessionActioDto';
 
 @Injectable({
   providedIn: 'root',
@@ -16,10 +17,11 @@ export class SessionService {
   /**
    * Creates a new session by sending a POST request to the sessions endpoint.
    *
-   * @returns {Observable<SessionDto>} An observable that emits the created session data
+   * @param request - The data transfer object containing the information needed to create a session
+   * @returns An Observable that emits the created SessionDto upon successful completion
    */
-  createSession(): Observable<SessionDto> {
-    return this.http.post<SessionDto>(`${environment.apiUrl}sessions`, {});
+  createSession(request: CreateSessionActioDto): Observable<SessionDto> {
+    return this.http.post<SessionDto>(`${environment.apiUrl}sessions`, request);
   }
 
   /**

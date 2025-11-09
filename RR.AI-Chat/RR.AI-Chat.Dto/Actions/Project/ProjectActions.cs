@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using System.Text.Json.Serialization;
 
-namespace RR.AI_Chat.Dto.Actions.Session
+namespace RR.AI_Chat.Dto.Actions.Project
 {
     public class UpsertProjectActionDto
     {

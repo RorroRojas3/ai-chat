@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Actions.Chat;
 using RR.AI_Chat.Service;
 

@@ -10,8 +10,6 @@ namespace RR.AI_Chat.Dto.Actions.Chat
 
         public Guid ServiceId { get; set; }
 
-        public Guid? ProjectId { get; set; }
-
         public List<McpDto> McpServers { get; set; } = [];
     }
 
@@ -25,6 +23,13 @@ namespace RR.AI_Chat.Dto.Actions.Chat
                 .NotEmpty().WithMessage("ModelId is required.");
             RuleFor(x => x.ServiceId)
                 .NotEmpty().WithMessage("ServiceId is required.");
+            RuleForEach(x => x.McpServers)
+                .ChildRules(mcp =>
+                {
+                    mcp.RuleFor(m => m.Name)
+                        .NotEmpty().WithMessage("MCP Server name is required.");
+                })
+                .When(x => x.McpServers != null && x.McpServers.Count > 0);
         }
     }
 }
