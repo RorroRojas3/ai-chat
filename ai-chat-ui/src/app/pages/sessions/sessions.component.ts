@@ -16,7 +16,7 @@ import { StoreService } from '../../store/store.service';
 import { SessionDeleteModalComponent } from '../../components/sessions/session-delete-modal/session-delete-modal.component';
 import { DeactivateSessionBulkActionDto } from '../../dtos/actions/session/DeactivateSessionBulkActionDto';
 import { SessionRenameModalComponent } from '../../components/sessions/session-rename-modal/session-rename-modal.component';
-import { RenameSessionActionDto } from '../../dtos/actions/session/RenameSessionActionDto';
+import { UpdateSessionActionDto } from '../../dtos/actions/session/UpdateSessionActionDto';
 
 @Component({
   selector: 'app-sessions',
@@ -351,10 +351,10 @@ export class SessionsComponent implements OnInit {
     }
 
     const sessionId = this.selectedSessionIds[0];
-    const request = new RenameSessionActionDto(sessionId, newName);
+    const request = new UpdateSessionActionDto(sessionId, newName);
 
     this.sessionService
-      .renameSession(request)
+      .updateSession(request)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

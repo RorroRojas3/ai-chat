@@ -28,16 +28,18 @@ namespace RR.AI_Chat.Dto.Actions.Session
         }
     }
 
-    public class RenameSessionActionDto
+    public class UpdateSessionActionDto
     {
         public Guid Id { get; set; }
 
         public string Name { get; set; } = null!;
+
+        public Guid? ProjectId { get; set; }
     }
 
-    public class RenameSessionActionDtoValidator : AbstractValidator<RenameSessionActionDto>
+    public class UpdateSessionActionDtoValidator : AbstractValidator<UpdateSessionActionDto>
     {
-        public RenameSessionActionDtoValidator()
+        public UpdateSessionActionDtoValidator()
         {
             RuleFor(x => x.Id).NotEmpty();
             RuleFor(x => x.Name).NotEmpty().MaximumLength(256);

@@ -5,7 +5,7 @@ import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { PaginatedResponseDto } from '../dtos/PaginatedResponseDto';
 import { DeactivateSessionBulkActionDto } from '../dtos/actions/session/DeactivateSessionBulkActionDto';
-import { RenameSessionActionDto } from '../dtos/actions/session/RenameSessionActionDto';
+import { UpdateSessionActionDto } from '../dtos/actions/session/UpdateSessionActionDto';
 import { CreateSessionActionDto } from '../dtos/actions/session/CreateSessionActionDto';
 
 @Injectable({
@@ -78,12 +78,12 @@ export class SessionService {
   }
 
   /**
-   * Renames an existing session.
+   * Updates an existing session.
    *
-   * @param request - The rename session request containing the session identifier and new name
-   * @returns An Observable that completes when the session has been successfully renamed
+   * @param request - The update session request containing the session identifier and new name
+   * @returns An Observable that completes when the session has been successfully updated
    */
-  renameSession(request: RenameSessionActionDto): Observable<void> {
-    return this.http.put<void>(`${environment.apiUrl}sessions/rename`, request);
+  updateSession(request: UpdateSessionActionDto): Observable<void> {
+    return this.http.put<void>(`${environment.apiUrl}sessions`, request);
   }
 }
