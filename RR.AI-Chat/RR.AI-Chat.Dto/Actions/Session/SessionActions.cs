@@ -11,7 +11,6 @@ namespace RR.AI_Chat.Dto.Actions.Session
     {
         public CreateSessionActionDtoValidator()
         {
-            RuleFor(x => x.ProjectId).NotEmpty().When(x => x.ProjectId.HasValue);
         }
     }
 
