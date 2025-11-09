@@ -136,16 +136,7 @@ export class PromptBoxComponent implements OnDestroy {
             this.storeService.streamMessage.set(
               createMessage('', false, undefined)
             );
-            // Refresh sessions based on current search state
-            if (this.storeService.hasMenuSessionSearchFilter()) {
-              this.sessionService
-                .searchSessions(this.storeService.menuSessionSearchFilter())
-                .subscribe((response) => {
-                  this.storeService.updateMenuSessions(response.items);
-                });
-            } else {
-              this.sessionService.loadMenuSessions();
-            }
+            this.sessionService.loadMenuSessions();
           },
           error: (error) => {
             this.resetPromptState();
