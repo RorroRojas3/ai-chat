@@ -44,46 +44,8 @@ export class MenuOffcanvasComponent implements OnInit {
    * Performs search using the session service
    */
   private performSearch(filter: string): void {
-    this.storeService.setSearchFilter(filter);
-
-    if (!filter.trim()) {
-      // If search is cleared, reload all sessions
-      this.loadAllSessions();
-      return;
-    }
-
-    this.storeService.setSearching(true);
-    this.sessionService.searchSessions(filter).subscribe({
-      next: (response) => {
-        this.storeService.sessions.set(response.items);
-        this.storeService.setSearching(false);
-      },
-      error: () => {
-        this.storeService.setSearching(false);
-      },
-    });
-  }
-
-  /**
-   * Loads all sessions without search filter
-   */
-  private loadAllSessions(): void {
-    this.sessionService.searchSessions('').subscribe({
-      next: (response) => {
-        this.storeService.sessions.set(response.items);
-      },
-    });
-  }
-
-  /**
-   * Refreshes sessions after streaming is complete
-   */
-  refreshSessions(): void {
-    if (this.storeService.hasSearchFilter()) {
-      this.performSearch(this.storeService.searchFilter());
-    } else {
-      this.loadAllSessions();
-    }
+    this.storeService.setMenuSessionSearchFilter(filter);
+    this.sessionService.loadMenuSessions();
   }
 
   /**
@@ -130,8 +92,8 @@ export class MenuOffcanvasComponent implements OnInit {
    * Clears the search term
    */
   clearSearch(): void {
-    this.storeService.clearSearchFilter();
-    this.loadAllSessions();
+    this.storeService.clearMenuSessionSearchFilter();
+    this.sessionService.loadMenuSessions();
   }
 
   /**

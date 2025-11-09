@@ -26,7 +26,12 @@ import { DocumentService } from './services/document.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavbarComponent, MenuOffcanvasComponent, NotificationComponent],
+  imports: [
+    RouterOutlet,
+    NavbarComponent,
+    MenuOffcanvasComponent,
+    NotificationComponent,
+  ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
@@ -113,7 +118,7 @@ export class AppComponent implements OnInit, OnDestroy {
       ]).subscribe(([models, sessions, mcps, fileExtensions]) => {
         this.storeService.models.set(models);
         this.storeService.selectedModel.set(models[0]);
-        this.storeService.sessions.set(sessions.items);
+        this.storeService.updateMenuSessions(sessions.items);
         this.storeService.mcps.set(mcps);
         this.storeService.fileExtensions.set(fileExtensions);
       });

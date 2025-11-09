@@ -115,21 +115,31 @@ namespace RR.AI_Chat.Service
         Task DeactivateSessionBulkAsync(DeactivateSessionBulkActionDto request, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Renames a session asynchronously based on the provided request.
+        /// Updates an existing chat session asynchronously with the provided information.
         /// </summary>
-        /// <param name="request">The request containing the session ID and the new name.</param>
+        /// <param name="request">The request containing the session ID, updated name, and optional project ID.</param>
         /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
+        /// <remarks>
+        /// This method performs the following operations:
+        /// <list type="number">
+        /// <item><description>Validates the request using the update session validator</description></item>
+        /// <item><description>Retrieves the current user ID from the token service</description></item>
+        /// <item><description>Updates the session name, project association, and modification date for sessions matching the ID and user</description></item>
+        /// <item><description>Logs success if the session was updated, or a warning if no session was found</description></item>
+        /// </list>
+        /// Only active sessions (not deactivated) belonging to the current user can be updated.
+        /// </remarks>
         /// <exception cref="ArgumentNullException">Thrown when the request is null.</exception>
         /// <exception cref="ValidationException">Thrown when the request validation fails.</exception>
-        Task RenameSessionAsync(RenameSessionActionDto request, CancellationToken cancellationToken);
+        Task UpdateSessionAsync(UpdateSessionActionDto request, CancellationToken cancellationToken);
     }
 
     public class SessionService(ILogger<SessionService> logger,
         [FromKeyedServices("azureaifoundry")] IChatClient openAiClient,
         ITokenService tokenService,
         IValidator<CreateSessionActionDto> createSessionValidator,
-        IValidator<RenameSessionActionDto> renameSessionValidator,
+        IValidator<UpdateSessionActionDto> updateSessionValidator,
         IValidator<CreateChatStreamActionDto> createChatStreamValidator,
         IValidator<DeactivateSessionBulkActionDto> deactivateSessionBulkValidator,
         AIChatDbContext ctx) : ISessionService
@@ -138,7 +148,7 @@ namespace RR.AI_Chat.Service
         private readonly IChatClient _chatClient = openAiClient;
         private readonly ITokenService _tokenService = tokenService;
         private readonly IValidator<CreateSessionActionDto> _createSessionValidator = createSessionValidator;
-        private readonly IValidator<RenameSessionActionDto> _renameSessionValidator = renameSessionValidator;
+        private readonly IValidator<UpdateSessionActionDto> _updateSessionValidator = updateSessionValidator;
         private readonly IValidator<CreateChatStreamActionDto> _createChatStreamValidator = createChatStreamValidator;
         private readonly IValidator<DeactivateSessionBulkActionDto> _deactivateSessionBulkValidator = deactivateSessionBulkValidator;
         private readonly AIChatDbContext _ctx = ctx;
@@ -433,11 +443,11 @@ namespace RR.AI_Chat.Service
         }
 
         /// <inheritdoc />
-        public async Task RenameSessionAsync(RenameSessionActionDto request, CancellationToken cancellationToken)
+        public async Task UpdateSessionAsync(UpdateSessionActionDto request, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(request);
 
-            _renameSessionValidator.ValidateAndThrow(request);
+            _updateSessionValidator.ValidateAndThrow(request);
 
             var userId = _tokenService.GetOid()!.Value;
 
@@ -445,16 +455,17 @@ namespace RR.AI_Chat.Service
                 .Where(x => x.Id == request.Id && x.UserId == userId && !x.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.Name, request.Name)
+                    .SetProperty(x => x.ProjectId, request.ProjectId)
                     .SetProperty(x => x.DateModified, DateTimeOffset.UtcNow),
                     cancellationToken);
 
             if (rows > 0)
             {
-                _logger.LogInformation("Session {Id} successfully renamed session.", request.Id);
+                _logger.LogInformation("Session {Id} successfully updated.", request.Id);
             }
             else
             {
-                _logger.LogWarning("Session {Id} not found or could not be renamed.", request.Id);
+                _logger.LogWarning("Session {Id} not found or could not be updated.", request.Id);
             }
         }
     }

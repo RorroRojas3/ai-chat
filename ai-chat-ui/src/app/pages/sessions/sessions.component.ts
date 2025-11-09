@@ -5,8 +5,11 @@ import { Router } from '@angular/router';
 import { SessionService } from '../../services/session.service';
 import { SessionDto } from '../../dtos/SessionDto';
 import {
+  catchError,
   debounceTime,
   distinctUntilChanged,
+  EMPTY,
+  finalize,
   Subject,
   switchMap,
   tap,
@@ -16,7 +19,8 @@ import { StoreService } from '../../store/store.service';
 import { SessionDeleteModalComponent } from '../../components/sessions/session-delete-modal/session-delete-modal.component';
 import { DeactivateSessionBulkActionDto } from '../../dtos/actions/session/DeactivateSessionBulkActionDto';
 import { SessionRenameModalComponent } from '../../components/sessions/session-rename-modal/session-rename-modal.component';
-import { RenameSessionActionDto } from '../../dtos/actions/session/RenameSessionActionDto';
+import { UpdateSessionActionDto } from '../../dtos/actions/session/UpdateSessionActionDto';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-sessions',
@@ -31,25 +35,18 @@ import { RenameSessionActionDto } from '../../dtos/actions/session/RenameSession
 })
 export class SessionsComponent implements OnInit {
   // Constants
-  readonly PAGE_SIZE = 10;
   readonly SEARCH_DEBOUNCE_MS = 600;
-  readonly STORE_SYNC_LIMIT = 10;
 
   // Inject dependencies using Angular 19 pattern
+  public readonly storeService = inject(StoreService);
   private readonly sessionService = inject(SessionService);
   private readonly router = inject(Router);
-  private readonly storeService = inject(StoreService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly notificationService = inject(NotificationService);
 
-  sessions: SessionDto[] = [];
-  searchFilter = '';
-  isSearching = false;
   isLoadingMore = false;
 
   // Virtual scrolling properties
-  currentSkip = 0;
-  totalCount = 0;
-  hasMoreSessions = true;
   showDeleteModal = false;
   selectedSessionIds: string[] = [];
   showRenameModal = false;
@@ -60,81 +57,31 @@ export class SessionsComponent implements OnInit {
 
   private searchSubject = new Subject<string>();
 
-  constructor() {
+  ngOnInit(): void {
+    this.storeService.setPageSessionSearchFilter('');
+
     // Set up debounced search with switchMap to avoid race conditions
     this.searchSubject
       .pipe(
         debounceTime(this.SEARCH_DEBOUNCE_MS),
         distinctUntilChanged(),
-        tap(() => {
-          this.isSearching = true;
-          this.currentSkip = 0; // Reset to beginning on new search
-          this.sessions = []; // Clear existing sessions on new search
-        }),
-        switchMap((filter) => {
-          this.searchFilter = filter;
-          return this.sessionService.searchSessions(
-            filter,
-            this.currentSkip,
-            this.PAGE_SIZE
-          );
-        }),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe({
-        next: (response) => {
-          this.handleSessionsResponse(response.items, response.totalCount);
-          this.isSearching = false;
-        },
-        error: () => {
-          this.isSearching = false;
-        },
+      .subscribe((filter) => {
+        this.sessionService.clearPageSessions();
+        this.sessionService.loadPageSessions(
+          filter,
+          this.storeService.pageSessionSkip(),
+          this.storeService.SESSION_PAGE_SIZE
+        );
       });
-  }
 
-  ngOnInit(): void {
-    this.loadSessions();
-  }
-
-  /**
-   * Handles session response and updates component state
-   */
-  private handleSessionsResponse(
-    items: SessionDto[],
-    totalCount: number,
-    append = false
-  ): void {
-    this.totalCount = totalCount;
-    this.hasMoreSessions = this.currentSkip + this.PAGE_SIZE < totalCount;
-
-    // API already returns SessionDto-shaped objects
-    if (append) {
-      this.sessions = [...this.sessions, ...items];
-    } else {
-      this.sessions = items;
-    }
-  }
-
-  /**
-   * Loads initial sessions
-   */
-  private loadSessions(): void {
-    this.isSearching = true;
-    this.currentSkip = 0;
-    this.sessions = [];
-
-    this.sessionService
-      .searchSessions(this.searchFilter, this.currentSkip, this.PAGE_SIZE)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response) => {
-          this.handleSessionsResponse(response.items, response.totalCount);
-          this.isSearching = false;
-        },
-        error: () => {
-          this.isSearching = false;
-        },
-      });
+    // Load initial sessions
+    this.sessionService.loadPageSessions(
+      this.storeService.pageSessionSearchFilter(),
+      0,
+      this.storeService.SESSION_PAGE_SIZE
+    );
   }
 
   /**
@@ -149,8 +96,11 @@ export class SessionsComponent implements OnInit {
    * Clears the search term and reloads sessions
    */
   clearSearch(): void {
-    this.searchFilter = '';
-    this.loadSessions();
+    this.sessionService.loadPageSessions(
+      '',
+      0,
+      this.storeService.SESSION_PAGE_SIZE
+    );
   }
 
   /**
@@ -164,28 +114,35 @@ export class SessionsComponent implements OnInit {
    * Loads more sessions (next page) and appends them to the existing list
    */
   loadMoreSessions(): void {
-    if (!this.hasMoreSessions || this.isLoadingMore) {
+    if (!this.storeService.pageSessionHasMore() || this.isLoadingMore) {
       return;
     }
 
     this.isLoadingMore = true;
-    this.currentSkip += this.PAGE_SIZE;
+    this.storeService.setPageSessionSkip(
+      this.storeService.pageSessionSkip() + this.storeService.SESSION_PAGE_SIZE
+    );
 
     this.sessionService
-      .searchSessions(this.searchFilter, this.currentSkip, this.PAGE_SIZE)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response) => {
-          this.handleSessionsResponse(
-            response.items,
-            response.totalCount,
-            true
-          );
-          this.isLoadingMore = false;
-        },
-        error: () => {
-          this.isLoadingMore = false;
-        },
+      .searchSessions(
+        this.storeService.pageSessionSearchFilter(),
+        this.storeService.pageSessionSkip(),
+        this.storeService.SESSION_PAGE_SIZE
+      )
+      .pipe(
+        catchError(() => {
+          this.notificationService.error('Error loading chats.');
+          return EMPTY;
+        }),
+        finalize(() => (this.isLoadingMore = false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((response) => {
+        this.sessionService.handlePageSessionsResponse(
+          response.items,
+          response.totalCount,
+          true
+        );
       });
   }
 
@@ -278,14 +235,16 @@ export class SessionsComponent implements OnInit {
       const sessionId = this.selectedSessionIds[0];
       this.sessionService
         .deactivateSession(sessionId)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: () => {
-            this.handleDeleteSuccess();
-          },
-          error: () => {
+        .pipe(
+          catchError(() => {
+            this.notificationService.error('Error deleting chat.');
             this.closeDeleteModal();
-          },
+            return EMPTY;
+          }),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(() => {
+          this.handleDeleteSuccess();
         });
     } else {
       // Multiple sessions, use bulk delete endpoint
@@ -294,14 +253,16 @@ export class SessionsComponent implements OnInit {
 
       this.sessionService
         .deactivateSessionBulk(bulkRequest)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: () => {
-            this.handleDeleteSuccess();
-          },
-          error: () => {
+        .pipe(
+          catchError(() => {
+            this.notificationService.error('Error deleting chats.');
             this.closeDeleteModal();
-          },
+            return EMPTY;
+          }),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(() => {
+          this.handleDeleteSuccess();
         });
     }
   }
@@ -311,23 +272,12 @@ export class SessionsComponent implements OnInit {
    */
   private handleDeleteSuccess(): void {
     this.closeDeleteModal();
-    this.loadSessions();
-    this.updateStoreWithLatestSessions();
-  }
-
-  /**
-   * Updates the store with the first page of sessions (no filters, no skip)
-   */
-  private updateStoreWithLatestSessions(): void {
-    this.sessionService
-      .searchSessions('', 0, this.STORE_SYNC_LIMIT)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response) => {
-          // API already returns SessionDto-shaped objects
-          this.storeService.updateSessions(response.items);
-        },
-      });
+    this.sessionService.loadPageSessions(
+      this.storeService.pageSessionSearchFilter(),
+      0,
+      this.storeService.SESSION_PAGE_SIZE
+    );
+    this.sessionService.loadMenuSessions();
   }
 
   closeDeleteModal(): void {
@@ -336,7 +286,9 @@ export class SessionsComponent implements OnInit {
   }
 
   onRenameSession(sessionId: string): void {
-    const session = this.sessions.find((s) => s.id === sessionId);
+    const session = this.storeService
+      .pageSessions()
+      .find((s) => s.id === sessionId);
     if (session) {
       this.selectedSessionIds = [sessionId];
       this.sessionName = session.name;
@@ -351,18 +303,20 @@ export class SessionsComponent implements OnInit {
     }
 
     const sessionId = this.selectedSessionIds[0];
-    const request = new RenameSessionActionDto(sessionId, newName);
+    const request = new UpdateSessionActionDto(sessionId, newName);
 
     this.sessionService
-      .renameSession(request)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.handleRenameSuccess();
-        },
-        error: () => {
+      .updateSession(request)
+      .pipe(
+        catchError(() => {
+          this.notificationService.error('Error renaming chat.');
           this.closeRenameModal();
-        },
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => {
+        this.handleRenameSuccess();
       });
   }
 
@@ -371,8 +325,12 @@ export class SessionsComponent implements OnInit {
    */
   private handleRenameSuccess(): void {
     this.closeRenameModal();
-    this.loadSessions();
-    this.updateStoreWithLatestSessions();
+    this.sessionService.loadPageSessions(
+      this.storeService.pageSessionSearchFilter(),
+      0,
+      this.storeService.SESSION_PAGE_SIZE
+    );
+    this.sessionService.loadMenuSessions();
   }
 
   /**
