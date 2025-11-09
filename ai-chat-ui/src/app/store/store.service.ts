@@ -87,15 +87,6 @@ export class StoreService {
   }
 
   /**
-   * Checks if a menu session search filter is currently active
-   *
-   * @returns True if the search filter contains non-whitespace characters, false otherwise
-   */
-  hasMenuSessionSearchFilter(): boolean {
-    return this.menuSessionSearchFilter().trim().length > 0;
-  }
-
-  /**
    * Updates the menu sessions with the provided array of session data transfer objects
    *
    * @param sessions - An array of SessionDto objects to set as the current menu sessions
