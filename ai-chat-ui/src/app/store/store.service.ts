@@ -10,6 +10,9 @@ import { McpDto } from '../dtos/McpDto';
 export class StoreService {
   constructor() {}
 
+  // CONSTANTS
+  readonly SESSION_PAGE_SIZE = 10;
+
   sessionId = signal<string>('');
   isStreaming = signal<boolean>(false);
   showStreamLoader = signal<boolean>(false);
@@ -24,9 +27,16 @@ export class StoreService {
   projectId = signal<string | undefined>(undefined);
 
   // Search functionality
-  sessions = signal<SessionDto[]>([]);
-  searchFilter = signal<string>('');
-  isSearching = signal<boolean>(false);
+  menuSessions = signal<SessionDto[]>([]);
+  menuSessionSearchFilter = signal<string>('');
+  menuIsSessionSearching = signal<boolean>(false);
+
+  pageSessions = signal<SessionDto[]>([]);
+  pageSessionSearchFilter = signal<string>('');
+  pageIsSessionSearching = signal<boolean>(false);
+  pageSessionSkip = signal<number>(0);
+  pageSessionTotalCount = signal<number>(0);
+  pageSessionHasMore = signal<boolean>(true);
 
   /**
    * Resets all store states to their initial values, preparing for a new chat session.
@@ -52,37 +62,106 @@ export class StoreService {
   }
 
   /**
-   * Sets the search filter and marks searching state
+   * Sets the search filter for menu sessions
+   *
+   * @param query - The search query string to filter sessions by
    */
-  setSearchFilter(query: string): void {
-    this.searchFilter.set(query);
+  setMenuSessionSearchFilter(query: string): void {
+    this.menuSessionSearchFilter.set(query);
   }
 
   /**
-   * Clears the search filter
+   * Clears the menu session search filter, resetting it to an empty string
    */
-  clearSearchFilter(): void {
-    this.searchFilter.set('');
+  clearMenuSessionSearchFilter(): void {
+    this.menuSessionSearchFilter.set('');
   }
 
   /**
-   * Sets the searching state
+   * Sets the searching state for menu sessions
+   *
+   * @param isSearching - Boolean flag indicating whether a search operation is in progress
    */
-  setSearching(isSearching: boolean): void {
-    this.isSearching.set(isSearching);
+  setMenuSessionSearching(isSearching: boolean): void {
+    this.menuIsSessionSearching.set(isSearching);
   }
 
   /**
-   * Checks if search filter is active
+   * Checks if a menu session search filter is currently active
+   *
+   * @returns True if the search filter contains non-whitespace characters, false otherwise
    */
-  hasSearchFilter(): boolean {
-    return this.searchFilter().trim().length > 0;
+  hasMenuSessionSearchFilter(): boolean {
+    return this.menuSessionSearchFilter().trim().length > 0;
   }
 
   /**
-   * Updates the sessions list in the store with the first 10 sessions (no filters, no skip)
+   * Updates the menu sessions with the provided array of session data transfer objects
+   *
+   * @param sessions - An array of SessionDto objects to set as the current menu sessions
    */
-  updateSessions(sessions: SessionDto[]): void {
-    this.sessions.set(sessions);
+  updateMenuSessions(sessions: SessionDto[]): void {
+    this.menuSessions.set(sessions);
+  }
+
+  /**
+   * Sets the search filter for page sessions
+   *
+   * @param query - The search query string to filter sessions by
+   */
+  setPageSessionSearchFilter(query: string): void {
+    this.pageSessionSearchFilter.set(query);
+  }
+
+  /**
+   * Clears the page session search filter, resetting it to an empty string
+   */
+  clearPageSessionSearchFilter(): void {
+    this.pageSessionSearchFilter.set('');
+  }
+
+  /**
+   * Sets the searching state for page sessions
+   *
+   * @param isSearching - Boolean flag indicating whether a search operation is in progress
+   */
+  setPageSessionSearching(isSearching: boolean): void {
+    this.pageIsSessionSearching.set(isSearching);
+  }
+
+  /**
+   * Sets the skip offset for page session pagination
+   *
+   * @param skip - The number of sessions to skip when fetching the next page
+   */
+  setPageSessionSkip(skip: number): void {
+    this.pageSessionSkip.set(skip);
+  }
+
+  /**
+   * Sets the total count of page sessions available
+   *
+   * @param totalCount - The total number of sessions available for pagination
+   */
+  setPageSessionTotalCount(totalCount: number): void {
+    this.pageSessionTotalCount.set(totalCount);
+  }
+
+  /**
+   * Sets whether there are more page sessions available to load
+   *
+   * @param hasMore - Boolean flag indicating if additional sessions can be loaded
+   */
+  setPageSessionHasMore(hasMore: boolean): void {
+    this.pageSessionHasMore.set(hasMore);
+  }
+
+  /**
+   * Updates the page sessions with the provided array of session data transfer objects
+   *
+   * @param sessions - An array of SessionDto objects to set as the current page sessions
+   */
+  updatePageSessions(sessions: SessionDto[]): void {
+    this.pageSessions.set(sessions);
   }
 }

@@ -1,18 +1,22 @@
 import { inject, Injectable } from '@angular/core';
 import { SessionDto } from '../dtos/SessionDto';
-import { Observable } from 'rxjs';
+import { catchError, EMPTY, finalize, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { PaginatedResponseDto } from '../dtos/PaginatedResponseDto';
 import { DeactivateSessionBulkActionDto } from '../dtos/actions/session/DeactivateSessionBulkActionDto';
 import { UpdateSessionActionDto } from '../dtos/actions/session/UpdateSessionActionDto';
 import { CreateSessionActionDto } from '../dtos/actions/session/CreateSessionActionDto';
+import { StoreService } from '../store/store.service';
+import { NotificationService } from './notification.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SessionService {
   private readonly http = inject(HttpClient);
+  private readonly storeService = inject(StoreService);
+  private readonly notificationService = inject(NotificationService);
 
   /**
    * Creates a new session by sending a POST request to the sessions endpoint.
@@ -85,5 +89,108 @@ export class SessionService {
    */
   updateSession(request: UpdateSessionActionDto): Observable<void> {
     return this.http.put<void>(`${environment.apiUrl}sessions`, request);
+  }
+
+  /**
+   * Loads and updates the menu sessions in the store.
+   *
+   * Fetches sessions based on the current menu search filter and updates the store
+   * with the results. Shows an error notification if the request fails.
+   * Sets the menu session searching state while the request is in progress.
+   */
+  loadMenuSessions(): void {
+    this.storeService.setMenuSessionSearching(true);
+    this.searchSessions(
+      this.storeService.menuSessionSearchFilter(),
+      0,
+      this.storeService.SESSION_PAGE_SIZE
+    )
+      .pipe(
+        catchError(() => {
+          this.notificationService.error('Error loading chats.');
+          return EMPTY;
+        }),
+        finalize(() => this.storeService.setMenuSessionSearching(false))
+      )
+      .subscribe((response) => {
+        this.storeService.updateMenuSessions(response.items);
+      });
+  }
+
+  /**
+   * Loads page sessions with the specified filter and pagination parameters.
+   *
+   * Updates the store with the search filter, skip offset, and total count, then fetches
+   * sessions from the API. Shows an error notification if the request fails.
+   * Sets the page session searching state while the request is in progress.
+   *
+   * @param filter - The search filter string to match against sessions
+   * @param skip - The number of records to skip for pagination (default: 0)
+   * @param take - The number of records to retrieve (default: 10)
+   */
+  loadPageSessions(filter: string, skip: number = 0, take: number = 10): void {
+    this.storeService.setPageSessionSearching(true);
+    this.storeService.setPageSessionSearchFilter(filter);
+    this.storeService.setPageSessionSkip(skip);
+    this.storeService.setPageSessionTotalCount(take);
+    this.searchSessions(filter, skip, take)
+      .pipe(
+        catchError(() => {
+          this.notificationService.error('Error loading chats.');
+          return EMPTY;
+        }),
+        finalize(() => this.storeService.setPageSessionSearching(false))
+      )
+      .subscribe((response) => {
+        this.handlePageSessionsResponse(response.items, response.totalCount);
+      });
+  }
+
+  /**
+   * Clears all page sessions data from the store.
+   *
+   * Resets the page sessions array to empty, resets the skip offset to 0,
+   * and sets the total count to 0.
+   */
+  clearPageSessions(): void {
+    this.storeService.updatePageSessions([]);
+    this.storeService.setPageSessionSkip(0);
+    this.storeService.setPageSessionTotalCount(0);
+  }
+
+  /**
+   * Handles the response from the page sessions API and updates the store accordingly.
+   *
+   * @param items - Array of session DTOs returned from the API
+   * @param totalCount - Total number of sessions available
+   * @param append - If true, appends items to existing sessions; if false, replaces them. Defaults to false
+   *
+   * @remarks
+   * This method performs the following operations:
+   * - Updates the total count of page sessions in the store
+   * - Calculates and sets whether more sessions are available for pagination
+   * - Either appends the new items to existing sessions or replaces them entirely based on the append flag
+   */
+  handlePageSessionsResponse(
+    items: SessionDto[],
+    totalCount: number,
+    append = false
+  ): void {
+    this.storeService.setPageSessionTotalCount(totalCount);
+    this.storeService.setPageSessionHasMore(
+      this.storeService.pageSessionSkip() +
+        this.storeService.SESSION_PAGE_SIZE <
+        totalCount
+    );
+
+    // API already returns SessionDto-shaped objects
+    if (append) {
+      this.storeService.updatePageSessions([
+        ...this.storeService.pageSessions(),
+        ...items,
+      ]);
+    } else {
+      this.storeService.updatePageSessions(items);
+    }
   }
 }

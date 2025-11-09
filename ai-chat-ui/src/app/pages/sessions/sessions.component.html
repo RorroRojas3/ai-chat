@@ -29,12 +29,12 @@
             type="text"
             class="form-control sessions-search__input"
             placeholder="Search chats..."
-            [value]="searchFilter"
+            [value]="storeService.pageSessionSearchFilter()"
             (input)="onSearchChange($event)"
             aria-label="Search chat sessions"
             aria-describedby="sessions-search-help"
           />
-          @if (searchFilter) {
+          @if (storeService.pageSessionSearchFilter()) {
           <button
             class="btn btn-outline-secondary sessions-search__clear"
             type="button"
@@ -53,11 +53,12 @@
       <!-- Total count display -->
       <div class="mb-2 d-flex justify-content-between align-items-center">
         <p class="text-muted mb-0 d-flex align-items-center">
-          @if (searchFilter) {
-          <i class="bi bi-search me-2"></i>{{ totalCount }} chats matching "{{
-            searchFilter
+          @if (storeService.pageSessionSearchFilter()) {
+          <i class="bi bi-search me-2"></i
+          >{{ storeService.pageSessionTotalCount() }} chats matching "{{
+            storeService.pageSessionSearchFilter()
           }}" } @else { <i class="bi bi-chat-text me-2"></i
-          >{{ totalCount }} chats with RR-GPT }
+          >{{ storeService.pageSessionTotalCount() }} chats with RR-GPT }
         </p>
 
         <!-- Action buttons - shown when sessions are selected -->
@@ -87,15 +88,15 @@
       <!-- Sessions list with scrollable container -->
       <div class="sessions-list-container mb-5">
         <div class="sessions-list pe-2" role="list" aria-label="Chat sessions">
-          @if (isSearching) {
+          @if (storeService.pageIsSessionSearching()) {
           <div class="alert alert-info" role="status" aria-live="polite">
             <i class="bi bi-search me-2"></i>
             Searching...
           </div>
-          } @else { @if (sessions.length > 0) {
+          } @else { @if (storeService.pageSessions().length > 0) {
           <ul class="list-group">
-            @for (session of sessions; track trackBySessionId($index, session))
-            {
+            @for (session of storeService.pageSessions(); track
+            trackBySessionId($index, session)) {
             <li
               class="mb-2 p-3 list-group-item list-group-item-action sessions-list__item rounded-3"
               (mouseenter)="onSessionMouseEnter(session.id)"
@@ -212,7 +213,8 @@
           </ul>
 
           <!-- Show More Button -->
-          @if (hasMoreSessions && !isSearching) {
+          @if (storeService.pageSessionHasMore() &&
+          !storeService.pageIsSessionSearching()) {
           <div class="d-flex justify-content-center mt-1">
             <button
               type="button"
@@ -240,9 +242,10 @@
             role="status"
             aria-live="polite"
           >
-            @if (searchFilter) {
+            @if (storeService.pageSessionSearchFilter()) {
             <i class="bi bi-search me-2"></i>
-            No chats found for "{{ searchFilter }}" } @else {
+            No chats found for "{{ storeService.pageSessionSearchFilter() }}" }
+            @else {
             <i class="bi bi-chat-text me-2"></i>
             No chat sessions available }
           </div>

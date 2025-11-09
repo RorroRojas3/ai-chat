@@ -137,15 +137,15 @@ export class PromptBoxComponent implements OnDestroy {
               createMessage('', false, undefined)
             );
             // Refresh sessions based on current search state
-            if (this.storeService.hasSearchFilter()) {
+            if (this.storeService.menuIsSessionSearching()) {
               this.sessionService
-                .searchSessions(this.storeService.searchFilter())
+                .searchSessions(this.storeService.menuSessionSearchFilter())
                 .subscribe((response) => {
-                  this.storeService.sessions.set(response.items);
+                  this.storeService.updateMenuSessions(response.items);
                 });
             } else {
               this.sessionService.searchSessions('').subscribe((response) => {
-                this.storeService.sessions.set(response.items);
+                this.storeService.updateMenuSessions(response.items);
               });
             }
           },
