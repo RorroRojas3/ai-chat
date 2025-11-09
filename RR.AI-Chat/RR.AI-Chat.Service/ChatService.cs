@@ -85,27 +85,40 @@ namespace RR.AI_Chat.Service
                 var chatOptions = await CreateChatOptions(sessionId, model, request.McpServers, cancellationToken).ConfigureAwait(false);
                 StringBuilder sb = new();
                 long totalInputTokens = 0, totalOutputTokens = 0;
-                await foreach (var message in chatClient.GetStreamingResponseAsync(conversations, chatOptions, cancellationToken))
+
+                try
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
 
-                    if (!string.IsNullOrEmpty(message.Text))
+                    await foreach (var message in chatClient.GetStreamingResponseAsync(conversations, chatOptions, cancellationToken))
                     {
-                        sb.Append(message.Text);
-                    }
+                        cancellationToken.ThrowIfCancellationRequested();
 
-                    if (message.Contents != null && 
-                        message.Contents.Count > 0)
-                    {
-                        // Check for usage content to track token consumption during streaming
-                        var usageContent = message.Contents.OfType<UsageContent>().FirstOrDefault();
-                        if (usageContent != null)
+                        if (!string.IsNullOrEmpty(message.Text))
                         {
-                            totalInputTokens += usageContent.Details?.InputTokenCount ?? 0;
-                            totalOutputTokens += usageContent.Details?.OutputTokenCount ?? 0;
+                            sb.Append(message.Text);
                         }
+
+                        if (message.Contents != null &&
+                            message.Contents.Count > 0)
+                        {
+                            // Check for usage content to track token consumption during streaming
+                            var usageContent = message.Contents.OfType<UsageContent>().FirstOrDefault();
+                            if (usageContent != null)
+                            {
+                                totalInputTokens += usageContent.Details?.InputTokenCount ?? 0;
+                                totalOutputTokens += usageContent.Details?.OutputTokenCount ?? 0;
+                            }
+                        }
+                        yield return message.Text;
                     }
-                    yield return message.Text;
+                }
+                finally
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        _logger.LogInformation("Streaming for session {SessionId} was cancelled.", sessionId);
+                        lockReleaser.Dispose();
+                    }
                 }
 
                 // Build updated conversation list

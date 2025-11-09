@@ -29,19 +29,6 @@
   }
 }
 
-.btn-prompt-box {
-  --bs-btn-color: #fff;
-  --bs-btn-bg: var(--color-accent);
-  --bs-btn-border-color: var(--color-accent);
-  --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: var(--color-navy);
-  --bs-btn-hover-border-color: var(--color-navy);
-  --bs-btn-focus-shadow-rgb: 28, 60, 98;
-  --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: var(--color-navy);
-  --bs-btn-active-border-color: var(--color-navy);
-}
-
 // Drag and drop overlay
 .drag-overlay {
   position: absolute;

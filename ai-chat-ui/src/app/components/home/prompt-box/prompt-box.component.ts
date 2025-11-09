@@ -45,7 +45,6 @@ export class PromptBoxComponent implements OnDestroy {
   // Constants
   readonly JOB_POLLING_INTERVAL_MS = 5000;
 
-  // Inject dependencies using Angular 19 pattern
   public readonly storeService = inject(StoreService);
   private readonly chatService = inject(ChatService);
   private readonly sanitizer = inject(DomSanitizer);
@@ -78,13 +77,16 @@ export class PromptBoxComponent implements OnDestroy {
   }
 
   async onClickCreateSession(): Promise<void> {
-    if (!this.prompt.trim() || this.storeService.disablePromptButton()) {
+    if (!this.prompt.trim() || this.storeService.isStreaming()) {
       return;
     }
 
     try {
       this.storeService.stream.set('');
-      this.storeService.disablePromptButton.set(true);
+      this.storeService.isStreaming.set(true);
+      this.storeService.showStreamLoader.set(true);
+      const promptText = this.prompt;
+      this.prompt = '';
 
       if (this.storeService.sessionId() === '') {
         const session = await firstValueFrom(
@@ -97,7 +99,7 @@ export class PromptBoxComponent implements OnDestroy {
       this.showAttachedFiles = false;
       this.storeService.messages.update((messages) => [
         ...messages,
-        createMessage(this.prompt, true, undefined),
+        createMessage(promptText, true, undefined),
       ]);
 
       // Upload attached files to the session
@@ -108,13 +110,14 @@ export class PromptBoxComponent implements OnDestroy {
         this.clearAllFiles();
       }
 
+      let firstStream = true;
       this.sseSubscription = this.chatService
-        .getServerSentEvent(this.prompt)
+        .getServerSentEvent(promptText)
         .subscribe({
           next: (message) => {
-            if (!this.storeService.isStreaming()) {
-              this.prompt = '';
-              this.storeService.isStreaming.set(true);
+            if (firstStream) {
+              firstStream = false;
+              this.storeService.showStreamLoader.set(false);
             }
             this.storeService.stream.update((stream) => stream + message);
             const html = this.md.render(this.storeService.stream());
@@ -127,7 +130,6 @@ export class PromptBoxComponent implements OnDestroy {
               ...messages,
               createMessage('', false, this.sanitizeHtml),
             ]);
-            this.storeService.disablePromptButton.set(false);
             this.storeService.isStreaming.set(false);
             this.storeService.streamMessage.set(
               createMessage('', false, undefined)
@@ -146,23 +148,48 @@ export class PromptBoxComponent implements OnDestroy {
             }
           },
           error: (error) => {
-            this.storeService.stream.set('');
-            this.storeService.disablePromptButton.set(false);
-            this.storeService.isStreaming.set(false);
-            this.storeService.streamMessage.set(
-              createMessage('', false, undefined)
-            );
+            this.resetPromptState();
           },
         });
     } catch (error) {
       // Handle errors appropriately
       console.error('Error in session creation:', error);
-      // You might want to show an error message to the user
-    } finally {
-      this.prompt = '';
-      this.showAttachedFiles = true;
-      this.clearAllFiles();
+      this.resetPromptState();
     }
+  }
+
+  /**
+   * Stops the current streaming session.
+   *
+   * Unsubscribes from the SSE (Server-Sent Events) subscription if active,
+   * clears the subscription reference, resets streaming state, clears the
+   * stream content, and resets the prompt input.
+   *
+   * @returns {void}
+   */
+  onClickStopSession(): void {
+    if (this.sseSubscription) {
+      this.sseSubscription.unsubscribe();
+      this.sseSubscription = undefined;
+    }
+    this.resetPromptState();
+  }
+
+  /**
+   * Resets the prompt input state and clears all associated data.
+   * This includes resetting streaming state, clearing the prompt text,
+   * clearing attached files, and showing the file attachment area.
+   *
+   * @private
+   */
+  private resetPromptState(): void {
+    this.storeService.isStreaming.set(false);
+    this.storeService.showStreamLoader.set(false);
+    this.storeService.stream.set('');
+    this.storeService.streamMessage.set(createMessage('', false, undefined));
+    this.prompt = '';
+    this.showAttachedFiles = true;
+    this.clearAllFiles();
   }
 
   /**
