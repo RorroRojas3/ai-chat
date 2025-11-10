@@ -102,9 +102,11 @@
       <a
         href="javascript:void(0);"
         class="list-group-item list-group-item-action menu-list__item"
+        [class.menu-list__item--active]="isCurrentSession(session.id)"
         (click)="onClickSession(session.id)"
         role="listitem"
         [attr.aria-label]="'Open chat: ' + session.name"
+        [attr.aria-current]="isCurrentSession(session.id) ? 'page' : null"
         >{{ getTruncatedSessionName(session) }}</a
       >
       } @empty { @if (storeService.menuSessionSearchFilter()) {
