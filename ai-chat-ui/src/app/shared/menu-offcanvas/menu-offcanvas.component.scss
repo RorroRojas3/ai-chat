@@ -39,6 +39,16 @@
           box-shadow: none;
         }
 
+        &--active {
+          background-color: var(--color-navy);
+          color: white;
+          font-weight: 600;
+          &:hover {
+            background-color: var(--color-navy);
+            opacity: 0.9;
+          }
+        }
+
         &--no-results {
           background-color: transparent;
           color: rgba(255, 255, 255, 0.6);

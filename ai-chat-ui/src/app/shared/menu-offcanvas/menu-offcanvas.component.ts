@@ -77,6 +77,13 @@ export class MenuOffcanvasComponent implements OnInit {
   }
 
   /**
+   * Checks if the given session ID matches the current active session
+   */
+  isCurrentSession(sessionId: string): boolean {
+    return this.storeService.session()?.id === sessionId;
+  }
+
+  /**
    * Handles the click event for selecting a session from the menu.
    * Finds the session in the menu sessions list, sets it as the active session,
    * and navigates to the session's chat page.
@@ -143,16 +150,30 @@ export class MenuOffcanvasComponent implements OnInit {
   }
 
   /**
-   * Shows the rename modal dialog by setting the showRenameModal flag to true.
-   * This method is typically called when the user initiates a rename action.
+   * Initiates the rename process for a specific session.
+   *
+   * Finds the session by ID, sets it as the active session in the store,
+   * and opens the rename modal.
+   *
+   * @param sessionId - The unique identifier of the session to rename
+   * @param event - The click event to stop propagation
+   * @returns void
    */
-  onShowRenameModal(): void {
-    this.showRenameModal = true;
+  onRenameSession(sessionId: string, event: Event): void {
+    event.stopPropagation();
+
+    const session = this.storeService
+      .menuSessions()
+      .find((s) => s.id === sessionId);
+    if (session) {
+      this.storeService.session.set(session);
+      this.showRenameModal = true;
+    }
   }
 
   /**
-   * Handles renaming a session with proper error handling and cleanup.
-   * Updates the current session name, refreshes menu sessions, and optionally
+   * Handles renaming the active session with proper error handling and cleanup.
+   * Updates the session name, refreshes menu sessions, and optionally
    * reloads page sessions if the renamed session is present in the page view.
    *
    * @param newName - The new name for the session
@@ -163,37 +184,37 @@ export class MenuOffcanvasComponent implements OnInit {
    * - Prevents memory leaks by using takeUntilDestroyed
    * - Shows error notifications if the rename operation fails
    * - Ensures the modal is closed in the finalize block regardless of success/failure
-   * - Updates both the active session and menu sessions list
+   * - Updates the active session in the store
+   * - Reloads menu sessions to reflect the change
    * - Conditionally reloads page sessions if the session exists in that view
    */
-  onRenameSession(newName: string): void {
+  handleRenameSession(newName: string): void {
     const currentSession = this.storeService.session();
     if (!currentSession) {
+      this.onCloseRenameModal();
       return;
     }
 
-    const request = new UpdateSessionActionDto(
-      currentSession.id,
-      newName,
-      currentSession.projectId
-    );
+    const request = new UpdateSessionActionDto(currentSession.id, newName);
 
     this.sessionService
       .updateSession(request)
       .pipe(
         catchError(() => {
-          this.notificationService.error(
-            'Failed to rename session. Please try again.'
-          );
+          this.notificationService.error('Error renaming chat.');
           return EMPTY;
         }),
         finalize(() => this.onCloseRenameModal()),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((response) => {
+        // Update the active session with the response
         this.storeService.session.set(response);
+
+        // Reload menu sessions to reflect the change
         this.sessionService.loadMenuSessions();
 
+        // Reload page sessions if the renamed session exists in that view
         if (
           this.storeService.pageSessions().some((s) => s.id === response.id)
         ) {
@@ -207,8 +228,9 @@ export class MenuOffcanvasComponent implements OnInit {
   }
 
   /**
-   * Closes the rename modal by setting the showRenameModal flag to false.
-   * This method is typically called when the user cancels or completes the rename operation.
+   * Closes the rename modal and resets the modal state.
+   *
+   * @returns void
    */
   onCloseRenameModal(): void {
     this.showRenameModal = false;
