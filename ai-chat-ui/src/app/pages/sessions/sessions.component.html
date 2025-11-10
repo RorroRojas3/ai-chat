@@ -172,37 +172,37 @@
                     [attr.aria-labelledby]="'dropdownMenu-' + session.id"
                   >
                     <li>
-                      <a
+                      <button
+                        type="button"
                         class="dropdown-item"
-                        href="javascript:void(0)"
                         (click)="
                           onRenameSession(session.id); $event.stopPropagation()
                         "
                       >
                         <i class="bi bi-pencil me-2"></i>Rename
-                      </a>
+                      </button>
                     </li>
                     <li>
-                      <a
+                      <button
+                        type="button"
                         class="dropdown-item"
-                        href="javascript:void(0)"
                         (click)="
                           onClickSession(session.id); $event.stopPropagation()
                         "
                       >
                         <i class="bi bi-chat-dots me-2"></i>Go to chat
-                      </a>
+                      </button>
                     </li>
                     <li>
-                      <a
+                      <button
+                        type="button"
                         class="dropdown-item"
-                        href="javascript:void(0)"
                         (click)="
                           onDeleteSession(session.id); $event.stopPropagation()
                         "
                       >
                         <i class="bi bi-trash me-2"></i>Delete
-                      </a>
+                      </button>
                     </li>
                   </ul>
                 </div>

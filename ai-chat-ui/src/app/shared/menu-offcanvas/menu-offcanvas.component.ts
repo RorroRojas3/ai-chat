@@ -157,7 +157,7 @@ export class MenuOffcanvasComponent implements OnInit {
    * Initiates the rename process for a specific session.
    *
    * Finds the session by ID, sets it as the active session in the store,
-   * and opens the rename modal.
+   * closes the offcanvas menu, and opens the rename modal.
    *
    * @param sessionId - The unique identifier of the session to rename
    * @param event - The click event to stop propagation
@@ -171,7 +171,14 @@ export class MenuOffcanvasComponent implements OnInit {
       .find((s) => s.id === sessionId);
     if (session) {
       this.storeService.session.set(session);
-      this.showRenameModal = true;
+
+      // Close the offcanvas before opening the modal
+      this.toggleOffcanvas(false);
+
+      // Small delay to ensure offcanvas closes before modal opens
+      setTimeout(() => {
+        this.showRenameModal = true;
+      }, 300);
     }
   }
 
@@ -188,6 +195,7 @@ export class MenuOffcanvasComponent implements OnInit {
    * - Prevents memory leaks by using takeUntilDestroyed
    * - Shows error notifications if the rename operation fails
    * - Ensures the modal is closed in the finalize block regardless of success/failure
+   * - Reopens the offcanvas menu after the operation completes
    * - Updates the active session in the store
    * - Reloads menu sessions to reflect the change
    * - Conditionally reloads page sessions if the session exists in that view
@@ -208,7 +216,10 @@ export class MenuOffcanvasComponent implements OnInit {
           this.notificationService.error('Error renaming chat.');
           return EMPTY;
         }),
-        finalize(() => this.onCloseRenameModal()),
+        finalize(() => {
+          this.onCloseRenameModal();
+          this.toggleOffcanvas(true);
+        }),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((response) => {
@@ -241,5 +252,31 @@ export class MenuOffcanvasComponent implements OnInit {
    */
   onCloseRenameModal(): void {
     this.showRenameModal = false;
+  }
+
+  /**
+   * Programmatically toggles the offcanvas menu open or closed.
+   * Uses Bootstrap's offcanvas API to show or hide the menu.
+   *
+   * @param open - True to open the offcanvas, false to close it
+   * @returns void
+   */
+  private toggleOffcanvas(open: boolean): void {
+    const offcanvasElement = document.getElementById('menu-offcanvas');
+    if (offcanvasElement) {
+      // Get or create Bootstrap's Offcanvas instance
+      let bsOffcanvas = (window as any).bootstrap?.Offcanvas?.getInstance(
+        offcanvasElement
+      );
+      if (!bsOffcanvas) {
+        bsOffcanvas = new (window as any).bootstrap.Offcanvas(offcanvasElement);
+      }
+
+      if (open) {
+        bsOffcanvas.show();
+      } else {
+        bsOffcanvas.hide();
+      }
+    }
   }
 }

@@ -81,17 +81,25 @@
                   </button>
                   <ul
                     class="dropdown-menu"
-                    style="background-color: var(--color-light-blue)"
                     aria-labelledby="dropdownMenuButton"
                   >
                     @for (model of storeService.models(); track model.id) {
                     <li>
-                      <a class="dropdown-item" (click)="onModelChange(model)">
+                      <a
+                        class="dropdown-item d-flex align-items-center"
+                        (click)="onModelChange(model)"
+                      >
                         <i
                           class="me-2 {{ getServiceIcon(model.aiServiceId) }}"
                           aria-hidden="true"
                         ></i>
-                        {{ model.name }}
+                        <span class="flex-grow-1">{{ model.name }}</span>
+                        @if (storeService.selectedModel().id === model.id) {
+                        <i
+                          class="bi bi-check-circle-fill ms-2 text-success"
+                          aria-hidden="true"
+                        ></i>
+                        }
                       </a>
                     </li>
                     }
@@ -114,11 +122,7 @@
                       getMcpButtonText()
                     }}</span>
                   </button>
-                  <ul
-                    class="dropdown-menu"
-                    style="background-color: var(--color-light-blue)"
-                    aria-labelledby="mcpDropdownButton"
-                  >
+                  <ul class="dropdown-menu" aria-labelledby="mcpDropdownButton">
                     @if (storeService.mcps().length === 0) {
                     <li>
                       <span class="dropdown-item-text text-muted"
@@ -186,11 +190,7 @@
                   >
                     <i class="bi bi-download" aria-hidden="true"></i>
                   </button>
-                  <ul
-                    class="dropdown-menu"
-                    style="background-color: var(--color-light-blue)"
-                    aria-labelledby="downloadDropdown"
-                  >
+                  <ul class="dropdown-menu" aria-labelledby="downloadDropdown">
                     @for (format of getDocumentFormats(); track format) {
                     <li>
                       <a

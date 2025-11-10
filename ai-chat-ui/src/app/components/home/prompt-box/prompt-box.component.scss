@@ -151,3 +151,17 @@
   opacity: 0.8;
   color: var(--color-accent);
 }
+
+// Override global dropdown styles for prompt-box
+.prompt-box {
+  .dropdown-toggle {
+    font-size: inherit;
+    line-height: inherit;
+    opacity: 1;
+
+    // Show the Bootstrap caret for these dropdowns
+    &::after {
+      display: inline-block;
+    }
+  }
+}
