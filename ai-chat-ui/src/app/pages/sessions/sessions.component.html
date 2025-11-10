@@ -157,7 +157,7 @@
                 @if (selectedSessionIds.length <= 1) {
                 <div class="dropdown ms-2">
                   <button
-                    class="btn btn-link p-1 text-white session-dropdown-toggle"
+                    class="btn btn-link p-1 text-white dropdown-toggle"
                     type="button"
                     [attr.id]="'dropdownMenu-' + session.id"
                     [attr.aria-label]="'Actions for ' + session.name"
@@ -168,7 +168,7 @@
                     <i class="bi bi-three-dots-vertical"></i>
                   </button>
                   <ul
-                    class="dropdown-menu session-dropdown-menu"
+                    class="dropdown-menu"
                     [attr.aria-labelledby]="'dropdownMenu-' + session.id"
                   >
                     <li>

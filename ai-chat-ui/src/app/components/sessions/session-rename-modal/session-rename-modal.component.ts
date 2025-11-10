@@ -1,4 +1,4 @@
-import { Component, input, output, effect } from '@angular/core';
+import { Component, input, output, effect, signal } from '@angular/core';
 import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -16,6 +16,7 @@ export class SessionRenameModalComponent {
   name = input<string>('');
   onRename = output<string>();
   onClose = output<void>();
+  shouldShow = signal<boolean>(false);
 
   sessionName = new FormControl('', [
     Validators.required,
@@ -30,6 +31,11 @@ export class SessionRenameModalComponent {
         this.sessionName.setValue(this.name());
         this.sessionName.markAsUntouched();
         this.sessionName.markAsPristine();
+        setTimeout(() => {
+          this.shouldShow.set(true);
+        }, 10);
+      } else {
+        this.shouldShow.set(false);
       }
     });
   }

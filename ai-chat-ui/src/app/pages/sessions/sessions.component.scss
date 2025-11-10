@@ -224,51 +224,6 @@
   }
 }
 
-// Session dropdown styling
-.session-dropdown-toggle {
-  font-size: 1.25rem;
-  line-height: 1;
-  text-decoration: none;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
-
-  &:hover {
-    opacity: 1;
-    color: white !important;
-  }
-
-  &:focus {
-    box-shadow: none;
-    color: white !important;
-  }
-}
-
-.session-dropdown-menu {
-  background-color: white;
-  border: 1px solid var(--color-accent-light);
-  box-shadow: 0 4px 12px rgba(18, 40, 66, 0.15);
-  border-radius: 0.5rem;
-  padding: 0.5rem 0;
-  min-width: 10rem;
-
-  .dropdown-item {
-    color: var(--color-navy);
-    padding: 0.5rem 1rem;
-    transition: all 0.2s ease;
-    font-weight: 500;
-
-    &:hover,
-    &:focus {
-      background-color: var(--color-light-blue);
-      color: var(--color-navy);
-    }
-
-    i {
-      opacity: 0.8;
-    }
-  }
-}
-
 // Responsive adjustments for mobile
 @media (max-width: 768px) {
   .sessions-list {
