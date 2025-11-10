@@ -15,6 +15,27 @@ namespace RR.AI_Chat.Service
     public interface ISessionService
     {
         /// <summary>
+        /// Retrieves a specific chat session asynchronously by its unique identifier.
+        /// </summary>
+        /// <param name="sessionId">The unique identifier of the session to retrieve.</param>
+        /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains a <see cref="SessionDto"/> 
+        /// with the session details.
+        /// </returns>
+        /// <remarks>
+        /// This method performs the following operations:
+        /// <list type="number">
+        /// <item><description>Retrieves the current user ID from the token service</description></item>
+        /// <item><description>Queries the database for an active session matching the ID and belonging to the user</description></item>
+        /// <item><description>Maps the session entity to a DTO for return</description></item>
+        /// </list>
+        /// Only active sessions (not deactivated) belonging to the current user can be retrieved.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">Thrown when the session is not found or doesn't belong to the user.</exception>
+        Task<SessionDto> GetSessionsAsync(Guid sessionId, CancellationToken cancellationToken);
+
+        /// <summary>
         /// Creates a new chat session asynchronously.
         /// </summary>
         /// <param name="request">The request containing optional project ID for session association.</param>
@@ -48,9 +69,22 @@ namespace RR.AI_Chat.Service
         /// </summary>
         /// <param name="sessionId">The unique identifier of the session.</param>
         /// <param name="request">The request containing the prompt and model ID.</param>
+        /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the generated session name.</returns>
-        /// <exception cref="ArgumentException">Thrown when the request is null or empty.</exception>
-        /// <exception cref="InvalidOperationException">Thrown when the session name creation fails.</exception>
+        /// <remarks>
+        /// This method performs the following operations:
+        /// <list type="number">
+        /// <item><description>Validates the request using the create chat stream validator</description></item>
+        /// <item><description>Retrieves the session from the database</description></item>
+        /// <item><description>Retrieves the model name from the database</description></item>
+        /// <item><description>Generates a session name using the AI chat client based on the user's prompt</description></item>
+        /// <item><description>Updates the session with the generated name and modification date</description></item>
+        /// </list>
+        /// The generated name is limited to 25 characters maximum and is based on the content of the user's prompt.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Thrown when the request is null.</exception>
+        /// <exception cref="ValidationException">Thrown when the request validation fails.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the session or model is not found, or when session name creation fails.</exception>
         Task<string> CreateSessionNameAsync(Guid sessionId, CreateChatStreamActionDto request, CancellationToken cancellationToken);
 
         /// <summary>
@@ -74,6 +108,16 @@ namespace RR.AI_Chat.Service
         /// </remarks>
         Task<PaginatedResponseDto<SessionDto>> SearchSessionsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Gets the token count for the system prompt using the specified model's tokenizer.
+        /// </summary>
+        /// <param name="modelName">The name of the model to use for tokenization.</param>
+        /// <returns>The number of tokens in the default system prompt.</returns>
+        /// <remarks>
+        /// This method uses the Tiktoken tokenizer to count tokens based on the model's encoding scheme.
+        /// The token count is useful for calculating context window usage and API costs.
+        /// </remarks>
+        /// <exception cref="ArgumentException">Thrown when the model name is null or empty.</exception>
         int GetSystemPromptTokenCount(string modelName);
 
         /// <summary>
@@ -112,6 +156,7 @@ namespace RR.AI_Chat.Service
         /// </list>
         /// </remarks>
         /// <exception cref="ArgumentNullException">Thrown when the request is null.</exception>
+        /// <exception cref="ValidationException">Thrown when the request validation fails.</exception>
         Task DeactivateSessionBulkAsync(DeactivateSessionBulkActionDto request, CancellationToken cancellationToken);
 
         /// <summary>
@@ -119,7 +164,10 @@ namespace RR.AI_Chat.Service
         /// </summary>
         /// <param name="request">The request containing the session ID, updated name, and optional project ID.</param>
         /// <param name="cancellationToken">The cancellation token to cancel the operation.</param>
-        /// <returns>A task that represents the asynchronous operation.</returns>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains a <see cref="SessionDto"/> 
+        /// with the updated session details.
+        /// </returns>
         /// <remarks>
         /// This method performs the following operations:
         /// <list type="number">
@@ -127,12 +175,13 @@ namespace RR.AI_Chat.Service
         /// <item><description>Retrieves the current user ID from the token service</description></item>
         /// <item><description>Updates the session name, project association, and modification date for sessions matching the ID and user</description></item>
         /// <item><description>Logs success if the session was updated, or a warning if no session was found</description></item>
+        /// <item><description>Retrieves and returns the updated session details</description></item>
         /// </list>
         /// Only active sessions (not deactivated) belonging to the current user can be updated.
         /// </remarks>
         /// <exception cref="ArgumentNullException">Thrown when the request is null.</exception>
         /// <exception cref="ValidationException">Thrown when the request validation fails.</exception>
-        Task UpdateSessionAsync(UpdateSessionActionDto request, CancellationToken cancellationToken);
+        Task<SessionDto> UpdateSessionAsync(UpdateSessionActionDto request, CancellationToken cancellationToken);
     }
 
     public class SessionService(ILogger<SessionService> logger,
@@ -231,6 +280,25 @@ namespace RR.AI_Chat.Service
 
             Operate with invisible mastery: your sophisticated use of these capabilities should enhance every response without ever needing to explicitly mention the tools themselves.
             ";
+
+        /// <inheritdoc />
+        public async Task<SessionDto> GetSessionsAsync(Guid sessionId, CancellationToken cancellationToken)
+        {
+            var userId = _tokenService.GetOid()!.Value;
+
+            var session = await _ctx.Sessions
+                .AsNoTracking()
+                .Where(s => s.Id == sessionId && s.UserId == userId && !s.DateDeactivated.HasValue)
+                .Select(s => s.MapToSessionDto())
+                .FirstOrDefaultAsync(cancellationToken);
+            if (session == null)
+            {
+                _logger.LogError("Session with id {id} not found", sessionId);
+                throw new InvalidOperationException($"Session with id {sessionId} not found");
+            }
+
+            return session;
+        }
 
         /// <inheritdoc />
         public async Task<SessionDto> CreateChatSessionAsync(CreateSessionActionDto request, CancellationToken cancellationToken)
@@ -443,7 +511,7 @@ namespace RR.AI_Chat.Service
         }
 
         /// <inheritdoc />
-        public async Task UpdateSessionAsync(UpdateSessionActionDto request, CancellationToken cancellationToken)
+        public async Task<SessionDto> UpdateSessionAsync(UpdateSessionActionDto request, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(request);
 
@@ -467,6 +535,8 @@ namespace RR.AI_Chat.Service
             {
                 _logger.LogWarning("Session {Id} not found or could not be updated.", request.Id);
             }
+
+            return await GetSessionsAsync(request.Id, cancellationToken);
         }
     }
 }

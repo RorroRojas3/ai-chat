@@ -219,11 +219,29 @@ export class SessionsComponent implements OnInit {
     this.showDeleteModal = true;
   }
 
+  /**
+   * Initiates the delete process for a specific session.
+   *
+   * Selects the specified session and opens the delete confirmation modal.
+   *
+   * @param {string} sessionId - The unique identifier of the session to delete
+   * @returns {void}
+   */
   onDeleteSession(sessionId: string): void {
     this.selectedSessionIds = [sessionId];
     this.showDeleteModal = true;
   }
 
+  /**
+   * Handles the delete session operation by calling appropriate endpoints.
+   *
+   * Determines whether to use single or bulk delete endpoint based on the
+   * number of selected sessions. Validates that at least one session is
+   * selected, calls the appropriate service method, and handles errors
+   * with notifications. Reloads sessions on success.
+   *
+   * @returns {void}
+   */
   handleDeleteSession(): void {
     if (this.selectedSessionIds.length === 0) {
       this.closeDeleteModal();
@@ -280,11 +298,28 @@ export class SessionsComponent implements OnInit {
     this.sessionService.loadMenuSessions();
   }
 
+  /**
+   * Closes the delete modal and resets the selection state.
+   *
+   * This method hides the delete confirmation modal dialog and clears
+   * the array of selected session IDs.
+   *
+   * @returns {void}
+   */
   closeDeleteModal(): void {
     this.showDeleteModal = false;
     this.selectedSessionIds = [];
   }
 
+  /**
+   * Initiates the rename process for a specific session.
+   *
+   * Finds the session by ID in the store and opens the rename modal
+   * with the current session name pre-populated.
+   *
+   * @param {string} sessionId - The unique identifier of the session to rename
+   * @returns {void}
+   */
   onRenameSession(sessionId: string): void {
     const session = this.storeService
       .pageSessions()
@@ -296,6 +331,16 @@ export class SessionsComponent implements OnInit {
     }
   }
 
+  /**
+   * Handles the rename session operation by updating the session name.
+   *
+   * Validates that exactly one session is selected, then calls the session
+   * service to update the session name. Displays an error notification on
+   * failure and reloads sessions on success.
+   *
+   * @param {string} newName - The new name for the session
+   * @returns {void}
+   */
   handleRenameSession(newName: string): void {
     if (this.selectedSessionIds.length !== 1) {
       this.closeRenameModal();

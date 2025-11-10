@@ -120,3 +120,10 @@
     </ul>
   </div>
 </div>
+
+<app-session-rename-modal
+  [show]="showRenameModal"
+  [name]="storeService.session()?.name ?? ''"
+  (onClose)="onCloseRenameModal()"
+  (onRename)="onRenameSession($event)"
+></app-session-rename-modal>

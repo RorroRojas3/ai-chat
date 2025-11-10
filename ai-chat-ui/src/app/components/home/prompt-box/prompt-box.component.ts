@@ -94,13 +94,13 @@ export class PromptBoxComponent implements OnDestroy {
       this.storeService.isStreaming.set(true);
       this.storeService.showStreamLoader.set(true);
 
-      if (this.storeService.sessionId() === '') {
+      if (!this.storeService.session()) {
         const session = await firstValueFrom(
           this.sessionService.createSession({
             projectId: this.storeService.projectId(),
           })
         );
-        this.storeService.sessionId.set(session.id);
+        this.storeService.session.set(session);
         this.location.replaceState(`chat/session/${session.id}`);
       }
 
@@ -172,9 +172,9 @@ export class PromptBoxComponent implements OnDestroy {
    * This includes resetting streaming state, clearing the prompt text,
    * clearing attached files, and showing the file attachment area.
    *
-   * @private
+   * @returns {void}
    */
-  private resetPromptState(): void {
+  resetPromptState(): void {
     this.storeService.isStreaming.set(false);
     this.storeService.showStreamLoader.set(false);
     this.storeService.stream.set('');
@@ -240,7 +240,7 @@ export class PromptBoxComponent implements OnDestroy {
   }
 
   // Handle multiple files
-  private handleFiles(fileList: FileList): void {
+  handleFiles(fileList: FileList): void {
     const allowedExtensions = this.storeService.fileExtensions();
 
     // Don't accept any files if no extensions are configured
@@ -300,8 +300,8 @@ export class PromptBoxComponent implements OnDestroy {
   }
 
   // Upload all attached files to the current session
-  private async uploadAttachedFiles(): Promise<JobDto[]> {
-    const sessionId = this.storeService.sessionId();
+  async uploadAttachedFiles(): Promise<JobDto[]> {
+    const sessionId = this.storeService.session()!.id;
     if (!sessionId) {
       throw new Error('No session ID available for file upload');
     }
@@ -323,7 +323,7 @@ export class PromptBoxComponent implements OnDestroy {
   }
 
   // Poll job statuses for uploaded files
-  private async pollJobStatuses(jobs: JobDto[]): Promise<void> {
+  async pollJobStatuses(jobs: JobDto[]): Promise<void> {
     const pollingPromises = jobs.map((job, index) => {
       const attachedFile = this.attachedFiles[index];
       if (attachedFile) {
@@ -336,10 +336,7 @@ export class PromptBoxComponent implements OnDestroy {
   }
 
   // Start polling for a specific job
-  private startJobPolling(
-    job: JobDto,
-    attachedFile: FileUploadDto
-  ): Promise<void> {
+  startJobPolling(job: JobDto, attachedFile: FileUploadDto): Promise<void> {
     return new Promise((resolve, reject) => {
       const subscription = interval(this.JOB_POLLING_INTERVAL_MS)
         .pipe(
@@ -465,7 +462,7 @@ export class PromptBoxComponent implements OnDestroy {
    * Downloads conversation history in the specified format
    */
   onDownloadConversationHistory(format: DocumentFormats): void {
-    const sessionId = this.storeService.sessionId();
+    const sessionId = this.storeService.session()?.id;
     if (!sessionId) {
       return;
     }
@@ -513,7 +510,7 @@ export class PromptBoxComponent implements OnDestroy {
   /**
    * Gets all available document formats
    */
-  get documentFormats(): DocumentFormats[] {
+  getDocumentFormats(): DocumentFormats[] {
     return [
       DocumentFormats.PDF,
       DocumentFormats.DOCX,

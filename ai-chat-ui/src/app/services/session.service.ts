@@ -19,6 +19,18 @@ export class SessionService {
   private readonly notificationService = inject(NotificationService);
 
   /**
+   * Retrieves a specific session by its unique identifier.
+   *
+   * @param {string} sessionId - The unique identifier of the session to retrieve
+   * @returns {Observable<SessionDto>} An Observable that emits the SessionDto for the requested session
+   */
+  getSession(sessionId: string): Observable<SessionDto> {
+    return this.http.get<SessionDto>(
+      `${environment.apiUrl}sessions/${sessionId}`
+    );
+  }
+
+  /**
    * Creates a new session by sending a POST request to the sessions endpoint.
    *
    * @param request - The data transfer object containing the information needed to create a session
@@ -82,13 +94,17 @@ export class SessionService {
   }
 
   /**
-   * Updates an existing session.
+   * Updates an existing session by sending a PUT request to the sessions endpoint.
    *
-   * @param request - The update session request containing the session identifier and new name
-   * @returns An Observable that completes when the session has been successfully updated
+   * @param request - The update session request containing the session identifier and updated properties (e.g., name)
+   * @returns An Observable that emits the updated SessionDto upon successful completion
+   *
+   * @remarks
+   * This method sends a PUT request to the `/sessions` endpoint with the session update data.
+   * The updated session data is returned in the response.
    */
-  updateSession(request: UpdateSessionActionDto): Observable<void> {
-    return this.http.put<void>(`${environment.apiUrl}sessions`, request);
+  updateSession(request: UpdateSessionActionDto): Observable<SessionDto> {
+    return this.http.put<SessionDto>(`${environment.apiUrl}sessions`, request);
   }
 
   /**

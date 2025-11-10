@@ -172,8 +172,8 @@
                 }
 
                 <!-- Download Conversation History Dropdown -->
-                @if (storeService.sessionId() && storeService.messages().length
-                > 2 && !storeService.isStreaming()) {
+                @if (storeService.session() && storeService.messages().length >
+                2 && !storeService.isStreaming()) {
                 <div class="dropdown">
                   <button
                     class="btn btn-primary dropdown-toggle"
@@ -191,7 +191,7 @@
                     style="background-color: var(--color-light-blue)"
                     aria-labelledby="downloadDropdown"
                   >
-                    @for (format of documentFormats; track format) {
+                    @for (format of getDocumentFormats(); track format) {
                     <li>
                       <a
                         class="dropdown-item"

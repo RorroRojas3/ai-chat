@@ -13,7 +13,7 @@ export class StoreService {
   // CONSTANTS
   readonly SESSION_PAGE_SIZE = 10;
 
-  sessionId = signal<string>('');
+  session = signal<SessionDto | null>(null);
   isStreaming = signal<boolean>(false);
   showStreamLoader = signal<boolean>(false);
   stream = signal<string>('');
@@ -53,7 +53,7 @@ export class StoreService {
    * - Initializing a new empty stream message
    */
   clearForNewSession(): void {
-    this.sessionId.set('');
+    this.session.set(null);
     this.messages.set([]);
     this.isStreaming.set(false);
     this.showStreamLoader.set(false);

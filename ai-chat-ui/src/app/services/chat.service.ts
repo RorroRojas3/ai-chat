@@ -88,9 +88,9 @@ export class ChatService {
       acquireToken()
         .then((accessToken) => {
           return fetch(
-            `${
-              environment.apiUrl
-            }chats/sessions/${this.storeService.sessionId()}/stream`,
+            `${environment.apiUrl}chats/sessions/${
+              this.storeService.session()?.id
+            }/stream`,
             {
               method: 'POST',
               headers: {
@@ -143,11 +143,9 @@ export class ChatService {
    * @returns An Observable that emits a SessionConversationDto containing the conversation data
    * @throws HttpErrorResponse if the request fails or session is invalid
    */
-  getSessionConversation(): Observable<SessionConversationDto> {
+  getSessionConversation(id: string): Observable<SessionConversationDto> {
     return this.http.get<SessionConversationDto>(
-      `${
-        environment.apiUrl
-      }chats/sessions/${this.storeService.sessionId()}/conversations`
+      `${environment.apiUrl}chats/sessions/${id}/conversations`
     );
   }
 }
