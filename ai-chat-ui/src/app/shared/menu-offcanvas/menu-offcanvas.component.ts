@@ -9,6 +9,8 @@ import {
   distinctUntilChanged,
   EMPTY,
   finalize,
+  forkJoin,
+  of,
   Subject,
 } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -57,7 +59,7 @@ export class MenuOffcanvasComponent implements OnInit {
    */
   private performSearch(filter: string): void {
     this.storeService.setMenuSessionSearchFilter(filter);
-    this.sessionService.loadMenuSessions();
+    this.sessionService.loadMenuSessions().subscribe();
   }
 
   /**
@@ -125,7 +127,7 @@ export class MenuOffcanvasComponent implements OnInit {
    */
   clearSearch(): void {
     this.storeService.clearMenuSessionSearchFilter();
-    this.sessionService.loadMenuSessions();
+    this.sessionService.loadMenuSessions().subscribe();
   }
 
   /**
@@ -134,6 +136,7 @@ export class MenuOffcanvasComponent implements OnInit {
    * @returns {void}
    */
   onClickGoToChats(): void {
+    this.storeService.clearForNewSession();
     this.router.navigate(['sessions']);
   }
 
@@ -146,6 +149,7 @@ export class MenuOffcanvasComponent implements OnInit {
    * @returns {void}
    */
   onClickGoToProjects(): void {
+    this.storeService.clearForNewSession();
     this.router.navigate(['projects']);
   }
 
@@ -211,19 +215,22 @@ export class MenuOffcanvasComponent implements OnInit {
         // Update the active session with the response
         this.storeService.session.set(response);
 
-        // Reload menu sessions to reflect the change
-        this.sessionService.loadMenuSessions();
+        // Check if we need to reload page sessions
+        const shouldReloadPageSessions = this.storeService
+          .pageSessions()
+          .some((s) => s.id === response.id);
 
-        // Reload page sessions if the renamed session exists in that view
-        if (
-          this.storeService.pageSessions().some((s) => s.id === response.id)
-        ) {
-          this.sessionService.loadPageSessions(
-            this.storeService.pageSessionSearchFilter(),
-            0,
-            this.storeService.SESSION_PAGE_SIZE
-          );
-        }
+        // Reload menu sessions and conditionally reload page sessions
+        forkJoin({
+          menuSessions: this.sessionService.loadMenuSessions(),
+          pageSessions: shouldReloadPageSessions
+            ? this.sessionService.loadPageSessions(
+                this.storeService.pageSessionSearchFilter(),
+                0,
+                this.storeService.SESSION_PAGE_SIZE
+              )
+            : of(undefined),
+        }).subscribe();
       });
   }
 

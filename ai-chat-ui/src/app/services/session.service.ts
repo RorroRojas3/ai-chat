@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SessionDto } from '../dtos/SessionDto';
-import { catchError, EMPTY, finalize, Observable } from 'rxjs';
+import { catchError, EMPTY, finalize, map, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { PaginatedResponseDto } from '../dtos/PaginatedResponseDto';
@@ -114,23 +114,23 @@ export class SessionService {
    * with the results. Shows an error notification if the request fails.
    * Sets the menu session searching state while the request is in progress.
    */
-  loadMenuSessions(): void {
+  loadMenuSessions(): Observable<void> {
     this.storeService.setMenuSessionSearching(true);
-    this.searchSessions(
+    return this.searchSessions(
       this.storeService.menuSessionSearchFilter(),
       0,
       this.storeService.SESSION_PAGE_SIZE
-    )
-      .pipe(
-        catchError(() => {
-          this.notificationService.error('Error loading chats.');
-          return EMPTY;
-        }),
-        finalize(() => this.storeService.setMenuSessionSearching(false))
-      )
-      .subscribe((response) => {
+    ).pipe(
+      tap((response) => {
         this.storeService.updateMenuSessions(response.items);
-      });
+      }),
+      catchError(() => {
+        this.notificationService.error('Error loading chats.');
+        return EMPTY;
+      }),
+      finalize(() => this.storeService.setMenuSessionSearching(false)),
+      map(() => void 0)
+    );
   }
 
   /**
@@ -144,21 +144,25 @@ export class SessionService {
    * @param skip - The number of records to skip for pagination (default: 0)
    * @param take - The number of records to retrieve (default: 10)
    */
-  loadPageSessions(filter: string, skip: number = 0, take: number = 10): void {
+  loadPageSessions(
+    filter: string,
+    skip: number = 0,
+    take: number = 10
+  ): Observable<void> {
     this.storeService.setPageSessionSearching(true);
     this.storeService.setPageSessionSearchFilter(filter);
     this.storeService.setPageSessionSkip(skip);
-    this.searchSessions(filter, skip, take)
-      .pipe(
-        catchError(() => {
-          this.notificationService.error('Error loading chats.');
-          return EMPTY;
-        }),
-        finalize(() => this.storeService.setPageSessionSearching(false))
-      )
-      .subscribe((response) => {
+    return this.searchSessions(filter, skip, take).pipe(
+      tap((response) => {
         this.handlePageSessionsResponse(response.items, response.totalCount);
-      });
+      }),
+      catchError(() => {
+        this.notificationService.error('Error loading chats.');
+        return EMPTY;
+      }),
+      finalize(() => this.storeService.setPageSessionSearching(false)),
+      map(() => void 0)
+    );
   }
 
   /**

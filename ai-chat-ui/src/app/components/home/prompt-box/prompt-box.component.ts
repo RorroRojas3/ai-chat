@@ -137,7 +137,7 @@ export class PromptBoxComponent implements OnDestroy {
               createMessage('', false, undefined)
             );
             this.showAttachedFiles = true;
-            this.sessionService.loadMenuSessions();
+            this.sessionService.loadMenuSessions().subscribe();
           },
           error: (error) => {
             this.resetPromptState();

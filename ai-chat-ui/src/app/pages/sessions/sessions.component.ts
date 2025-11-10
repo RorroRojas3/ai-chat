@@ -10,6 +10,7 @@ import {
   distinctUntilChanged,
   EMPTY,
   finalize,
+  forkJoin,
   Subject,
   switchMap,
   tap,
@@ -77,11 +78,13 @@ export class SessionsComponent implements OnInit {
       });
 
     // Load initial sessions
-    this.sessionService.loadPageSessions(
-      this.storeService.pageSessionSearchFilter(),
-      0,
-      this.storeService.SESSION_PAGE_SIZE
-    );
+    this.sessionService
+      .loadPageSessions(
+        this.storeService.pageSessionSearchFilter(),
+        0,
+        this.storeService.SESSION_PAGE_SIZE
+      )
+      .subscribe();
   }
 
   /**
@@ -96,11 +99,9 @@ export class SessionsComponent implements OnInit {
    * Clears the search term and reloads sessions
    */
   clearSearch(): void {
-    this.sessionService.loadPageSessions(
-      '',
-      0,
-      this.storeService.SESSION_PAGE_SIZE
-    );
+    this.sessionService
+      .loadPageSessions('', 0, this.storeService.SESSION_PAGE_SIZE)
+      .subscribe();
   }
 
   /**
@@ -290,12 +291,14 @@ export class SessionsComponent implements OnInit {
    */
   private handleDeleteSuccess(): void {
     this.closeDeleteModal();
-    this.sessionService.loadPageSessions(
-      this.storeService.pageSessionSearchFilter(),
-      0,
-      this.storeService.SESSION_PAGE_SIZE
-    );
-    this.sessionService.loadMenuSessions();
+    forkJoin({
+      pageSessions: this.sessionService.loadPageSessions(
+        this.storeService.pageSessionSearchFilter(),
+        0,
+        this.storeService.SESSION_PAGE_SIZE
+      ),
+      menuSessions: this.sessionService.loadMenuSessions(),
+    }).subscribe();
   }
 
   /**
@@ -370,12 +373,14 @@ export class SessionsComponent implements OnInit {
    */
   private handleRenameSuccess(): void {
     this.closeRenameModal();
-    this.sessionService.loadPageSessions(
-      this.storeService.pageSessionSearchFilter(),
-      0,
-      this.storeService.SESSION_PAGE_SIZE
-    );
-    this.sessionService.loadMenuSessions();
+    forkJoin({
+      pageSessions: this.sessionService.loadPageSessions(
+        this.storeService.pageSessionSearchFilter(),
+        0,
+        this.storeService.SESSION_PAGE_SIZE
+      ),
+      menuSessions: this.sessionService.loadMenuSessions(),
+    }).subscribe();
   }
 
   /**
