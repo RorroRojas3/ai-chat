@@ -12,6 +12,7 @@ import {
   forkJoin,
   of,
   Subject,
+  switchMap,
 } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -60,7 +61,10 @@ export class MenuOffcanvasComponent implements OnInit {
    */
   private performSearch(filter: string): void {
     this.storeService.setMenuSessionSearchFilter(filter);
-    this.sessionService.loadMenuSessions().subscribe();
+    this.sessionService
+      .loadMenuSessions()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   }
 
   /**
@@ -128,7 +132,10 @@ export class MenuOffcanvasComponent implements OnInit {
    */
   clearSearch(): void {
     this.storeService.clearMenuSessionSearchFilter();
-    this.sessionService.loadMenuSessions().subscribe();
+    this.sessionService
+      .loadMenuSessions()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   }
 
   /**
@@ -217,33 +224,34 @@ export class MenuOffcanvasComponent implements OnInit {
           this.notificationService.error('Error renaming chat.');
           return EMPTY;
         }),
+        switchMap((response) => {
+          // Update the active session with the response
+          this.storeService.session.set(response);
+
+          // Check if we need to reload page sessions
+          const shouldReloadPageSessions = this.storeService
+            .pageSessions()
+            .some((s) => s.id === response.id);
+
+          // Reload menu sessions and conditionally reload page sessions
+          return forkJoin({
+            menuSessions: this.sessionService.loadMenuSessions(),
+            pageSessions: shouldReloadPageSessions
+              ? this.sessionService.loadPageSessions(
+                  this.storeService.pageSessionSearchFilter(),
+                  0,
+                  this.storeService.SESSION_PAGE_SIZE
+                )
+              : of(undefined),
+          });
+        }),
         finalize(() => {
           this.onCloseRenameModal();
           this.toggleOffcanvas(true);
         }),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((response) => {
-        // Update the active session with the response
-        this.storeService.session.set(response);
-
-        // Check if we need to reload page sessions
-        const shouldReloadPageSessions = this.storeService
-          .pageSessions()
-          .some((s) => s.id === response.id);
-
-        // Reload menu sessions and conditionally reload page sessions
-        forkJoin({
-          menuSessions: this.sessionService.loadMenuSessions(),
-          pageSessions: shouldReloadPageSessions
-            ? this.sessionService.loadPageSessions(
-                this.storeService.pageSessionSearchFilter(),
-                0,
-                this.storeService.SESSION_PAGE_SIZE
-              )
-            : of(undefined),
-        }).subscribe();
-      });
+      .subscribe();
   }
 
   /**
