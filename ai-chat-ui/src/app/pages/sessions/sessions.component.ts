@@ -66,16 +66,17 @@ export class SessionsComponent implements OnInit {
       .pipe(
         debounceTime(this.SEARCH_DEBOUNCE_MS),
         distinctUntilChanged(),
+        switchMap((filter) => {
+          this.sessionService.clearPageSessions();
+          return this.sessionService.loadPageSessions(
+            filter,
+            this.storeService.pageSessionSkip(),
+            this.storeService.SESSION_PAGE_SIZE
+          );
+        }),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((filter) => {
-        this.sessionService.clearPageSessions();
-        this.sessionService.loadPageSessions(
-          filter,
-          this.storeService.pageSessionSkip(),
-          this.storeService.SESSION_PAGE_SIZE
-        );
-      });
+      .subscribe();
 
     // Load initial sessions
     this.sessionService
@@ -84,6 +85,7 @@ export class SessionsComponent implements OnInit {
         0,
         this.storeService.SESSION_PAGE_SIZE
       )
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
   }
 
@@ -101,6 +103,7 @@ export class SessionsComponent implements OnInit {
   clearSearch(): void {
     this.sessionService
       .loadPageSessions('', 0, this.storeService.SESSION_PAGE_SIZE)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
   }
 
@@ -298,7 +301,9 @@ export class SessionsComponent implements OnInit {
         this.storeService.SESSION_PAGE_SIZE
       ),
       menuSessions: this.sessionService.loadMenuSessions(),
-    }).subscribe();
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   }
 
   /**
@@ -380,7 +385,9 @@ export class SessionsComponent implements OnInit {
         this.storeService.SESSION_PAGE_SIZE
       ),
       menuSessions: this.sessionService.loadMenuSessions(),
-    }).subscribe();
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   }
 
   /**
