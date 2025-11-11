@@ -30,6 +30,7 @@ export class MenuOffcanvasComponent implements OnInit {
   // Constants
   readonly MAX_SESSION_NAME_LENGTH = 40;
   readonly SEARCH_DEBOUNCE_MS = 600;
+  readonly OFFCANVAS_TRANSITION_DELAY_MS = 300;
 
   // Inject dependencies using Angular 19 pattern
   public readonly storeService = inject(StoreService);
@@ -178,7 +179,7 @@ export class MenuOffcanvasComponent implements OnInit {
       // Small delay to ensure offcanvas closes before modal opens
       setTimeout(() => {
         this.showRenameModal = true;
-      }, 300);
+      }, this.OFFCANVAS_TRANSITION_DELAY_MS);
     }
   }
 

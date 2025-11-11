@@ -85,7 +85,8 @@
                   >
                     @for (model of storeService.models(); track model.id) {
                     <li>
-                      <a
+                      <button
+                        type="button"
                         class="dropdown-item d-flex align-items-center"
                         (click)="onModelChange(model)"
                       >
@@ -100,7 +101,7 @@
                           aria-hidden="true"
                         ></i>
                         }
-                      </a>
+                      </button>
                     </li>
                     }
                   </ul>
@@ -132,10 +133,10 @@
                     } @else { @for (mcp of storeService.mcps(); track mcp.name)
                     {
                     <li>
-                      <a
+                      <button
+                        type="button"
                         class="dropdown-item d-flex align-items-center"
                         (click)="toggleMcpSelection(mcp, $event)"
-                        style="cursor: pointer"
                         [attr.aria-label]="
                           isMcpSelected(mcp)
                             ? 'Deselect tool: ' + mcp.name
@@ -154,7 +155,7 @@
                           aria-hidden="true"
                         ></i>
                         }
-                      </a>
+                      </button>
                     </li>
                     } }
                   </ul>
@@ -193,7 +194,8 @@
                   <ul class="dropdown-menu" aria-labelledby="downloadDropdown">
                     @for (format of getDocumentFormats(); track format) {
                     <li>
-                      <a
+                      <button
+                        type="button"
                         class="dropdown-item"
                         (click)="onDownloadConversationHistory(format)"
                       >
@@ -202,7 +204,7 @@
                           aria-hidden="true"
                         ></i>
                         {{ getFormatName(format) }}
-                      </a>
+                      </button>
                     </li>
                     }
                   </ul>

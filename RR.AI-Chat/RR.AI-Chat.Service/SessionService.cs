@@ -519,6 +519,15 @@ namespace RR.AI_Chat.Service
 
             var userId = _tokenService.GetOid()!.Value;
 
+            var anySession = await _ctx.Sessions
+                .Where(x => x.Id == request.Id && x.UserId == userId && !x.DateDeactivated.HasValue)
+                .AnyAsync(cancellationToken);
+            if (!anySession)
+            {
+                _logger.LogWarning("Session not found or already deactivated");
+                throw new InvalidOperationException($"Session not found or already deactivated.");
+            }
+
             var rows = await _ctx.Sessions
                 .Where(x => x.Id == request.Id && x.UserId == userId && !x.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(s => s
@@ -527,14 +536,7 @@ namespace RR.AI_Chat.Service
                     .SetProperty(x => x.DateModified, DateTimeOffset.UtcNow),
                     cancellationToken);
 
-            if (rows > 0)
-            {
-                _logger.LogInformation("Session {Id} successfully updated.", request.Id);
-            }
-            else
-            {
-                _logger.LogWarning("Session {Id} not found or could not be updated.", request.Id);
-            }
+            _logger.LogInformation("Session {Id} successfully updated.", request.Id);
 
             return await GetSessionsAsync(request.Id, cancellationToken);
         }
