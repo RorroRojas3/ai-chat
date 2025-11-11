@@ -10,7 +10,14 @@ namespace RR.AI_Chat.Api.Controllers
     [ApiController]
     public class SessionsController(ISessionService sessionService) : ControllerBase
     {
-        private readonly ISessionService _sessionService = sessionService;  
+        private readonly ISessionService _sessionService = sessionService;
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetSessionsAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var response = await _sessionService.GetSessionsAsync(id, cancellationToken);
+            return Ok(response);
+        }
 
         [HttpPost]
         public async Task<IActionResult> CreateSessionAsync(CreateSessionActionDto request, CancellationToken cancellationToken)
@@ -43,8 +50,8 @@ namespace RR.AI_Chat.Api.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateSessionAsync([FromBody] UpdateSessionActionDto request, CancellationToken cancellationToken)
         {
-            await _sessionService.UpdateSessionAsync(request, cancellationToken);
-            return NoContent();
+            var response = await _sessionService.UpdateSessionAsync(request, cancellationToken);
+            return Ok(response);
         }
     }
 }

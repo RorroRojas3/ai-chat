@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SessionDto } from '../dtos/SessionDto';
-import { catchError, EMPTY, finalize, Observable } from 'rxjs';
+import { catchError, EMPTY, finalize, map, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { PaginatedResponseDto } from '../dtos/PaginatedResponseDto';
@@ -17,6 +17,18 @@ export class SessionService {
   private readonly http = inject(HttpClient);
   private readonly storeService = inject(StoreService);
   private readonly notificationService = inject(NotificationService);
+
+  /**
+   * Retrieves a specific session by its unique identifier.
+   *
+   * @param {string} sessionId - The unique identifier of the session to retrieve
+   * @returns {Observable<SessionDto>} An Observable that emits the SessionDto for the requested session
+   */
+  getSession(sessionId: string): Observable<SessionDto> {
+    return this.http.get<SessionDto>(
+      `${environment.apiUrl}sessions/${sessionId}`
+    );
+  }
 
   /**
    * Creates a new session by sending a POST request to the sessions endpoint.
@@ -82,13 +94,17 @@ export class SessionService {
   }
 
   /**
-   * Updates an existing session.
+   * Updates an existing session by sending a PUT request to the sessions endpoint.
    *
-   * @param request - The update session request containing the session identifier and new name
-   * @returns An Observable that completes when the session has been successfully updated
+   * @param request - The update session request containing the session identifier and updated properties (e.g., name)
+   * @returns An Observable that emits the updated SessionDto upon successful completion
+   *
+   * @remarks
+   * This method sends a PUT request to the `/sessions` endpoint with the session update data.
+   * The updated session data is returned in the response.
    */
-  updateSession(request: UpdateSessionActionDto): Observable<void> {
-    return this.http.put<void>(`${environment.apiUrl}sessions`, request);
+  updateSession(request: UpdateSessionActionDto): Observable<SessionDto> {
+    return this.http.put<SessionDto>(`${environment.apiUrl}sessions`, request);
   }
 
   /**
@@ -98,23 +114,23 @@ export class SessionService {
    * with the results. Shows an error notification if the request fails.
    * Sets the menu session searching state while the request is in progress.
    */
-  loadMenuSessions(): void {
+  loadMenuSessions(): Observable<void> {
     this.storeService.setMenuSessionSearching(true);
-    this.searchSessions(
+    return this.searchSessions(
       this.storeService.menuSessionSearchFilter(),
       0,
       this.storeService.SESSION_PAGE_SIZE
-    )
-      .pipe(
-        catchError(() => {
-          this.notificationService.error('Error loading chats.');
-          return EMPTY;
-        }),
-        finalize(() => this.storeService.setMenuSessionSearching(false))
-      )
-      .subscribe((response) => {
+    ).pipe(
+      tap((response) => {
         this.storeService.updateMenuSessions(response.items);
-      });
+      }),
+      catchError(() => {
+        this.notificationService.error('Error loading chats.');
+        return EMPTY;
+      }),
+      finalize(() => this.storeService.setMenuSessionSearching(false)),
+      map(() => void 0)
+    );
   }
 
   /**
@@ -128,21 +144,25 @@ export class SessionService {
    * @param skip - The number of records to skip for pagination (default: 0)
    * @param take - The number of records to retrieve (default: 10)
    */
-  loadPageSessions(filter: string, skip: number = 0, take: number = 10): void {
+  loadPageSessions(
+    filter: string,
+    skip: number = 0,
+    take: number = 10
+  ): Observable<void> {
     this.storeService.setPageSessionSearching(true);
     this.storeService.setPageSessionSearchFilter(filter);
     this.storeService.setPageSessionSkip(skip);
-    this.searchSessions(filter, skip, take)
-      .pipe(
-        catchError(() => {
-          this.notificationService.error('Error loading chats.');
-          return EMPTY;
-        }),
-        finalize(() => this.storeService.setPageSessionSearching(false))
-      )
-      .subscribe((response) => {
+    return this.searchSessions(filter, skip, take).pipe(
+      tap((response) => {
         this.handlePageSessionsResponse(response.items, response.totalCount);
-      });
+      }),
+      catchError(() => {
+        this.notificationService.error('Error loading chats.');
+        return EMPTY;
+      }),
+      finalize(() => this.storeService.setPageSessionSearching(false)),
+      map(() => void 0)
+    );
   }
 
   /**

@@ -81,18 +81,27 @@
                   </button>
                   <ul
                     class="dropdown-menu"
-                    style="background-color: var(--color-light-blue)"
                     aria-labelledby="dropdownMenuButton"
                   >
                     @for (model of storeService.models(); track model.id) {
                     <li>
-                      <a class="dropdown-item" (click)="onModelChange(model)">
+                      <button
+                        type="button"
+                        class="dropdown-item d-flex align-items-center"
+                        (click)="onModelChange(model)"
+                      >
                         <i
                           class="me-2 {{ getServiceIcon(model.aiServiceId) }}"
                           aria-hidden="true"
                         ></i>
-                        {{ model.name }}
-                      </a>
+                        <span class="flex-grow-1">{{ model.name }}</span>
+                        @if (storeService.selectedModel().id === model.id) {
+                        <i
+                          class="bi bi-check-circle-fill ms-2 text-success"
+                          aria-hidden="true"
+                        ></i>
+                        }
+                      </button>
                     </li>
                     }
                   </ul>
@@ -114,11 +123,7 @@
                       getMcpButtonText()
                     }}</span>
                   </button>
-                  <ul
-                    class="dropdown-menu"
-                    style="background-color: var(--color-light-blue)"
-                    aria-labelledby="mcpDropdownButton"
-                  >
+                  <ul class="dropdown-menu" aria-labelledby="mcpDropdownButton">
                     @if (storeService.mcps().length === 0) {
                     <li>
                       <span class="dropdown-item-text text-muted"
@@ -128,10 +133,10 @@
                     } @else { @for (mcp of storeService.mcps(); track mcp.name)
                     {
                     <li>
-                      <a
+                      <button
+                        type="button"
                         class="dropdown-item d-flex align-items-center"
                         (click)="toggleMcpSelection(mcp, $event)"
-                        style="cursor: pointer"
                         [attr.aria-label]="
                           isMcpSelected(mcp)
                             ? 'Deselect tool: ' + mcp.name
@@ -150,7 +155,7 @@
                           aria-hidden="true"
                         ></i>
                         }
-                      </a>
+                      </button>
                     </li>
                     } }
                   </ul>
@@ -172,8 +177,8 @@
                 }
 
                 <!-- Download Conversation History Dropdown -->
-                @if (storeService.sessionId() && storeService.messages().length
-                > 2 && !storeService.isStreaming()) {
+                @if (storeService.session() && storeService.messages().length >
+                2 && !storeService.isStreaming()) {
                 <div class="dropdown">
                   <button
                     class="btn btn-primary dropdown-toggle"
@@ -186,14 +191,11 @@
                   >
                     <i class="bi bi-download" aria-hidden="true"></i>
                   </button>
-                  <ul
-                    class="dropdown-menu"
-                    style="background-color: var(--color-light-blue)"
-                    aria-labelledby="downloadDropdown"
-                  >
-                    @for (format of documentFormats; track format) {
+                  <ul class="dropdown-menu" aria-labelledby="downloadDropdown">
+                    @for (format of getDocumentFormats(); track format) {
                     <li>
-                      <a
+                      <button
+                        type="button"
                         class="dropdown-item"
                         (click)="onDownloadConversationHistory(format)"
                       >
@@ -202,7 +204,7 @@
                           aria-hidden="true"
                         ></i>
                         {{ getFormatName(format) }}
-                      </a>
+                      </button>
                     </li>
                     }
                   </ul>

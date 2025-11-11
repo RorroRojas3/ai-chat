@@ -11,6 +11,9 @@ import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import hljs from 'highlight.js';
 import { ActivatedRoute } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
+import { SessionService } from '../../services/session.service';
+import { NotificationService } from '../../services/notification.service';
+import { catchError, EMPTY, switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -19,12 +22,13 @@ import { ChatService } from '../../services/chat.service';
   styleUrl: './home.component.scss',
 })
 export class HomeComponent implements OnInit {
-  // Inject dependencies using Angular 19 pattern
   public readonly storeService = inject(StoreService);
+  private readonly sessionService = inject(SessionService);
   private readonly chatService = inject(ChatService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly notificationService = inject(NotificationService);
 
   private readonly md: markdownit;
 
@@ -54,16 +58,41 @@ export class HomeComponent implements OnInit {
 
   /**
    * Loads the conversation for a given session ID.
-   * Processes the conversation messages, converting assistant messages from markdown to sanitized HTML.
-   * Updates the store with the processed messages.
-   * If the API call fails (e.g., invalid sessionId), resets to a new session.
+   *
+   * This method performs the following steps:
+   * 1. Fetches session information from the API
+   * 2. Updates the store with the session data
+   * 3. Retrieves the conversation for the session
+   * 4. Processes messages, converting assistant messages from markdown to sanitized HTML
+   * 5. Updates the store with the processed messages
+   *
+   * If any step fails, displays an error notification and resets to a new session.
+   * Properly manages subscriptions to prevent memory leaks using takeUntilDestroyed.
    *
    * @param sessionId - The unique identifier of the session to load
    */
-  private loadSessionConversation(sessionId: string): void {
-    this.storeService.sessionId.set(sessionId);
-    this.chatService.getSessionConversation().subscribe({
-      next: (response) => {
+  loadSessionConversation(sessionId: string): void {
+    this.sessionService
+      .getSession(sessionId)
+      .pipe(
+        tap((session) => {
+          // Step 2: Set the session in the store
+          this.storeService.session.set(session);
+        }),
+        switchMap((session) => {
+          // Step 3: Get the session conversation after successful session fetch
+          return this.chatService.getSessionConversation(session.id);
+        }),
+        catchError(() => {
+          // Step 6: Catch errors and display notification
+          this.notificationService.error('Error loading chat session.');
+          this.storeService.clearForNewSession();
+          return EMPTY;
+        }),
+        takeUntilDestroyed(this.destroyRef) // Step 4: Prevent memory leaks
+      )
+      .subscribe((response) => {
+        // Step 4: Process and update messages
         const mappedMessages = response.messages.map(
           (message: SessionMessageDto) => {
             if (message.role === 1) {
@@ -75,12 +104,7 @@ export class HomeComponent implements OnInit {
           }
         );
         this.storeService.messages.set(mappedMessages);
-      },
-      error: () => {
-        // If session is invalid or API call fails, reset to a new session
-        this.storeService.clearForNewSession();
-      },
-    });
+      });
   }
 
   /**
