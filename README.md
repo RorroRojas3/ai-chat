@@ -1,14 +1,15 @@
 # AI Chat Application
 
 [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
-[![Angular](https://img.shields.io/badge/Angular-19-DD0031?logo=angular)](https://angular.dev/)
+[![Angular](https://img.shields.io/badge/Angular-20-DD0031?logo=angular)](https://angular.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![SQL Server](https://img.shields.io/badge/SQL%20Server-Vector%20Search-CC2927?logo=microsoft-sql-server)](https://www.microsoft.com/sql-server)
 
-A full-stack AI chat application built with .NET 9 Web API backend and Angular 19 frontend. The application supports multiple AI service providers including Ollama, OpenAI, Azure AI Foundry, and Anthropic, with document management and vector search capabilities.
+A full-stack AI chat application built with .NET 9 Web API backend and Angular 20 frontend. The application supports multiple AI service providers including Ollama, OpenAI, Azure AI Foundry, and Anthropic, with document management and vector search capabilities.
 
 ## 📋 Table of Contents
+
 - [Features](#-features)
 - [Architecture](#️-architecture)
 - [Tech Stack](#️-tech-stack)
@@ -45,7 +46,7 @@ ai-chat/
 │   ├── RR.AI-Chat.Repository/  # Data Access Layer
 │   ├── RR.AI-Chat.Entity/      # Entity Framework Models
 │   └── RR.AI-Chat.Dto/         # Data Transfer Objects
-└── ai-chat-ui/                 # Angular 19 Frontend
+└── ai-chat-ui/                 # Angular 20 Frontend
     ├── src/app/services/       # HTTP Services
     ├── src/app/dtos/           # TypeScript DTOs
     └── src/environments/       # Environment Configuration
@@ -54,6 +55,7 @@ ai-chat/
 ## 🛠️ Tech Stack
 
 ### Backend (.NET API)
+
 - **.NET 9.0** - Web API Framework
 - **Entity Framework Core 9.0** - ORM with SQL Server
 - **SQL Server Vector Search** - Vector embeddings storage
@@ -61,7 +63,8 @@ ai-chat/
 - **Swagger/OpenAPI** - API Documentation
 
 ### Frontend (Angular UI)
-- **Angular 19** - Frontend Framework
+
+- **Angular 20** - Frontend Framework
 - **TypeScript 5.6** - Programming Language
 - **Bootstrap 5.3** - CSS Framework
 - **RxJS** - Reactive Programming
@@ -69,6 +72,7 @@ ai-chat/
 - **Markdown-it** - Markdown Rendering
 
 ### AI Service Integrations
+
 - **Ollama** - Local AI models
 - **OpenAI** - GPT models
 - **Azure AI Foundry** - Azure OpenAI Service
@@ -77,15 +81,18 @@ ai-chat/
 ## 📋 Prerequisites
 
 ### Required Software
+
 - **.NET 9.0 SDK** - [Download here](https://dotnet.microsoft.com/download/dotnet/9.0)
 - **Node.js 18+** - [Download here](https://nodejs.org/)
 - **SQL Server** - Express, Developer, or Full edition
 - **Angular CLI** - Install via `npm install -g @angular/cli`
 
 ### Optional (for local AI)
+
 - **Ollama** - [Install here](https://ollama.ai/) for local AI models
 
 ### AI Service API Keys (at least one required)
+
 - **OpenAI API Key** - For GPT models
 - **Azure AI Foundry** - Endpoint URL and API Key
 - **Anthropic API Key** - For Claude models
@@ -95,12 +102,14 @@ ai-chat/
 > **New to the project?** Check out our [Quick Start Guide](QUICK_START.md) for the fastest way to get running!
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/RorroRojas3/ai-chat.git
 cd ai-chat
 ```
 
 ### 2. Setup the Database
+
 ```bash
 # Create database (replace connection string as needed)
 # Default: Server=localhost;Database=aichat;Integrated Security=true;Encrypt=true;TrustServerCertificate=true;
@@ -109,12 +118,14 @@ cd ai-chat
 ### 3. Configure API Environment Variables
 
 Create user secrets for the API project:
+
 ```bash
 cd RR.AI-Chat/RR.AI-Chat.Api
 dotnet user-secrets init
 ```
 
 Add your AI service configurations:
+
 ```bash
 # For OpenAI
 dotnet user-secrets set "OpenAI:ApiKey" "your-openai-api-key"
@@ -132,6 +143,7 @@ dotnet user-secrets set "OllamaUrl" "http://localhost:11434/"
 ```
 
 ### 4. Run the API
+
 ```bash
 cd RR.AI-Chat
 dotnet restore
@@ -142,6 +154,7 @@ dotnet run --project RR.AI-Chat.Api
 The API will start at `https://localhost:7045` (HTTPS) and `http://localhost:5045` (HTTP).
 
 ### 5. Run the Frontend
+
 ```bash
 cd ai-chat-ui
 npm install
@@ -151,6 +164,7 @@ npm start
 The frontend will start at `http://localhost:4200`.
 
 ### 6. Access the Application
+
 - **Frontend**: http://localhost:4200
 - **API Documentation**: https://localhost:7045/swagger
 
@@ -167,7 +181,7 @@ The frontend will start at `http://localhost:4200`.
     }
   },
   "AllowedHosts": "*",
-  "CorsOrigins": [ "http://localhost:4200" ],
+  "CorsOrigins": ["http://localhost:4200"],
   "OllamaUrl": "http://localhost:11434/",
   "ConnectionStrings": {
     "DefaultConnection": "Server=localhost;Database=aichat;Integrated Security=true;Encrypt=true;TrustServerCertificate=true;"
@@ -180,29 +194,30 @@ The frontend will start at `http://localhost:4200`.
 ```typescript
 export const environment = {
   production: false,
-  apiUrl: 'https://localhost:7045/api/',
+  apiUrl: "https://localhost:7045/api/",
 };
 ```
 
 ### Environment Variables Reference
 
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `OpenAI:ApiKey` | OpenAI API key for GPT models | No* | - |
-| `AzureAIFoundry:Url` | Azure OpenAI endpoint URL | No* | - |
-| `AzureAIFoundry:ApiKey` | Azure OpenAI API key | No* | - |
-| `AzureAIFoundry:EmbeddingModel` | Embedding model name | No | text-embedding-ada-002 |
-| `Anthropic:ApiKey` | Anthropic API key for Claude models | No* | - |
-| `OllamaUrl` | Ollama server URL | No | http://localhost:11434/ |
-| `ConnectionStrings:DefaultConnection` | SQL Server connection string | Yes | See above |
+| Variable                              | Description                         | Required | Default                 |
+| ------------------------------------- | ----------------------------------- | -------- | ----------------------- |
+| `OpenAI:ApiKey`                       | OpenAI API key for GPT models       | No\*     | -                       |
+| `AzureAIFoundry:Url`                  | Azure OpenAI endpoint URL           | No\*     | -                       |
+| `AzureAIFoundry:ApiKey`               | Azure OpenAI API key                | No\*     | -                       |
+| `AzureAIFoundry:EmbeddingModel`       | Embedding model name                | No       | text-embedding-ada-002  |
+| `Anthropic:ApiKey`                    | Anthropic API key for Claude models | No\*     | -                       |
+| `OllamaUrl`                           | Ollama server URL                   | No       | http://localhost:11434/ |
+| `ConnectionStrings:DefaultConnection` | SQL Server connection string        | Yes      | See above               |
 
-*At least one AI service must be configured.
+\*At least one AI service must be configured.
 
 ## 🧪 Database Setup
 
 The application uses Entity Framework migrations. To set up the database:
 
 1. **Update Connection String**: Modify the connection string in `appsettings.json` or set via user secrets:
+
    ```bash
    dotnet user-secrets set "ConnectionStrings:DefaultConnection" "your-connection-string"
    ```
@@ -216,21 +231,25 @@ The application uses Entity Framework migrations. To set up the database:
 ## 📚 API Endpoints
 
 ### Chat Endpoints
+
 - `POST /api/chats/sessions/{sessionId}/stream` - Stream chat responses
 - `POST /api/chats/sessions/{sessionId}/completion` - Get chat completion
 
 ### Session Management
+
 - `GET /api/sessions` - Get all sessions
 - `POST /api/sessions` - Create new session
 - `GET /api/sessions/{id}` - Get session by ID
 - `DELETE /api/sessions/{id}` - Delete session
 
 ### Document Management
+
 - `POST /api/documents` - Upload document
 - `GET /api/documents` - Get all documents
 - `POST /api/documents/search` - Search documents
 
 ### Models
+
 - `GET /api/models` - Get available AI models
 
 ## 📝 Examples
@@ -238,6 +257,7 @@ The application uses Entity Framework migrations. To set up the database:
 ### Example 1: Starting a Chat Session
 
 **Backend (C# API Call)**:
+
 ```csharp
 // Create a new chat session
 var session = new SessionDto
@@ -252,10 +272,11 @@ var createdSession = await response.Content.ReadFromJsonAsync<SessionDto>();
 ```
 
 **Frontend (TypeScript/Angular)**:
+
 ```typescript
 // Using the SessionService
-this.sessionService.createSession('My AI Conversation').subscribe(session => {
-  console.log('Session created:', session.id);
+this.sessionService.createSession("My AI Conversation").subscribe((session) => {
+  console.log("Session created:", session.id);
   this.currentSessionId = session.id;
 });
 ```
@@ -263,16 +284,17 @@ this.sessionService.createSession('My AI Conversation').subscribe(session => {
 ### Example 2: Sending a Chat Message and Streaming Response
 
 **Backend (C# Controller)**:
+
 ```csharp
 [HttpPost("sessions/{sessionId}/stream")]
 public async IAsyncEnumerable<string> StreamChatCompletion(
-    Guid sessionId, 
+    Guid sessionId,
     [FromBody] ChatCompletionDto request,
     [EnumeratorCancellation] CancellationToken cancellationToken)
 {
     await foreach (var chunk in _chatService.StreamCompletionAsync(
-        sessionId, 
-        request, 
+        sessionId,
+        request,
         cancellationToken))
     {
         yield return chunk;
@@ -281,6 +303,7 @@ public async IAsyncEnumerable<string> StreamChatCompletion(
 ```
 
 **Frontend (TypeScript/Angular with SSE)**:
+
 ```typescript
 // Stream chat response
 sendMessage(sessionId: string, message: string, model: string) {
@@ -305,6 +328,7 @@ sendMessage(sessionId: string, message: string, model: string) {
 ### Example 3: Document Upload and Vector Search
 
 **Upload a Document**:
+
 ```csharp
 // C# Example
 var formData = new MultipartFormDataContent();
@@ -315,6 +339,7 @@ var document = await response.Content.ReadFromJsonAsync<DocumentDto>();
 ```
 
 **Search Documents**:
+
 ```csharp
 // C# Example - Vector search with AI embeddings
 var searchRequest = new DocumentSearchDto
@@ -330,40 +355,43 @@ var results = await response.Content.ReadFromJsonAsync<List<DocumentDto>>();
 ### Example 4: Using Different AI Providers
 
 **OpenAI (GPT-4)**:
+
 ```typescript
 const request = {
-  prompt: 'Explain quantum computing',
-  model: 'gpt-4',
-  systemPrompt: 'You are a physics expert.'
+  prompt: "Explain quantum computing",
+  model: "gpt-4",
+  systemPrompt: "You are a physics expert.",
 };
 
-this.chatService.getCompletion(sessionId, request).subscribe(response => {
+this.chatService.getCompletion(sessionId, request).subscribe((response) => {
   console.log(response.content);
 });
 ```
 
 **Ollama (Local Model)**:
+
 ```typescript
 const request = {
-  prompt: 'Write a haiku about coding',
-  model: 'llama3.2:latest',
-  systemPrompt: 'You are a creative poet.'
+  prompt: "Write a haiku about coding",
+  model: "llama3.2:latest",
+  systemPrompt: "You are a creative poet.",
 };
 
-this.chatService.getCompletion(sessionId, request).subscribe(response => {
+this.chatService.getCompletion(sessionId, request).subscribe((response) => {
   console.log(response.content);
 });
 ```
 
 **Anthropic (Claude)**:
+
 ```typescript
 const request = {
-  prompt: 'Help me debug this code',
-  model: 'claude-3-5-sonnet-20241022',
-  systemPrompt: 'You are an expert programmer.'
+  prompt: "Help me debug this code",
+  model: "claude-3-5-sonnet-20241022",
+  systemPrompt: "You are an expert programmer.",
 };
 
-this.chatService.getCompletion(sessionId, request).subscribe(response => {
+this.chatService.getCompletion(sessionId, request).subscribe((response) => {
   console.log(response.content);
 });
 ```
@@ -371,32 +399,36 @@ this.chatService.getCompletion(sessionId, request).subscribe(response => {
 ### Example 5: Session Management
 
 **List All Sessions**:
+
 ```typescript
 // Get all chat sessions
-this.sessionService.getSessions().subscribe(sessions => {
-  sessions.forEach(session => {
+this.sessionService.getSessions().subscribe((sessions) => {
+  sessions.forEach((session) => {
     console.log(`${session.name} - Created: ${session.createdAt}`);
   });
 });
 ```
 
 **Delete a Session**:
+
 ```typescript
 // Delete a specific session
 this.sessionService.deleteSession(sessionId).subscribe(() => {
-  console.log('Session deleted successfully');
+  console.log("Session deleted successfully");
 });
 ```
 
 ### Example 6: Configuration with User Secrets
 
 **Setting up OpenAI**:
+
 ```bash
 cd RR.AI-Chat/RR.AI-Chat.Api
 dotnet user-secrets set "OpenAI:ApiKey" "sk-proj-xxxxxxxxxxxxx"
 ```
 
 **Setting up Azure AI Foundry**:
+
 ```bash
 dotnet user-secrets set "AzureAIFoundry:Url" "https://my-resource.openai.azure.com/"
 dotnet user-secrets set "AzureAIFoundry:ApiKey" "your-azure-key"
@@ -404,6 +436,7 @@ dotnet user-secrets set "AzureAIFoundry:EmbeddingModel" "text-embedding-ada-002"
 ```
 
 **Setting up Anthropic**:
+
 ```bash
 dotnet user-secrets set "Anthropic:ApiKey" "sk-ant-xxxxxxxxxxxxx"
 ```
@@ -415,12 +448,14 @@ dotnet user-secrets set "Anthropic:ApiKey" "sk-ant-xxxxxxxxxxxxx"
 ### Running Tests
 
 **Backend Tests**:
+
 ```bash
 cd RR.AI-Chat
 dotnet test
 ```
 
 **Frontend Tests**:
+
 ```bash
 cd ai-chat-ui
 npm test
@@ -429,12 +464,14 @@ npm test
 ### Building for Production
 
 **Backend**:
+
 ```bash
 cd RR.AI-Chat
 dotnet publish -c Release -o ./publish
 ```
 
 **Frontend**:
+
 ```bash
 cd ai-chat-ui
 npm run build
@@ -462,6 +499,7 @@ npm test
 ```
 
 For continuous test watching during development:
+
 ```bash
 npm test -- --watch
 ```
@@ -471,6 +509,7 @@ npm test -- --watch
 To generate code coverage reports:
 
 **Backend (using dotnet-coverage)**:
+
 ```bash
 dotnet tool install -g dotnet-coverage
 cd RR.AI-Chat
@@ -478,6 +517,7 @@ dotnet-coverage collect -f cobertura -o coverage.cobertura.xml dotnet test
 ```
 
 **Frontend**:
+
 ```bash
 cd ai-chat-ui
 npm test -- --code-coverage
@@ -490,55 +530,68 @@ Coverage reports will be generated in the `coverage/` directory.
 ### Common Issues
 
 #### 1. .NET SDK Version Error
+
 **Error**: `The current .NET SDK does not support targeting .NET 9.0`
 
 **Solution**: Install .NET 9.0 SDK from [Microsoft's download page](https://dotnet.microsoft.com/download/dotnet/9.0).
 
 #### 2. Database Connection Issues
+
 **Error**: Cannot connect to SQL Server
 
 **Solutions**:
+
 - Ensure SQL Server is running
 - Verify connection string in `appsettings.json`
 - Check if Windows Authentication is enabled (for Integrated Security)
 - For Docker SQL Server, ensure proper port mapping
 
 #### 3. CORS Errors
+
 **Error**: CORS policy blocking requests from frontend
 
 **Solutions**:
+
 - Verify `CorsOrigins` in `appsettings.json` includes your frontend URL
 - Ensure the API is running on the expected port
 - Check if HTTPS redirects are causing issues
 
 #### 4. AI Service Errors
+
 **Error**: API key authentication failed
 
 **Solutions**:
+
 - Verify API keys are correctly set in user secrets
 - Check if the AI service endpoint URLs are correct
 - Ensure at least one AI service is properly configured
 
 #### 5. Vector Search Issues
+
 **Error**: Vector search operations failing
 
 **Solutions**:
+
 - Ensure SQL Server supports Vector Search (SQL Server 2022+)
 - Verify EFCore.SqlServer.VectorSearch package is installed
 - Check if embedding model is properly configured
 
 #### 6. Node.js/Angular Issues
+
 **Error**: Node.js version compatibility
 
 **Solutions**:
+
 - Use Node.js 18+ (recommended: LTS version)
 - Clear npm cache: `npm cache clean --force`
 - Delete `node_modules` and run `npm install` again
 
 #### 7. Port Conflicts
+
 **Error**: Port already in use
 
 **Solutions**:
+
 - API: Modify `launchSettings.json` to use different ports
 - Frontend: Use `ng serve --port 4201` to specify different port
 
@@ -572,12 +625,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Authors
 
-**Rodrigo Ignacio Rojas Garcia** - *Creator and Maintainer*
+**Rodrigo Ignacio Rojas Garcia** - _Creator and Maintainer_
+
 - GitHub: [@RorroRojas3](https://github.com/RorroRojas3)
 
 ## 🙏 Acknowledgments
 
 ### AI Service Providers
+
 - [OpenAI](https://openai.com/) - GPT models and embeddings
 - [Anthropic](https://www.anthropic.com/) - Claude AI models
 - [Microsoft Azure AI](https://azure.microsoft.com/en-us/products/ai-services) - Azure OpenAI Service
@@ -586,6 +641,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Key Technologies & Libraries
 
 **Backend (.NET)**
+
 - [ASP.NET Core](https://dotnet.microsoft.com/apps/aspnet) - Web framework
 - [Entity Framework Core](https://docs.microsoft.com/ef/core/) - ORM and database access
 - [Microsoft.Extensions.AI](https://devblogs.microsoft.com/dotnet/introducing-microsoft-extensions-ai-preview/) - AI service abstractions
@@ -595,6 +651,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Hangfire](https://www.hangfire.io/) - Background job processing
 
 **Frontend (Angular)**
+
 - [Angular](https://angular.dev/) - Frontend framework
 - [Bootstrap](https://getbootstrap.com/) - UI component library
 - [Bootstrap Icons](https://icons.getbootstrap.com/) - Icon library
@@ -604,16 +661,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [MSAL Angular](https://github.com/AzureAD/microsoft-authentication-library-for-js) - Microsoft Authentication Library
 
 **Database & Search**
+
 - [SQL Server](https://www.microsoft.com/sql-server) - Database engine
 - [EFCore.SqlServer.VectorSearch](https://github.com/Giorgi/EFCore.SqlServer.VectorSearch) - Vector search capabilities
 
 **Development Tools**
+
 - [Visual Studio Code](https://code.visualstudio.com/) - Code editor
 - [.NET SDK](https://dotnet.microsoft.com/download) - Development framework
 - [Node.js](https://nodejs.org/) - JavaScript runtime
 - [Angular CLI](https://angular.dev/tools/cli) - Angular development tools
 
 ### Inspiration
+
 This project combines modern AI capabilities with traditional web development practices to create a flexible, multi-provider chat interface suitable for various AI use cases.
 
 ## 🆘 Support
