@@ -70,11 +70,13 @@ export class SessionsComponent implements OnInit {
       )
       .subscribe((filter) => {
         this.sessionService.clearPageSessions();
-        this.sessionService.loadPageSessions(
-          filter,
-          this.storeService.pageSessionSkip(),
-          this.storeService.SESSION_PAGE_SIZE
-        );
+        this.sessionService
+          .loadPageSessions(
+            filter,
+            this.storeService.pageSessionSkip(),
+            this.storeService.SESSION_PAGE_SIZE
+          )
+          .subscribe();
       });
 
     // Load initial sessions
