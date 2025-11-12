@@ -1,5 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
+using Microsoft.Data.SqlTypes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
@@ -10,7 +11,6 @@ using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
 using System.ComponentModel;
 using System.Text.Json;
-using System.Threading;
 
 namespace RR.AI_Chat.Service
 {
@@ -167,7 +167,7 @@ namespace RR.AI_Chat.Service
             }
 
             var embedding = await _embeddingGenerator.GenerateVectorAsync(prompt, null, cancellationToken);
-            var vector = embedding.ToArray();
+            var vector = new SqlVector<float>(embedding);
 
             var docPages = await _ctx.DocumentPages
                 .AsNoTracking()
@@ -361,7 +361,7 @@ namespace RR.AI_Chat.Service
                         documentPages.Add(new DocumentPage
                         {
                             Number = result.Number,
-                            Embedding = result.Embedding.ToArray(),
+                            Embedding = new SqlVector<float>(result.Embedding),
                             Text = result.Text,
                             DateCreated = date
                         });
@@ -377,7 +377,7 @@ namespace RR.AI_Chat.Service
                     documentPages.Add(new DocumentPage
                     {
                         Number = result.Number,
-                        Embedding = result.Embedding.ToArray(),
+                        Embedding = new SqlVector<float>(result.Embedding),
                         Text = result.Text,
                         DateCreated = date
                     });

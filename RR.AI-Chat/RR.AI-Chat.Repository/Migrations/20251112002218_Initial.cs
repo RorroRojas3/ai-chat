@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Data.SqlTypes;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -181,7 +182,7 @@ namespace RR.AI_Chat.Repository.Migrations
                     DocumentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Number = table.Column<int>(type: "int", nullable: false),
                     Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Embedding = table.Column<string>(type: "vector(1536)", nullable: false),
+                    Embedding = table.Column<SqlVector<float>>(type: "vector(1536)", nullable: false),
                     DateCreated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     DateDeactivated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                     Version = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
