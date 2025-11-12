@@ -1,4 +1,5 @@
 ﻿using Hangfire.Server;
+using Microsoft.Data.SqlTypes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
@@ -120,7 +121,7 @@ namespace RR.AI_Chat.Service
                         documentPages.Add(new DocumentPage
                         {
                             Number = result.Number,
-                            Embedding = result.Embedding.ToArray(),
+                            Embedding = new SqlVector<float>(result.Embedding),
                             Text = result.Text,
                             DateCreated = date
                         });
@@ -138,7 +139,7 @@ namespace RR.AI_Chat.Service
                     documentPages.Add(new DocumentPage
                     {
                         Number = result.Number,
-                        Embedding = result.Embedding.ToArray(),
+                        Embedding = new SqlVector<float>(result.Embedding),
                         Text = result.Text,
                         DateCreated = date
                     });
