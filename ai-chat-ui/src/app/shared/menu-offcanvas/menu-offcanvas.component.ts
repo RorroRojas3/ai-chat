@@ -20,10 +20,16 @@ import { SessionDto } from '../../dtos/SessionDto';
 import { SessionRenameModalComponent } from '../../components/sessions/session-rename-modal/session-rename-modal.component';
 import { UpdateSessionActionDto } from '../../dtos/actions/session/UpdateSessionActionDto';
 import { NotificationService } from '../../services/notification.service';
+import { SessionDeleteModalComponent } from '../../components/sessions/session-delete-modal/session-delete-modal.component';
 
 @Component({
   selector: 'app-menu-offcanvas',
-  imports: [FormsModule, CommonModule, SessionRenameModalComponent],
+  imports: [
+    FormsModule,
+    CommonModule,
+    SessionRenameModalComponent,
+    SessionDeleteModalComponent,
+  ],
   templateUrl: './menu-offcanvas.component.html',
   styleUrl: './menu-offcanvas.component.scss',
 })
@@ -42,6 +48,7 @@ export class MenuOffcanvasComponent implements OnInit {
 
   private searchSubject = new Subject<string>();
   showRenameModal = false;
+  showDeleteModal = false;
 
   ngOnInit(): void {
     // Set up debounced search with automatic cleanup
@@ -227,6 +234,7 @@ export class MenuOffcanvasComponent implements OnInit {
         switchMap((response) => {
           // Update the active session with the response
           this.storeService.session.set(response);
+          this.notificationService.success('Chat renamed successfully.');
 
           // Check if we need to reload page sessions
           const shouldReloadPageSessions = this.storeService
@@ -261,6 +269,110 @@ export class MenuOffcanvasComponent implements OnInit {
    */
   onCloseRenameModal(): void {
     this.showRenameModal = false;
+  }
+
+  /**
+   * Initiates the delete process for a specific session.
+   *
+   * Finds the session by ID, sets it as the active session in the store,
+   * closes the offcanvas menu, and opens the delete confirmation modal.
+   *
+   * @param sessionId - The unique identifier of the session to delete
+   * @param event - The click event to stop propagation
+   * @returns void
+   */
+  onDeleteSession(sessionId: string, event: Event): void {
+    event.stopPropagation();
+
+    const session = this.storeService
+      .menuSessions()
+      .find((s) => s.id === sessionId);
+    if (session) {
+      this.storeService.session.set(session);
+
+      this.toggleOffcanvas(false);
+
+      setTimeout(() => {
+        this.showDeleteModal = true;
+      }, this.OFFCANVAS_TRANSITION_DELAY_MS);
+    }
+  }
+
+  /**
+   * Handles deleting the active session with proper error handling and cleanup.
+   * Deactivates the session, clears it from the store, refreshes menu sessions,
+   * and optionally reloads page sessions if the deleted session was present in the page view.
+   *
+   * @returns void
+   *
+   * @remarks
+   * This method:
+   * - Prevents memory leaks by using takeUntilDestroyed
+   * - Shows error notifications if the delete operation fails
+   * - Ensures the modal is closed in the finalize block regardless of success/failure
+   * - Reopens the offcanvas menu after the operation completes
+   * - Clears the active session from the store
+   * - Reloads menu sessions to reflect the change
+   * - Conditionally reloads page sessions if the session exists in that view
+   * - Navigates away from the deleted session if currently viewing it
+   */
+  handleDeleteSession(): void {
+    const currentSession = this.storeService.session();
+    if (!currentSession) {
+      this.onCloseDeleteModal();
+      return;
+    }
+
+    const sessionId = currentSession.id;
+    this.sessionService
+      .deactivateSession(sessionId)
+      .pipe(
+        catchError(() => {
+          this.notificationService.error('Error renaming chat.');
+          return EMPTY;
+        }),
+        switchMap(() => {
+          this.storeService.session.set(null);
+          this.notificationService.success('Chat deleted successfully.');
+
+          // Check if we need to reload page sessions
+          const shouldReloadPageSessions = this.storeService
+            .pageSessions()
+            .some((s) => s.id === sessionId);
+
+          // Reload menu sessions and conditionally reload page sessions
+          return forkJoin({
+            menuSessions: this.sessionService.loadMenuSessions(),
+            pageSessions: shouldReloadPageSessions
+              ? this.sessionService.loadPageSessions(
+                  this.storeService.pageSessionSearchFilter(),
+                  0,
+                  this.storeService.SESSION_PAGE_SIZE
+                )
+              : of(undefined),
+          });
+        }),
+        switchMap(() => {
+          // Navigate to chat page after sessions are reloaded
+          this.onClickCreateNewSession();
+          return of(undefined);
+        }),
+        finalize(() => {
+          this.onCloseDeleteModal();
+          this.toggleOffcanvas(true);
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
+  }
+
+  /**
+   * Closes the delete confirmation modal and resets the modal state.
+   *
+   * @returns void
+   */
+  onCloseDeleteModal(): void {
+    this.showDeleteModal = false;
   }
 
   /**

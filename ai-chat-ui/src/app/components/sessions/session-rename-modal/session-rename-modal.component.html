@@ -67,3 +67,12 @@
     </div>
   </div>
 </div>
+
+<!-- Backdrop -->
+<div
+  class="modal-backdrop fade"
+  [class.show]="show()"
+  [style.display]="show() ? 'block' : 'none'"
+  (click)="handleClose()"
+  [attr.aria-hidden]="true"
+></div>
