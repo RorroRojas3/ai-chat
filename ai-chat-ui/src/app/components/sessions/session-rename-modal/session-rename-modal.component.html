@@ -6,8 +6,6 @@
   role="dialog"
   aria-labelledby="renameSessionModalLabel"
   [attr.aria-hidden]="!show()"
-  data-bs-backdrop="static"
-  data-bs-keyboard="false"
 >
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -71,7 +69,7 @@
 <!-- Backdrop -->
 <div
   class="modal-backdrop fade"
-  [class.show]="show()"
+  [class.show]="shouldShow()"
   [style.display]="show() ? 'block' : 'none'"
   (click)="handleClose()"
   [attr.aria-hidden]="true"

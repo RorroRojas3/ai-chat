@@ -328,7 +328,7 @@ export class MenuOffcanvasComponent implements OnInit {
       .deactivateSession(sessionId)
       .pipe(
         catchError(() => {
-          this.notificationService.error('Error renaming chat.');
+          this.notificationService.error('Error deleting chat.');
           return EMPTY;
         }),
         switchMap(() => {
