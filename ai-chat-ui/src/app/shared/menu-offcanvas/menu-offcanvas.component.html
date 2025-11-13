@@ -142,6 +142,15 @@
                 <i class="bi bi-pencil me-2"></i>Rename
               </button>
             </li>
+            <li>
+              <button
+                type="button"
+                class="dropdown-item"
+                (click)="onDeleteSession(session.id, $event)"
+              >
+                <i class="bi bi-trash me-2"></i>Delete
+              </button>
+            </li>
           </ul>
         </div>
         }
@@ -166,3 +175,10 @@
   (onClose)="onCloseRenameModal()"
   (onRename)="handleRenameSession($event)"
 ></app-session-rename-modal>
+
+<app-session-delete-modal
+  [show]="showDeleteModal"
+  [sessionCount]="1"
+  (onClose)="onCloseDeleteModal()"
+  (onDelete)="handleDeleteSession()"
+></app-session-delete-modal>

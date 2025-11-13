@@ -1,6 +1,6 @@
 <div
   class="modal fade"
-  [class.show]="show()"
+  [class.show]="shouldShow()"
   [style.display]="show() ? 'block' : 'none'"
   tabindex="-1"
   role="dialog"
@@ -51,8 +51,7 @@
 <!-- Backdrop -->
 <div
   class="modal-backdrop fade"
-  [class.show]="show()"
-  [style.display]="show() ? 'block' : 'none'"
-  (click)="handleClose()"
+  [class.show]="shouldShow()"
+  [style.display]="shouldShow() ? 'block' : 'none'"
   [attr.aria-hidden]="true"
 ></div>

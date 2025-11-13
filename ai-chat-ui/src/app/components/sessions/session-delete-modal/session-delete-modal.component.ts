@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -12,6 +12,20 @@ export class SessionDeleteModalComponent {
   sessionCount = input<number>(0);
   onDelete = output<void>();
   onClose = output<void>();
+  shouldShow = signal<boolean>(false);
+
+  constructor() {
+    // Use effect to respond to input changes
+    effect(() => {
+      if (this.show()) {
+        setTimeout(() => {
+          this.shouldShow.set(true);
+        }, 10);
+      } else {
+        this.shouldShow.set(false);
+      }
+    });
+  }
 
   /**
    * Handles the delete action by emitting the delete event.
