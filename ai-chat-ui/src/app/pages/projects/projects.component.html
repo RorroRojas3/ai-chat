@@ -92,7 +92,7 @@
                     <i class="bi bi-folder-fill me-2"></i>{{ project.name }}
                   </h5>
                   @if (project.description) {
-                  <p class="mb-2 text-muted">{{ project.description }}</p>
+                  <p class="mb-2">{{ project.description }}</p>
                   }
                   <div class="projects-list__dates">
                     <small
@@ -123,7 +123,7 @@
                 </div>
                 <div class="dropdown ms-2">
                   <button
-                    class="btn btn-link p-1 text-white project-dropdown-toggle"
+                    class="btn btn-link p-1 text-white dropdown-toggle"
                     type="button"
                     [attr.id]="'dropdownMenu-' + project.id"
                     [attr.aria-label]="'Actions for ' + project.name"
@@ -134,37 +134,37 @@
                     <i class="bi bi-three-dots-vertical"></i>
                   </button>
                   <ul
-                    class="dropdown-menu project-dropdown-menu"
+                    class="dropdown-menu"
                     [attr.aria-labelledby]="'dropdownMenu-' + project.id"
                   >
                     <li>
-                      <a
+                      <button
+                        type="button"
                         class="dropdown-item"
-                        href="javascript:void(0)"
                         (click)="onEditProject(project.id, $event)"
                       >
                         <i class="bi bi-pencil me-2"></i>Edit
-                      </a>
+                      </button>
                     </li>
                     <li>
-                      <a
+                      <button
+                        type="button"
                         class="dropdown-item"
-                        href="javascript:void(0)"
                         (click)="
                           onClickProject(project.id); $event.stopPropagation()
                         "
                       >
-                        <i class="bi bi-folder-open me-2"></i>Open Project
-                      </a>
+                        <i class="bi bi-folder-fill me-2"></i>Open Project
+                      </button>
                     </li>
                     <li>
-                      <a
+                      <button
+                        type="button"
                         class="dropdown-item"
-                        href="javascript:void(0)"
                         (click)="onDeleteProject(project.id, $event)"
                       >
                         <i class="bi bi-trash me-2"></i>Delete
-                      </a>
+                      </button>
                     </li>
                   </ul>
                 </div>

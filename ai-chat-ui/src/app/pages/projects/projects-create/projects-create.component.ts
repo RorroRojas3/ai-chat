@@ -112,8 +112,7 @@ export class ProjectsCreateComponent {
             );
             this.router.navigate(['/projects', project.id]);
           }),
-          catchError((error) => {
-            console.error('Error creating project:', error);
+          catchError(() => {
             this.notificationService.error(
               'Failed to create project. Please try again.'
             );
