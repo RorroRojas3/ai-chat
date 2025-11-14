@@ -14,7 +14,9 @@
   min-height: 0;
   padding-right: 0.5rem;
 
-  // Custom scrollbar styling
+  // Custom scrollbar styling - only visible when needed
+  scrollbar-gutter: stable;
+
   &::-webkit-scrollbar {
     width: 8px;
   }
