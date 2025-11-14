@@ -37,6 +37,11 @@ export const routes: Routes = [
     canActivate: [MsalGuard],
   },
   {
+    path: 'projects/:id',
+    component: ProjectsComponent, // Placeholder component until project detail page is created
+    canActivate: [MsalGuard],
+  },
+  {
     path: '**',
     redirectTo: '/chat',
   },

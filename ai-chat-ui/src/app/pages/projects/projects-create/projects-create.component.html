@@ -1,1 +1,128 @@
-<p>projects-create works!</p>
+<div class="container-fluid projects-create-container">
+  <div class="row h-100">
+    <div class="col-12 d-flex flex-column h-100 p-4">
+      <div class="projects-create-content">
+        <!-- Header -->
+        <header class="mb-4">
+          <h1 class="display-5 fw-bold text-primary">
+            Create a personal project
+          </h1>
+        </header>
+
+        <!-- Info Card -->
+        <div class="card bg-navy text-white mb-4">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-bold mb-3">How to use projects</h5>
+            <p class="card-text">
+              Projects help organize your work and leverage knowledge across
+              multiple conversations. Upload docs, code, and files to create
+              themed collections that RR GPT can reference again and again.
+            </p>
+            <p class="card-text mb-0">
+              Start by creating a memorable title and description to organize
+              your project. You can always edit it later.
+            </p>
+          </div>
+        </div>
+
+        <!-- Project Form -->
+        <form [formGroup]="projectForm" (ngSubmit)="handleSubmit()">
+          <!-- Project Name -->
+          <div class="mb-4">
+            <label
+              for="projectName"
+              class="form-label fw-semibold text-primary"
+            >
+              Name of your project
+            </label>
+            <input
+              type="text"
+              class="form-control form-control-lg"
+              [class.is-invalid]="showNameError()"
+              id="projectName"
+              formControlName="name"
+              placeholder="Name of your project"
+              [attr.maxlength]="MAX_NAME_LENGTH"
+              aria-describedby="projectNameHelp projectNameError"
+            />
+            @if (nameControl.hasError('required') && showNameError()) {
+            <div
+              id="projectNameError"
+              class="invalid-feedback"
+              role="alert"
+              aria-live="polite"
+            >
+              Project name is required.
+            </div>
+            }
+            <div id="projectNameHelp" class="form-text">
+              {{ nameCharacterCount() }} / {{ MAX_NAME_LENGTH }} characters
+            </div>
+          </div>
+
+          <!-- Project Description -->
+          <div class="mb-4">
+            <label
+              for="projectDescription"
+              class="form-label text-primary fw-semibold"
+            >
+              Description
+            </label>
+            <textarea
+              class="form-control form-control-lg"
+              [class.is-invalid]="showDescriptionError()"
+              id="projectDescription"
+              formControlName="description"
+              placeholder="Describe your project..."
+              rows="5"
+              [attr.maxlength]="MAX_DESCRIPTION_LENGTH"
+              aria-describedby="projectDescriptionHelp projectDescriptionError"
+            ></textarea>
+            @if (descriptionControl.hasError('required') &&
+            showDescriptionError()) {
+            <div
+              id="projectDescriptionError"
+              class="invalid-feedback"
+              role="alert"
+              aria-live="polite"
+            >
+              Project description is required.
+            </div>
+            }
+            <div id="projectDescriptionHelp" class="form-text">
+              {{ descriptionCharacterCount() }} /
+              {{ MAX_DESCRIPTION_LENGTH }} characters
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="d-flex justify-content-end gap-3 mb-5">
+            <button
+              type="button"
+              class="btn btn-lg btn-secondary"
+              (click)="handleCancel()"
+              [disabled]="isSubmitting"
+              aria-label="Cancel project creation"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="btn btn-lg btn-primary"
+              [disabled]="projectForm.invalid || isSubmitting"
+              aria-label="Create project"
+            >
+              @if (isSubmitting) {
+              <span
+                class="spinner-border spinner-border-sm me-2"
+                role="status"
+                aria-hidden="true"
+              ></span>
+              Creating... } @else { Create Project }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

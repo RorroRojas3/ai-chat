@@ -1,0 +1,104 @@
+// Full-page container with proper height management
+.projects-create-container {
+  background-color: var(--color-light-blue);
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+}
+
+// Scrollable content area
+.projects-create-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding-right: 0.5rem;
+
+  // Custom scrollbar styling
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(28, 60, 98, 0.1);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-accent);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--color-navy);
+    }
+  }
+}
+
+// Use global color scheme from styles.scss
+.bg-navy {
+  background-color: var(--color-navy);
+}
+
+// Form input styling for consistency with sessions page
+.form-control,
+.form-control-lg {
+  background-color: white;
+  border-color: var(--color-accent);
+
+  &:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 0.2rem rgba(28, 60, 98, 0.25);
+    background-color: white;
+  }
+
+  &:hover:not(:focus) {
+    border-color: var(--color-accent-light);
+  }
+}
+
+// Component-specific styles only
+textarea.form-control {
+  resize: vertical;
+}
+
+// Responsive adjustments for mobile
+@media (max-width: 768px) {
+  .projects-create-container {
+    .col-12 {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+  }
+
+  .projects-create-content {
+    padding-right: 0.25rem;
+  }
+
+  // Larger touch targets for mobile
+  .btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+  }
+
+  // Stack buttons vertically on very small screens
+  @media (max-width: 480px) {
+    .d-flex.gap-3 {
+      flex-direction: column;
+      gap: 1rem !important;
+
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+
+  // Adjust heading size
+  .display-5 {
+    font-size: 2rem;
+  }
+
+  // Better spacing for form fields
+  .mb-4 {
+    margin-bottom: 1.5rem !important;
+  }
+}

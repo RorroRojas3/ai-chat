@@ -65,6 +65,11 @@ app-home {
   scrollbar-color: var(--color-accent) var(--color-light-blue);
 }
 
+/* Boostrap Overrides and Customizations */
+.text-primary {
+  color: var(--color-navy) !important;
+}
+
 /* Custom Button Styling */
 .btn-primary {
   background-color: var(--color-accent) !important;
