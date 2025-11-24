@@ -37,5 +37,19 @@ namespace RR.AI_Chat.Entity
                 DateModified = source.DateModified
             };
         }
+
+        public static ProjectDetailDto MapToProjectDetailDto(this Project source)
+        {
+            return new ProjectDetailDto
+            {
+                Id = source.Id,
+                Name = source.Name,
+                Description = source.Description,
+                Instructions = source.Instructions,
+                DateCreated = source.DateCreated,
+                DateModified = source.DateModified,
+                Sessions = [.. source.Sessions.Select(s => s.MapToSessionDto())]
+            };
+        }
     }
 }

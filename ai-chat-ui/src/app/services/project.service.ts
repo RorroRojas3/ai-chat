@@ -5,6 +5,7 @@ import { ProjectDto } from '../dtos/ProjectDto';
 import { PaginatedResponseDto } from '../dtos/PaginatedResponseDto';
 import { UpsertProjectActionDto } from '../dtos/actions/project/UpsertProjectActionDto';
 import { environment } from '../../environments/environment';
+import { ProjectDetailDto } from '../dtos/ProjectDetailDto';
 
 @Injectable({
   providedIn: 'root',
@@ -75,5 +76,29 @@ export class ProjectService {
    */
   deactivateProject(id: string): Observable<void> {
     return this.http.delete<void>(`${environment.apiUrl}projects/${id}`);
+  }
+
+  /**
+   * Retrieves detailed information about a project by its unique identifier.
+   *
+   * @param id - The unique identifier of the project to retrieve
+   * @returns An Observable that emits the detailed project information
+   *
+   * @remarks
+   * This method makes an HTTP GET request to the projects endpoint.
+   * The request is made to `{apiUrl}/projects/{id}` where apiUrl is configured in the environment.
+   *
+   * @example
+   * ```typescript
+   * this.projectService.getProjectById('123').subscribe(
+   *   project => console.log('Project:', project),
+   *   error => console.error('Error fetching project:', error)
+   * );
+   * ```
+   */
+  getProjectById(id: string): Observable<ProjectDetailDto> {
+    return this.http.get<ProjectDetailDto>(
+      `${environment.apiUrl}projects/${id}`
+    );
   }
 }

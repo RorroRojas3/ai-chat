@@ -150,17 +150,6 @@
                       <button
                         type="button"
                         class="dropdown-item"
-                        (click)="
-                          onClickProject(project.id); $event.stopPropagation()
-                        "
-                      >
-                        <i class="bi bi-folder-fill me-2"></i>Open Project
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        class="dropdown-item"
                         (click)="onDeleteProject(project.id, $event)"
                       >
                         <i class="bi bi-trash me-2"></i>Delete

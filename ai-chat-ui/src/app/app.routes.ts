@@ -4,6 +4,7 @@ import { MsalGuard } from '@azure/msal-angular';
 import { SessionsComponent } from './pages/sessions/sessions.component';
 import { ProjectsComponent } from './pages/projects/projects.component';
 import { ProjectsCreateComponent } from './pages/projects/projects-create/projects-create.component';
+import { ProjectDetailComponent } from './pages/projects/project-detail/project-detail.component';
 
 export const routes: Routes = [
   {
@@ -38,7 +39,7 @@ export const routes: Routes = [
   },
   {
     path: 'projects/:id',
-    component: ProjectsComponent, // Placeholder component until project detail page is created
+    component: ProjectDetailComponent, // Placeholder component until project detail page is created
     canActivate: [MsalGuard],
   },
   {
