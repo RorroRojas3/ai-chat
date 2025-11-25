@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Graph.IdentityGovernance.LifecycleWorkflows.DeletedItems.Workflows.Item.MicrosoftGraphIdentityGovernanceActivateWithScope;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Actions.Project;
 using RR.AI_Chat.Entity;
@@ -208,6 +209,20 @@ namespace RR.AI_Chat.Service
             await _ctx.Projects
                 .Where(x => x.Id == id)
                 .ExecuteUpdateAsync(p => p
+                    .SetProperty(x => x.DateDeactivated, date)
+                    .SetProperty(x => x.DateModified, date),
+                    cancellationToken);
+
+            await _ctx.ProjectDocuments
+                .Where(pd => pd.ProjectId == id)
+                .ExecuteUpdateAsync(pd => pd
+                    .SetProperty(x => x.DateDeactivated, date)
+                    .SetProperty(x => x.DateModified, date),
+                    cancellationToken);
+
+            await _ctx.ProjectDocumentPages
+                .Where(pdp => pdp.ProjectDocument.ProjectId == id)
+                .ExecuteUpdateAsync(pdp => pdp
                     .SetProperty(x => x.DateDeactivated, date)
                     .SetProperty(x => x.DateModified, date),
                     cancellationToken);
