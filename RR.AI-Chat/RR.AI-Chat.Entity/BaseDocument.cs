@@ -3,14 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RR.AI_Chat.Entity
 {
-    [Table(nameof(Document), Schema = "Core")]
-    public class Document : BaseEntity
+    public class BaseDocument : BaseModifiedEntity
     {
         [ForeignKey(nameof(User))]
         public Guid UserId { get; set; }
-
-        [ForeignKey(nameof(Session))]
-        public Guid SessionId { get; set; }
 
         [StringLength(256)]
         public string Name { get; set; } = null!;
@@ -26,10 +22,6 @@ namespace RR.AI_Chat.Entity
         [Column(TypeName = "nvarchar(max)")]
         public string Path { get; set; } = null!;
 
-        public Session Session { get; set; } = null!;
-
-        public List<DocumentPage> Pages { get; set; } = [];  
-
-        public User User { get; set; } = null!;      
+        public User User { get; set; } = null!;
     }
 }

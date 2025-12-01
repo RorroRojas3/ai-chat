@@ -121,27 +121,3 @@
     cursor: not-allowed;
   }
 }
-
-.project-dropdown-toggle {
-  color: white;
-  text-decoration: none;
-
-  &:hover {
-    color: rgba(255, 255, 255, 0.8);
-  }
-}
-
-.project-dropdown-menu {
-  background-color: var(--color-accent);
-  border: 1px solid var(--color-navy);
-
-  .dropdown-item {
-    color: white;
-
-    &:hover,
-    &:focus {
-      background-color: var(--color-navy);
-      color: white;
-    }
-  }
-}

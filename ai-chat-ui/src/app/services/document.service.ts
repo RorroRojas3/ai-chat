@@ -150,4 +150,25 @@ export class DocumentService {
       `${environment.apiUrl}documents/file-extensions`
     );
   }
+
+  /**
+   * Creates a new document for a specific project by uploading a file.
+   *
+   * @param projectId - The unique identifier of the project to which the document will be added
+   * @param content - The file to be uploaded as the project document
+   * @returns An Observable that emits a JobDto object representing the document creation job
+   *
+   * @remarks
+   * This method sends a POST request with multipart/form-data containing the file.
+   * The file is appended to FormData with the key 'file'.
+   */
+  createProjectDocument(projectId: string, content: File): Observable<JobDto> {
+    const formData = new FormData();
+    formData.append('file', content);
+
+    return this.http.post<JobDto>(
+      `${environment.apiUrl}documents/projects/${projectId}`,
+      formData
+    );
+  }
 }

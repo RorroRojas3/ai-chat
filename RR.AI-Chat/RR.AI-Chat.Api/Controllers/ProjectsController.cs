@@ -33,6 +33,13 @@ namespace RR.AI_Chat.Api.Controllers
             return Ok(response);
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetProjectByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var response = await _projectService.GetProjectByIdAsync(id, cancellationToken);
+            return Ok(response);
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeactivateProjectAsync(Guid id,  CancellationToken cancellationToken)
         {

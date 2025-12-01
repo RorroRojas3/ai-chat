@@ -53,6 +53,15 @@ namespace RR.AI_Chat.Service
         /// have their ProjectId set to null within a single database transaction.
         /// </remarks>
         Task DeactivateProjectAsync(Guid id, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Retrieves detailed information about a specific active project belonging to the current user.
+        /// </summary>
+        /// <param name="id">The unique identifier of the project to retrieve.</param>
+        /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+        /// <returns>The project details as a <see cref="ProjectDetailDto"/>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when the project is not found or already deactivated.</exception>
+        Task<ProjectDetailDto> GetProjectByIdAsync(Guid id, CancellationToken cancellationToken);
     }
 
     public class ProjectService(ILogger<ProjectService> logger,
@@ -156,6 +165,28 @@ namespace RR.AI_Chat.Service
         }
 
         /// <inheritdoc />
+        public async Task<ProjectDetailDto> GetProjectByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            var userId = _tokenService.GetOid()!.Value;
+
+            var project = await _ctx.Projects
+                .Include(x => x.Sessions.Where(x => !x.DateDeactivated.HasValue))
+                .AsNoTracking()
+                .Where(x => x.Id == id &&
+                        x.UserId == userId &&
+                        !x.DateDeactivated.HasValue)
+                .Select(p => p.MapToProjectDetailDto())
+                .FirstOrDefaultAsync(cancellationToken);
+            if (project == null)
+            {
+                _logger.LogWarning("Project with id {Id} not found or already deactivated.", id);
+                throw new InvalidOperationException($"Project not found or already deactivated.");
+            }
+
+            return project;
+        }
+
+        /// <inheritdoc />
         public async Task DeactivateProjectAsync(Guid id, CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid()!.Value;
@@ -178,6 +209,20 @@ namespace RR.AI_Chat.Service
             await _ctx.Projects
                 .Where(x => x.Id == id)
                 .ExecuteUpdateAsync(p => p
+                    .SetProperty(x => x.DateDeactivated, date)
+                    .SetProperty(x => x.DateModified, date),
+                    cancellationToken);
+
+            await _ctx.ProjectDocuments
+                .Where(pd => pd.ProjectId == id)
+                .ExecuteUpdateAsync(pd => pd
+                    .SetProperty(x => x.DateDeactivated, date)
+                    .SetProperty(x => x.DateModified, date),
+                    cancellationToken);
+
+            await _ctx.ProjectDocumentPages
+                .Where(pdp => pdp.ProjectDocument.ProjectId == id)
+                .ExecuteUpdateAsync(pdp => pdp
                     .SetProperty(x => x.DateDeactivated, date)
                     .SetProperty(x => x.DateModified, date),
                     cancellationToken);
