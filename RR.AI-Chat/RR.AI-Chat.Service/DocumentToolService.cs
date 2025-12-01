@@ -351,7 +351,7 @@ namespace RR.AI_Chat.Service
             var tasks = new List<Task<PageEmbeddingDto>>();
             foreach (var documentExtractor in documentExtractors)
             {
-                var task = _documentService.GeneratePageEmbedding(documentExtractor, CancellationToken.None);
+                var task = _documentService.GeneratePageEmbeddingAsync(documentExtractor, CancellationToken.None);
                 tasks.Add(task);
                 if (tasks.Count == 10)
                 {
