@@ -23,8 +23,14 @@ export class ProjectDetailComponent implements OnInit {
 
   ngOnInit(): void {
     this.projectId = this.route.snapshot.paramMap.get('id');
+
+    if (!this.projectId) {
+      this.notificationService.error('Project ID is required');
+      return;
+    }
+
     this.projectService
-      .getProjectById(this.projectId!)
+      .getProjectById(this.projectId)
       .pipe(
         catchError(() => {
           this.notificationService.error(

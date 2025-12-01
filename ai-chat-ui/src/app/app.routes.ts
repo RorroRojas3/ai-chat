@@ -39,7 +39,7 @@ export const routes: Routes = [
   },
   {
     path: 'projects/:id',
-    component: ProjectDetailComponent, // Placeholder component until project detail page is created
+    component: ProjectDetailComponent,
     canActivate: [MsalGuard],
   },
   {

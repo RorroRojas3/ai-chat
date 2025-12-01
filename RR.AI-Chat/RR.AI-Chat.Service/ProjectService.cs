@@ -1,7 +1,6 @@
 ﻿using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Graph.IdentityGovernance.LifecycleWorkflows.DeletedItems.Workflows.Item.MicrosoftGraphIdentityGovernanceActivateWithScope;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Actions.Project;
 using RR.AI_Chat.Entity;
@@ -171,6 +170,7 @@ namespace RR.AI_Chat.Service
             var userId = _tokenService.GetOid()!.Value;
 
             var project = await _ctx.Projects
+                .Include(x => x.Sessions.Where(x => !x.DateDeactivated.HasValue))
                 .AsNoTracking()
                 .Where(x => x.Id == id &&
                         x.UserId == userId &&
