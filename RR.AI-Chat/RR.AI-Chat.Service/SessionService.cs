@@ -448,13 +448,13 @@ namespace RR.AI_Chat.Service
                 return;
             }
 
-            await _ctx.DocumentPages
-                .Where(p => p.Document.SessionId == sessionId && !p.DateDeactivated.HasValue)
+            await _ctx.SessionDocumentPages
+                .Where(p => p.SessionDocument.SessionId == sessionId && !p.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(p => p
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
-            await _ctx.Documents
+            await _ctx.SessionDocuments
                 .Where(d => d.SessionId == sessionId && !d.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(d => d
                     .SetProperty(x => x.DateDeactivated, date),
@@ -490,13 +490,13 @@ namespace RR.AI_Chat.Service
             }
 
             // Deactivate all pages for documents in these sessions
-            await _ctx.DocumentPages
-                .Where(p => sessionIds.Contains(p.Document.SessionId) && !p.DateDeactivated.HasValue)
+            await _ctx.SessionDocumentPages
+                .Where(p => sessionIds.Contains(p.SessionDocument.SessionId) && !p.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(p => p
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
-            await _ctx.Documents
+            await _ctx.SessionDocuments
                 .Where(d => sessionIds.Contains(d.SessionId) && !d.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(d => d
                     .SetProperty(x => x.DateDeactivated, date),

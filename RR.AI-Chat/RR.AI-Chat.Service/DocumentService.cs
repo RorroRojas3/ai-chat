@@ -11,13 +11,12 @@ using RR.AI_Chat.Dto.Enums;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
 using RR.AI_Chat.Service.Common.Interface;
-using DocumentPage = RR.AI_Chat.Entity.DocumentPage;
 
 namespace RR.AI_Chat.Service
 {
     public interface IDocumentService 
     {
-        Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken);
+        Task<SessionDocumentDto> CreateSessionDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken);
 
         Task<FileDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken);
 
@@ -63,7 +62,7 @@ namespace RR.AI_Chat.Service
         /// </summary>
         /// <param name="formFile">The uploaded PDF file to process. Must not be null.</param>
         /// <param name="sessionId">The unique identifier of the session to associate the document with.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="DocumentDto"/> with the created document's ID and name.</returns>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="SessionDocumentDto"/> with the created document's ID and name.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="formFile"/> is null.</exception>
         /// <remarks>
         /// This method performs the following operations:
@@ -73,7 +72,7 @@ namespace RR.AI_Chat.Service
         /// 4. Creates document page entities with embeddings
         /// 5. Saves the document and all pages to the database
         /// </remarks>
-        public async Task<DocumentDto> CreateDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken)
+        public async Task<SessionDocumentDto> CreateSessionDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(context, nameof(context));
             ArgumentNullException.ThrowIfNull(fileDataDto, nameof(fileDataDto));
@@ -103,7 +102,7 @@ namespace RR.AI_Chat.Service
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Extracting.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 50);
 
-            List<DocumentPage> documentPages = [];
+            List<SessionDocumentPage> documentPages = [];
             var date = DateTimeOffset.UtcNow;
 
             var tasks = new List<Task<PageEmbeddingDto>>();
@@ -119,12 +118,13 @@ namespace RR.AI_Chat.Service
                     var completedTasks = await Task.WhenAll(tasks);
                     foreach (var result in completedTasks)
                     {
-                        documentPages.Add(new DocumentPage
+                        documentPages.Add(new SessionDocumentPage
                         {
                             Number = result.Number,
                             Embedding = new SqlVector<float>(result.Embedding),
                             Text = result.Text,
                             DateCreated = date,
+                            DateModified = date
                         });
                     }
                     tasks.Clear();
@@ -137,19 +137,20 @@ namespace RR.AI_Chat.Service
                 var completedTasks = await Task.WhenAll(tasks);
                 foreach (var result in completedTasks)
                 {
-                    documentPages.Add(new DocumentPage
+                    documentPages.Add(new SessionDocumentPage
                     {
                         Number = result.Number,
                         Embedding = new SqlVector<float>(result.Embedding),
                         Text = result.Text,
-                        DateCreated = date
+                        DateCreated = date,
+                        DateModified = date
                     });
                 }
             }
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Embedding.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 75);
 
-            var document = new Document
+            var document = new SessionDocument
             {
                 UserId = userId,
                 SessionId = sessionId,
@@ -168,11 +169,7 @@ namespace RR.AI_Chat.Service
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Processed.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 100);
 
-            return new()
-            {
-                Id = document.Id.ToString(),
-                Name = document.Name
-            };
+            return document.MapToSessionDocumentDto();
         }
 
         public async Task<FileDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken)

@@ -24,7 +24,7 @@ export class DocumentService {
    * This method sends a POST request with the file as FormData to the documents API endpoint.
    * The response is logged to the console upon successful completion.
    */
-  createDocument(sessionId: string, content: File): Observable<JobDto> {
+  createSessionDocument(sessionId: string, content: File): Observable<JobDto> {
     const formData = new FormData();
     formData.append('file', content);
 
