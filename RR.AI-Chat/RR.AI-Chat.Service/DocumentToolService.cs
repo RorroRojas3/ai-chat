@@ -358,7 +358,8 @@ namespace RR.AI_Chat.Service
                             Number = result.Number,
                             Embedding = new SqlVector<float>(result.Embedding),
                             Text = result.Text,
-                            DateCreated = date
+                            DateCreated = date,
+                            DateModified = date
                         });
                     }
                     tasks.Clear();
@@ -374,7 +375,8 @@ namespace RR.AI_Chat.Service
                         Number = result.Number,
                         Embedding = new SqlVector<float>(result.Embedding),
                         Text = result.Text,
-                        DateCreated = date
+                        DateCreated = date,
+                        DateModified = date
                     });
                 }
             }
@@ -388,7 +390,8 @@ namespace RR.AI_Chat.Service
                 MimeType = properties.Value.ContentType,
                 Path = path,
                 Pages = documentPages,
-                DateCreated = date
+                DateCreated = date,
+                DateModified = date
             };
             await _ctx.AddAsync(newDocument);
             await _ctx.SaveChangesAsync();

@@ -160,7 +160,8 @@ namespace RR.AI_Chat.Service
                 Size = fileDataDto.Length,
                 Path = blob,
                 Pages = documentPages,
-                DateCreated = date
+                DateCreated = date,
+                DateModified = date
             };
 
             await _ctx.AddAsync(document, cancellationToken);
