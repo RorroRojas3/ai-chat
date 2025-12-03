@@ -314,7 +314,7 @@ export class PromptBoxComponent implements OnDestroy {
     // Upload files sequentially and wait for each to complete
     const uploadPromises = this.attachedFiles.map((attachedFile) =>
       firstValueFrom(
-        this.documentService.createDocument(sessionId, attachedFile.file)
+        this.documentService.createSessionDocument(sessionId, attachedFile.file)
       )
     );
 

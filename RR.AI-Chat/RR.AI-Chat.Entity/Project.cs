@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RR.AI_Chat.Entity
 {
+    [Table(nameof(Project), Schema = "Core")]
     public class Project : BaseModifiedEntity
     {
         [ForeignKey(nameof(User))]

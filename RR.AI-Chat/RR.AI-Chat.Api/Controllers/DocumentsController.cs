@@ -22,7 +22,7 @@ namespace RR.AI_Chat.Api.Controllers
         private readonly ITokenService _tokenService = tokenService;
 
         [HttpPost("sessions/{sessionId}")]
-        public async Task<IActionResult> CreateDocumentAsync([FromRoute] Guid sessionId, IFormFile file, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateSessionDocumentAsync([FromRoute] Guid sessionId, IFormFile file, CancellationToken cancellationToken)
         {
             if (file == null || file.Length == 0)
             {
@@ -37,7 +37,7 @@ namespace RR.AI_Chat.Api.Controllers
                 Length = file.Length,
                 Content = await ReadFileAsync(file)
             };
-            var jobId = BackgroundJob.Enqueue(() => _service.CreateDocumentAsync(null, fileData, _tokenService.GetOid()!.Value, sessionId, cancellationToken));
+            var jobId = BackgroundJob.Enqueue(() => _service.CreateSessionDocumentAsync(null, fileData, _tokenService.GetOid()!.Value, sessionId, cancellationToken));
 
             return Accepted(new JobDto { Id = jobId});
         }

@@ -22,7 +22,7 @@ namespace RR.AI_Chat.Service
     
         IList<AITool> GetTools();
 
-        Task<List<Document>> SearchDocumentsAsync(string sessionId, string prompt, CancellationToken cancellationToken = default);
+        Task<List<SessionDocument>> SearchDocumentsAsync(string sessionId, string prompt, CancellationToken cancellationToken = default);
 
         Task<string> CompareDocumentsAsync(string sessionId, string firstDocumentId, string secondDocumentId, CancellationToken cancellationToken = default);
     }
@@ -58,15 +58,10 @@ namespace RR.AI_Chat.Service
                 return "The session ID is not a valid GUID. Continue with your work without mentioning it.";
             }
 
-            var documents = await _ctx.Documents.AsNoTracking()
+            var documents = await _ctx.SessionDocuments.AsNoTracking()
                 .Where(x => x.SessionId == Guid.Parse(sessionId) && 
                         !   x.DateDeactivated.HasValue )
-                .Select(x => new DocumentDto
-                {
-                    Id = x.Id.ToString(),
-                    SessionId = x.SessionId.ToString(),
-                    Name = x.Name,
-                }).ToListAsync(cancellationToken).ConfigureAwait(false);
+                .Select(x => x.MapToSessionDocumentDto()).ToListAsync(cancellationToken).ConfigureAwait(false);
             if (documents.Count == 0)
             {
                 return "No documents found in the current session. Continue with your work without mentioning it.";
@@ -102,13 +97,13 @@ namespace RR.AI_Chat.Service
                 return "The document ID is not a valid GUID. Continue with your work without mentioning it.";
             }
 
-            var documentPages = await _ctx.DocumentPages.AsNoTracking()
-                .Include(x => x.Document)
-                .Where(x => x.DocumentId == documentGuid && 
-                        x.Document.SessionId == sessionGuid && 
+            var documentPages = await _ctx.SessionDocumentPages.AsNoTracking()
+                .Include(x => x.SessionDocument)
+                .Where(x => x.SessionDocumentId == documentGuid && 
+                        x.SessionDocument.SessionId == sessionGuid && 
                         !x.DateDeactivated.HasValue)
                 .OrderBy(x => x.Number)
-                .Select(x => new DocumentPage
+                .Select(x => new SessionDocumentPage
                 {
                     Id = x.Id,
                     Number = x.Number,
@@ -141,7 +136,7 @@ namespace RR.AI_Chat.Service
         /// Pages within each document are ordered by their similarity score to the search prompt.
         /// </remarks>
         [Description("Searches for information in the document if no overiew or summary is asked.")]
-        public async Task<List<Document>> SearchDocumentsAsync([Description("sessionId")] string sessionId, [Description("What the user is looking for in document")] string prompt, CancellationToken cancellationToken)
+        public async Task<List<SessionDocument>> SearchDocumentsAsync([Description("sessionId")] string sessionId, [Description("What the user is looking for in document")] string prompt, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(sessionId))
             {
@@ -158,7 +153,7 @@ namespace RR.AI_Chat.Service
                 return [];
             }
 
-            var anyDocuments = await _ctx.Documents
+            var anyDocuments = await _ctx.SessionDocuments
                 .AsNoTracking()
                 .AnyAsync(d => d.SessionId == sessionGuid && !d.DateDeactivated.HasValue, cancellationToken);   
             if (!anyDocuments)
@@ -169,22 +164,22 @@ namespace RR.AI_Chat.Service
             var embedding = await _embeddingGenerator.GenerateVectorAsync(prompt, null, cancellationToken);
             var vector = new SqlVector<float>(embedding);
 
-            var docPages = await _ctx.DocumentPages
+            var docPages = await _ctx.SessionDocumentPages
                 .AsNoTracking()
-                .Include(p => p.Document)
-                .Where(p => p.Document.SessionId == Guid.Parse(sessionId))
+                .Include(p => p.SessionDocument)
+                .Where(p => p.SessionDocument.SessionId == Guid.Parse(sessionId))
                 .Where(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector) <= _cosineDistanceThreshold)
                 .OrderBy(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector))
                 .Take(10)
-                .GroupBy(p => p.Document)
-                .Select(g => new Document
+                .GroupBy(p => p.SessionDocument)
+                .Select(g => new SessionDocument
                 {
                     Id = g.Key.Id,
                     Name = g.Key.Name,
                     Extension = g.Key.Extension,
                     DateCreated = g.Key.DateCreated,
                     Pages = g.OrderBy(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector))
-                           .Select(p => new DocumentPage
+                           .Select(p => new SessionDocumentPage
                            {
                                Id = p.Id,
                                Number = p.Number,
@@ -292,10 +287,10 @@ namespace RR.AI_Chat.Service
 
         private async Task<string?> GetDocumentContentAsync(Guid sessionId, Guid documentId, CancellationToken cancellationToken)
         {
-            var documentPages = await _ctx.DocumentPages.AsNoTracking()
-                .Include(x => x.Document)
-                .Where(x => x.DocumentId == documentId &&
-                        x.Document.SessionId == sessionId &&
+            var documentPages = await _ctx.SessionDocumentPages.AsNoTracking()
+                .Include(x => x.SessionDocument)
+                .Where(x => x.SessionDocumentId == documentId &&
+                        x.SessionDocument.SessionId == sessionId &&
                         !x.DateDeactivated.HasValue)
                 .OrderBy(x => x.Number)
                 .Select(x => x.Text)
@@ -338,7 +333,7 @@ namespace RR.AI_Chat.Service
 
             await _blobStorageService.UploadAsync(container, path, bytes, metadata, CancellationToken.None);
 
-            List<DocumentPage> documentPages = [];
+            List<SessionDocumentPage> documentPages = [];
             var date = DateTime.UtcNow;
             var fileDto = new FileDto
             {
@@ -358,12 +353,13 @@ namespace RR.AI_Chat.Service
                     var completedTasks = await Task.WhenAll(tasks);
                     foreach (var result in completedTasks)
                     {
-                        documentPages.Add(new DocumentPage
+                        documentPages.Add(new SessionDocumentPage
                         {
                             Number = result.Number,
                             Embedding = new SqlVector<float>(result.Embedding),
                             Text = result.Text,
-                            DateCreated = date
+                            DateCreated = date,
+                            DateModified = date
                         });
                     }
                     tasks.Clear();
@@ -374,17 +370,18 @@ namespace RR.AI_Chat.Service
                 var completedTasks = await Task.WhenAll(tasks);
                 foreach (var result in completedTasks)
                 {
-                    documentPages.Add(new DocumentPage
+                    documentPages.Add(new SessionDocumentPage
                     {
                         Number = result.Number,
                         Embedding = new SqlVector<float>(result.Embedding),
                         Text = result.Text,
-                        DateCreated = date
+                        DateCreated = date,
+                        DateModified = date
                     });
                 }
             }
 
-            var newDocument = new Document
+            var newDocument = new SessionDocument
             {
                 UserId = userId,
                 SessionId = sessionId,
@@ -393,7 +390,8 @@ namespace RR.AI_Chat.Service
                 MimeType = properties.Value.ContentType,
                 Path = path,
                 Pages = documentPages,
-                DateCreated = date
+                DateCreated = date,
+                DateModified = date
             };
             await _ctx.AddAsync(newDocument);
             await _ctx.SaveChangesAsync();
