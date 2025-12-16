@@ -3,7 +3,7 @@
   [ngClass]="{ 'justify-content-end': message().isOutgoing }"
 >
   <div
-    class="message-bubble p-3 rounded-4"
+    class="message-bubble p-3 rounded-4 position-relative"
     [ngClass]="{
       'message-user': message().isOutgoing,
       'message-assistant bg-light': !message().isOutgoing,
@@ -16,7 +16,27 @@
     "
   >
     @if (!message().isOutgoing) {
+    <!-- Copy message button - only shown when not streaming -->
+    @if (canCopyMessage()) {
+    <button
+      type="button"
+      class="message-copy-btn btn btn-sm position-absolute bottom-0 end-0 mb-2 me-2"
+      [class.copied]="messageCopied()"
+      (click)="copyMessage()"
+      [attr.aria-label]="messageCopied() ? 'Message copied' : 'Copy message'"
+      [title]="messageCopied() ? 'Copied!' : 'Copy message'"
+    >
+      <i
+        class="bi"
+        [ngClass]="{
+          'bi-clipboard-check': messageCopied(),
+          'bi-clipboard': !messageCopied()
+        }"
+      ></i>
+    </button>
+    }
     <div
+      #messageContent
       [innerHTML]="message().markdown"
       id="markdown-preview"
       class="message-content"

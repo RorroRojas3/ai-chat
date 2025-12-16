@@ -98,7 +98,7 @@ export class HomeComponent implements OnInit {
             if (message.role === 1) {
               const html = this.md.render(message.text);
               const sanitizeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
-              return createMessage('', false, sanitizeHtml);
+              return createMessage(message.text, false, sanitizeHtml);
             }
             return createMessage(message.text, true, undefined);
           }
