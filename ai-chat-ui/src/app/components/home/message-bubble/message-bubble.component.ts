@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { MessageDto } from '../../../dtos/MessageDto';
 import { StoreService } from '../../../store/store.service';
+import { NotificationService } from '../../../services/notification.service';
 
 /** Duration in milliseconds for copy success feedback */
 const COPY_FEEDBACK_DURATION_MS = 2000;
@@ -25,6 +26,7 @@ const COPY_FEEDBACK_DURATION_MS = 2000;
 export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
   readonly message = input.required<MessageDto>();
   readonly storeService = inject(StoreService);
+  readonly notificationService = inject(NotificationService);
 
   private readonly messageContentRef =
     viewChild<ElementRef<HTMLDivElement>>('messageContent');
@@ -71,7 +73,7 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
       await navigator.clipboard.writeText(content);
       this.showCopyFeedback();
     } catch (error) {
-      console.error('Failed to copy message:', error);
+      this.notificationService.error('Failed to copy message to clipboard.');
     }
   }
 
