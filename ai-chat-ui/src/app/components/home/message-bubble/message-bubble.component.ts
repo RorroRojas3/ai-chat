@@ -8,7 +8,6 @@ import {
   AfterViewInit,
   ElementRef,
   viewChild,
-  ChangeDetectionStrategy,
   OnDestroy,
 } from '@angular/core';
 import { MessageDto } from '../../../dtos/MessageDto';
@@ -22,7 +21,6 @@ const COPY_FEEDBACK_DURATION_MS = 2000;
   imports: [NgClass],
   templateUrl: './message-bubble.component.html',
   styleUrl: './message-bubble.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
   readonly message = input.required<MessageDto>();
@@ -42,10 +40,14 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
   /** Stores active timeout IDs for cleanup on destroy */
   private readonly activeTimeouts = new Set<ReturnType<typeof setTimeout>>();
 
-  /** Stores button click handlers for cleanup on destroy */
-  private readonly buttonClickHandlers = new Map<
+  /** Stores button event handlers for cleanup on destroy */
+  private readonly buttonEventHandlers = new Map<
     HTMLButtonElement,
-    () => Promise<void>
+    {
+      click: () => Promise<void>;
+      mouseenter: () => void;
+      mouseleave: () => void;
+    }
   >();
 
   ngAfterViewInit(): void {
@@ -101,16 +103,43 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
    * Wraps a pre element with a container and adds a copy button.
    */
   private wrapCodeBlockWithCopyButton(pre: HTMLPreElement): void {
-    if (pre.querySelector('.code-copy-btn')) return;
+    // Skip if already wrapped (check parent for wrapper class)
+    if (pre.parentElement?.classList.contains('code-block-wrapper')) return;
 
     const wrapper = this.createCodeBlockWrapper(pre);
     const copyBtn = this.createCopyButton();
 
+    // Create all handlers
     const clickHandler = (): Promise<void> =>
       this.handleCodeBlockCopy(pre, copyBtn);
+    const mouseenterHandler = (): void => {
+      if (!copyBtn.classList.contains('copied')) {
+        copyBtn.style.opacity = '1';
+        copyBtn.style.backgroundColor = 'white';
+        copyBtn.style.borderColor = 'var(--color-accent)';
+        copyBtn.style.color = 'var(--color-navy)';
+      }
+    };
+    const mouseleaveHandler = (): void => {
+      if (!copyBtn.classList.contains('copied')) {
+        copyBtn.style.opacity = '0.7';
+        copyBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+        copyBtn.style.borderColor = 'rgba(28, 60, 98, 0.2)';
+        copyBtn.style.color = 'var(--color-accent)';
+      }
+    };
 
+    // Add event listeners
     copyBtn.addEventListener('click', clickHandler);
-    this.buttonClickHandlers.set(copyBtn, clickHandler);
+    copyBtn.addEventListener('mouseenter', mouseenterHandler);
+    copyBtn.addEventListener('mouseleave', mouseleaveHandler);
+
+    // Store for cleanup
+    this.buttonEventHandlers.set(copyBtn, {
+      click: clickHandler,
+      mouseenter: mouseenterHandler,
+      mouseleave: mouseleaveHandler,
+    });
 
     wrapper.appendChild(copyBtn);
   }
@@ -121,6 +150,14 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
   private createCodeBlockWrapper(pre: HTMLPreElement): HTMLDivElement {
     const wrapper = document.createElement('div');
     wrapper.className = 'code-block-wrapper';
+    wrapper.style.position = 'relative';
+    wrapper.style.display = 'block';
+
+    // Style the pre element
+    pre.style.marginBottom = '0';
+    pre.style.paddingRight = '3rem';
+    pre.style.paddingBottom = '2rem';
+
     pre.parentNode?.insertBefore(wrapper, pre);
     wrapper.appendChild(pre);
     return wrapper;
@@ -136,6 +173,25 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
     btn.setAttribute('aria-label', 'Copy code');
     btn.setAttribute('title', 'Copy code');
     btn.innerHTML = '<i class="bi bi-clipboard"></i>';
+
+    // Apply inline styles for dynamically created element
+    Object.assign(btn.style, {
+      position: 'absolute',
+      bottom: '0',
+      right: '0',
+      margin: '0.5rem',
+      opacity: '0.7',
+      transition: 'opacity 0.2s ease, background-color 0.2s ease',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      border: '1px solid rgba(28, 60, 98, 0.2)',
+      color: 'var(--color-accent)',
+      padding: '0.25rem 0.5rem',
+      zIndex: '2',
+      fontSize: '0.75rem',
+      borderRadius: '0.25rem',
+      cursor: 'pointer',
+    });
+
     return btn;
   }
 
@@ -166,11 +222,24 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
     btn.setAttribute('aria-label', 'Code copied');
     btn.setAttribute('title', 'Copied!');
 
+    // Apply copied styles
+    btn.style.opacity = '1';
+    btn.style.backgroundColor = '#d4edda';
+    btn.style.borderColor = '#28a745';
+    btn.style.color = '#28a745';
+
     const timeoutId = setTimeout(() => {
       btn.innerHTML = '<i class="bi bi-clipboard"></i>';
       btn.classList.remove('copied');
       btn.setAttribute('aria-label', 'Copy code');
       btn.setAttribute('title', 'Copy code');
+
+      // Reset styles
+      btn.style.opacity = '0.7';
+      btn.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+      btn.style.borderColor = 'rgba(28, 60, 98, 0.2)';
+      btn.style.color = 'var(--color-accent)';
+
       this.activeTimeouts.delete(timeoutId);
     }, COPY_FEEDBACK_DURATION_MS);
     this.activeTimeouts.add(timeoutId);
@@ -188,9 +257,11 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
    * Removes all event listeners from dynamically created buttons.
    */
   private removeAllEventListeners(): void {
-    this.buttonClickHandlers.forEach((handler, btn) => {
-      btn.removeEventListener('click', handler);
+    this.buttonEventHandlers.forEach((handlers, btn) => {
+      btn.removeEventListener('click', handlers.click);
+      btn.removeEventListener('mouseenter', handlers.mouseenter);
+      btn.removeEventListener('mouseleave', handlers.mouseleave);
     });
-    this.buttonClickHandlers.clear();
+    this.buttonEventHandlers.clear();
   }
 }
