@@ -9,6 +9,7 @@ import {
   ElementRef,
   viewChild,
   ChangeDetectionStrategy,
+  OnDestroy,
 } from '@angular/core';
 import { MessageDto } from '../../../dtos/MessageDto';
 import { StoreService } from '../../../store/store.service';
@@ -23,7 +24,7 @@ const COPY_FEEDBACK_DURATION_MS = 2000;
   styleUrl: './message-bubble.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MessageBubbleComponent implements AfterViewInit {
+export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
   readonly message = input.required<MessageDto>();
   readonly storeService = inject(StoreService);
 
@@ -38,8 +39,22 @@ export class MessageBubbleComponent implements AfterViewInit {
     () => !this.message().isOutgoing && !this.storeService.isStreaming()
   );
 
+  /** Stores active timeout IDs for cleanup on destroy */
+  private readonly activeTimeouts = new Set<ReturnType<typeof setTimeout>>();
+
+  /** Stores button click handlers for cleanup on destroy */
+  private readonly buttonClickHandlers = new Map<
+    HTMLButtonElement,
+    () => Promise<void>
+  >();
+
   ngAfterViewInit(): void {
     this.addCodeBlockCopyButtons();
+  }
+
+  ngOnDestroy(): void {
+    this.clearAllTimeouts();
+    this.removeAllEventListeners();
   }
 
   /**
@@ -63,7 +78,11 @@ export class MessageBubbleComponent implements AfterViewInit {
    */
   private showCopyFeedback(): void {
     this.messageCopied.set(true);
-    setTimeout(() => this.messageCopied.set(false), COPY_FEEDBACK_DURATION_MS);
+    const timeoutId = setTimeout(() => {
+      this.messageCopied.set(false);
+      this.activeTimeouts.delete(timeoutId);
+    }, COPY_FEEDBACK_DURATION_MS);
+    this.activeTimeouts.add(timeoutId);
   }
 
   /**
@@ -87,9 +106,12 @@ export class MessageBubbleComponent implements AfterViewInit {
     const wrapper = this.createCodeBlockWrapper(pre);
     const copyBtn = this.createCopyButton();
 
-    copyBtn.addEventListener('click', () =>
-      this.handleCodeBlockCopy(pre, copyBtn)
-    );
+    const clickHandler = (): Promise<void> =>
+      this.handleCodeBlockCopy(pre, copyBtn);
+
+    copyBtn.addEventListener('click', clickHandler);
+    this.buttonClickHandlers.set(copyBtn, clickHandler);
+
     wrapper.appendChild(copyBtn);
   }
 
@@ -98,7 +120,7 @@ export class MessageBubbleComponent implements AfterViewInit {
    */
   private createCodeBlockWrapper(pre: HTMLPreElement): HTMLDivElement {
     const wrapper = document.createElement('div');
-    wrapper.className = 'code-block-wrapper position-relative';
+    wrapper.className = 'code-block-wrapper';
     pre.parentNode?.insertBefore(wrapper, pre);
     wrapper.appendChild(pre);
     return wrapper;
@@ -109,10 +131,10 @@ export class MessageBubbleComponent implements AfterViewInit {
    */
   private createCopyButton(): HTMLButtonElement {
     const btn = document.createElement('button');
-    btn.className =
-      'code-copy-btn btn btn-sm position-absolute top-0 end-0 m-2';
+    btn.className = 'code-copy-btn';
     btn.type = 'button';
     btn.setAttribute('aria-label', 'Copy code');
+    btn.setAttribute('title', 'Copy code');
     btn.innerHTML = '<i class="bi bi-clipboard"></i>';
     return btn;
   }
@@ -141,10 +163,34 @@ export class MessageBubbleComponent implements AfterViewInit {
   private showCodeBlockCopyFeedback(btn: HTMLButtonElement): void {
     btn.innerHTML = '<i class="bi bi-clipboard-check"></i>';
     btn.classList.add('copied');
+    btn.setAttribute('aria-label', 'Code copied');
+    btn.setAttribute('title', 'Copied!');
 
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       btn.innerHTML = '<i class="bi bi-clipboard"></i>';
       btn.classList.remove('copied');
+      btn.setAttribute('aria-label', 'Copy code');
+      btn.setAttribute('title', 'Copy code');
+      this.activeTimeouts.delete(timeoutId);
     }, COPY_FEEDBACK_DURATION_MS);
+    this.activeTimeouts.add(timeoutId);
+  }
+
+  /**
+   * Clears all active timeouts to prevent memory leaks.
+   */
+  private clearAllTimeouts(): void {
+    this.activeTimeouts.forEach((timeoutId) => clearTimeout(timeoutId));
+    this.activeTimeouts.clear();
+  }
+
+  /**
+   * Removes all event listeners from dynamically created buttons.
+   */
+  private removeAllEventListeners(): void {
+    this.buttonClickHandlers.forEach((handler, btn) => {
+      btn.removeEventListener('click', handler);
+    });
+    this.buttonClickHandlers.clear();
   }
 }

@@ -73,64 +73,63 @@
   }
 }
 
-// Code block wrapper and copy button
-::ng-deep .code-block-wrapper {
-  position: relative;
+// Code block wrapper and copy button (using :host for dynamically created elements)
+:host {
+  .code-block-wrapper {
+    position: relative;
 
-  pre {
-    margin-bottom: 0;
-    padding-right: 3rem;
+    pre {
+      margin-bottom: 0;
+      padding-right: 3rem;
 
-    @media (max-width: 576px) {
-      padding-right: 2.5rem;
-      font-size: 0.75rem;
+      @media (max-width: 576px) {
+        padding-right: 2.5rem;
+        font-size: 0.75rem;
+      }
     }
   }
-}
 
-::ng-deep .code-copy-btn {
-  opacity: 0;
-  transition: opacity 0.2s ease, background-color 0.2s ease;
-  background-color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(28, 60, 98, 0.2);
-  color: var(--color-accent);
-  padding: 0.25rem 0.5rem;
-  z-index: 2;
-
-  &:hover {
-    background-color: white;
-    border-color: var(--color-accent);
-    color: var(--color-navy);
-  }
-
-  &:focus {
-    opacity: 1;
-    box-shadow: 0 0 0 0.2rem rgba(28, 60, 98, 0.25);
-  }
-
-  &.copied {
-    background-color: #d4edda;
-    border-color: #28a745;
-    color: #28a745;
-  }
-
-  i {
+  .code-copy-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0.5rem;
+    opacity: 0.7;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(28, 60, 98, 0.2);
+    color: var(--color-accent);
+    padding: 0.25rem 0.5rem;
+    z-index: 2;
     font-size: 0.75rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
 
-    @media (max-width: 576px) {
-      font-size: 0.625rem;
+    &:hover {
+      opacity: 1;
+      background-color: white;
+      border-color: var(--color-accent);
+      color: var(--color-navy);
     }
-  }
-}
 
-// Show code copy button on hover for desktop
-::ng-deep .code-block-wrapper:hover .code-copy-btn {
-  opacity: 1;
-}
+    &:focus {
+      opacity: 1;
+      box-shadow: 0 0 0 0.2rem rgba(28, 60, 98, 0.25);
+    }
 
-// Always show code copy button on touch devices
-@media (hover: none) and (pointer: coarse) {
-  ::ng-deep .code-copy-btn {
-    opacity: 0.8;
+    &.copied {
+      opacity: 1;
+      background-color: #d4edda;
+      border-color: #28a745;
+      color: #28a745;
+    }
+
+    i {
+      font-size: 0.75rem;
+
+      @media (max-width: 576px) {
+        font-size: 0.625rem;
+      }
+    }
   }
 }
