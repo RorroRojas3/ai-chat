@@ -1,9 +1,9 @@
 import { Component, input, output, effect, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-session-delete-modal',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './session-delete-modal.component.html',
   styleUrl: './session-delete-modal.component.scss',
 })

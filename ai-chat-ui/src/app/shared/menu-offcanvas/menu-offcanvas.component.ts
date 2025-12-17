@@ -14,7 +14,7 @@ import {
   Subject,
   switchMap,
 } from 'rxjs';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { SessionDto } from '../../dtos/SessionDto';
 import { SessionRenameModalComponent } from '../../components/sessions/session-rename-modal/session-rename-modal.component';
@@ -26,10 +26,9 @@ import { SessionDeleteModalComponent } from '../../components/sessions/session-d
   selector: 'app-menu-offcanvas',
   imports: [
     FormsModule,
-    CommonModule,
     SessionRenameModalComponent,
-    SessionDeleteModalComponent,
-  ],
+    SessionDeleteModalComponent
+],
   templateUrl: './menu-offcanvas.component.html',
   styleUrl: './menu-offcanvas.component.scss',
 })

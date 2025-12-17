@@ -1,5 +1,5 @@
 import { Component, inject, DestroyRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import {
   ReactiveFormsModule,
   FormControl,
@@ -15,7 +15,7 @@ import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-projects-create',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './projects-create.component.html',
   styleUrl: './projects-create.component.scss',
 })

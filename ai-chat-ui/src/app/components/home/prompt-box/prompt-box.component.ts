@@ -33,11 +33,11 @@ import { JobState } from '../../../dtos/const/JobState';
 import { Location } from '@angular/common';
 import { DocumentFormats } from '../../../dtos/const/DocumentFormats';
 import { McpDto } from '../../../dtos/McpDto';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-prompt-box',
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule],
   templateUrl: './prompt-box.component.html',
   styleUrl: './prompt-box.component.scss',
 })

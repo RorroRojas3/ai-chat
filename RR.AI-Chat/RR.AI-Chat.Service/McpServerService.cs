@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
+using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Service.Settings;
@@ -88,7 +89,7 @@ namespace RR.AI_Chat.Service
         /// <inheritdoc />
         public async Task<IList<McpClientTool>> GetToolsFromServerAsync(McpClient mcpClient, CancellationToken cancellationToken)
         {
-            var tools = await mcpClient.ListToolsAsync(null, cancellationToken);
+            var tools = await mcpClient.ListToolsAsync(new RequestOptions() , cancellationToken).ConfigureAwait(false);
             return tools;
         }
 
