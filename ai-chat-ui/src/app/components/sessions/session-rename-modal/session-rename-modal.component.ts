@@ -1,10 +1,10 @@
 import { Component, input, output, effect, signal } from '@angular/core';
 import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-session-rename-modal',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './session-rename-modal.component.html',
   styleUrl: './session-rename-modal.component.scss',
 })
