@@ -25,4 +25,50 @@
 
 .message-assistant {
   color: var(--color-accent);
+
+  // Add padding for copy button at bottom of non-outgoing messages
+  padding-bottom: 2.5rem !important;
+
+  @media (max-width: 576px) {
+    padding-bottom: 2rem !important;
+  }
+}
+
+// Copy message button styling
+.message-copy-btn {
+  opacity: 0.7;
+  transition: opacity 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(28, 60, 98, 0.2);
+  color: var(--color-accent);
+  padding: 0.25rem 0.5rem;
+  z-index: 1;
+
+  &:hover {
+    opacity: 1;
+    background-color: white;
+    border-color: var(--color-accent);
+    color: var(--color-navy);
+  }
+
+  &:focus {
+    opacity: 1;
+    box-shadow: 0 0 0 0.2rem rgba(28, 60, 98, 0.25);
+  }
+
+  &.copied {
+    opacity: 1;
+    background-color: #d4edda;
+    border-color: #28a745;
+    color: #28a745;
+  }
+
+  i {
+    font-size: 0.875rem;
+
+    @media (max-width: 576px) {
+      font-size: 0.75rem;
+    }
+  }
 }

@@ -127,10 +127,11 @@ export class PromptBoxComponent implements OnDestroy {
             this.markdown.emit(this.sanitizeHtml);
           },
           complete: () => {
+            const rawContent = this.storeService.stream();
             this.storeService.stream.set('');
             this.storeService.messages.update((messages) => [
               ...messages,
-              createMessage('', false, this.sanitizeHtml),
+              createMessage(rawContent, false, this.sanitizeHtml),
             ]);
             this.storeService.isStreaming.set(false);
             this.storeService.streamMessage.set(
