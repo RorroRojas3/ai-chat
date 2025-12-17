@@ -72,7 +72,7 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
     try {
       await navigator.clipboard.writeText(content);
       this.showCopyFeedback();
-    } catch (error) {
+    } catch (error: unknown) {
       this.notificationService.error('Failed to copy message to clipboard.');
     }
   }
@@ -179,7 +179,7 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
       border: '1px solid rgba(28, 60, 98, 0.2)',
       color: 'var(--color-accent)',
       padding: '0.25rem 0.5rem',
-      zIndex: '10',
+      zIndex: '1',
       fontSize: '0.75rem',
       borderRadius: '0.25rem',
       cursor: 'pointer',
