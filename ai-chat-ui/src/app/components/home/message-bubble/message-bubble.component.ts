@@ -103,10 +103,21 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
    * Wraps a pre element with a container and adds a copy button.
    */
   private wrapCodeBlockWithCopyButton(pre: HTMLPreElement): void {
-    // Skip if already wrapped (check parent for wrapper class)
+    // Skip if already wrapped
     if (pre.parentElement?.classList.contains('code-block-wrapper')) return;
 
-    const wrapper = this.createCodeBlockWrapper(pre);
+    // Create wrapper for positioning
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block-wrapper';
+    Object.assign(wrapper.style, {
+      position: 'relative',
+      display: 'block',
+    });
+
+    // Insert wrapper and move pre inside
+    pre.parentNode?.insertBefore(wrapper, pre);
+    wrapper.appendChild(pre);
+
     const copyBtn = this.createCopyButton();
 
     // Create all handlers
@@ -145,25 +156,6 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Creates a wrapper div for the code block.
-   */
-  private createCodeBlockWrapper(pre: HTMLPreElement): HTMLDivElement {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'code-block-wrapper';
-    wrapper.style.position = 'relative';
-    wrapper.style.display = 'block';
-
-    // Style the pre element
-    pre.style.marginBottom = '0';
-    pre.style.paddingRight = '3rem';
-    pre.style.paddingBottom = '2rem';
-
-    pre.parentNode?.insertBefore(wrapper, pre);
-    wrapper.appendChild(pre);
-    return wrapper;
-  }
-
-  /**
    * Creates a copy button element with proper styling and accessibility.
    */
   private createCopyButton(): HTMLButtonElement {
@@ -174,19 +166,18 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
     btn.setAttribute('title', 'Copy code');
     btn.innerHTML = '<i class="bi bi-clipboard"></i>';
 
-    // Apply inline styles for dynamically created element
+    // Apply inline styles - positioned at top-right corner of wrapper
     Object.assign(btn.style, {
       position: 'absolute',
-      bottom: '0',
-      right: '0',
-      margin: '0.5rem',
+      top: '0.5rem',
+      right: '0.5rem',
       opacity: '0.7',
       transition: 'opacity 0.2s ease, background-color 0.2s ease',
       backgroundColor: 'rgba(255, 255, 255, 0.9)',
       border: '1px solid rgba(28, 60, 98, 0.2)',
       color: 'var(--color-accent)',
       padding: '0.25rem 0.5rem',
-      zIndex: '2',
+      zIndex: '10',
       fontSize: '0.75rem',
       borderRadius: '0.25rem',
       cursor: 'pointer',
