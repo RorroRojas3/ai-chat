@@ -1,12 +1,12 @@
 # AI Chat Application
 
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
-[![Angular](https://img.shields.io/badge/Angular-20-DD0031?logo=angular)](https://angular.dev/)
+[![Angular](https://img.shields.io/badge/Angular-21-DD0031?logo=angular)](https://angular.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![SQL Server](https://img.shields.io/badge/SQL%20Server-Vector%20Search-CC2927?logo=microsoft-sql-server)](https://www.microsoft.com/sql-server)
 
-A full-stack AI chat application built with .NET 9 Web API backend and Angular 20 frontend. The application supports multiple AI service providers including Ollama, OpenAI, Azure AI Foundry, and Anthropic, with document management and vector search capabilities.
+A full-stack AI chat application built with .NET 10 Web API backend and Angular 21 frontend. The application supports multiple AI service providers including Ollama, OpenAI, Azure AI Foundry, and Anthropic, with document management and vector search capabilities.
 
 ## 📋 Table of Contents
 
@@ -40,13 +40,13 @@ A full-stack AI chat application built with .NET 9 Web API backend and Angular 2
 
 ```
 ai-chat/
-├── RR.AI-Chat/                 # .NET 9 Web API Backend
+├── RR.AI-Chat/                 # .NET 10 Web API Backend
 │   ├── RR.AI-Chat.Api/         # API Controllers & Program.cs
 │   ├── RR.AI-Chat.Service/     # Business Logic Services
 │   ├── RR.AI-Chat.Repository/  # Data Access Layer
 │   ├── RR.AI-Chat.Entity/      # Entity Framework Models
 │   └── RR.AI-Chat.Dto/         # Data Transfer Objects
-└── ai-chat-ui/                 # Angular 20 Frontend
+└── ai-chat-ui/                 # Angular 21 Frontend
     ├── src/app/services/       # HTTP Services
     ├── src/app/dtos/           # TypeScript DTOs
     └── src/environments/       # Environment Configuration
@@ -56,16 +56,16 @@ ai-chat/
 
 ### Backend (.NET API)
 
-- **.NET 9.0** - Web API Framework
-- **Entity Framework Core 9.0** - ORM with SQL Server
+- **.NET 10.0** - Web API Framework
+- **Entity Framework Core 10.0** - ORM with SQL Server
 - **SQL Server Vector Search** - Vector embeddings storage
 - **Microsoft.Extensions.AI** - AI service abstractions
 - **Swagger/OpenAPI** - API Documentation
 
 ### Frontend (Angular UI)
 
-- **Angular 20** - Frontend Framework
-- **TypeScript 5.6** - Programming Language
+- **Angular 21** - Frontend Framework
+- **TypeScript 5.9** - Programming Language
 - **Bootstrap 5.3** - CSS Framework
 - **RxJS** - Reactive Programming
 - **Highlight.js** - Code Syntax Highlighting
@@ -82,10 +82,10 @@ ai-chat/
 
 ### Required Software
 
-- **.NET 9.0 SDK** - [Download here](https://dotnet.microsoft.com/download/dotnet/9.0)
+- **.NET 10.0 SDK** - [Download here](https://dotnet.microsoft.com/download/dotnet/10.0)
 - **Node.js 18+** - [Download here](https://nodejs.org/)
 - **SQL Server** - Express, Developer, or Full edition
-- **Angular CLI** - Install via `npm install -g @angular/cli`
+- **Angular CLI 21+** - Install via `npm install -g @angular/cli`
 
 ### Optional (for local AI)
 
@@ -162,6 +162,23 @@ npm start
 ```
 
 The frontend will start at `http://localhost:4200`.
+
+### 6. (Optional) Enable Angular MCP Tools in VS Code
+
+Use the Angular CLI MCP server to supercharge AI-assisted Angular workflows.
+
+Create `.vscode/mcp.json` in the repo root with one of the following configurations:
+
+```jsonc
+{
+  "servers": {
+    "angular-cli": {
+      "command": "npx",
+      "args": ["-y", "@angular/cli", "mcp"]
+    }
+  }
+}
+```
 
 ### 6. Access the Application
 
@@ -531,9 +548,9 @@ Coverage reports will be generated in the `coverage/` directory.
 
 #### 1. .NET SDK Version Error
 
-**Error**: `The current .NET SDK does not support targeting .NET 9.0`
+**Error**: `The current .NET SDK does not support targeting .NET 10.0`
 
-**Solution**: Install .NET 9.0 SDK from [Microsoft's download page](https://dotnet.microsoft.com/download/dotnet/9.0).
+**Solution**: Install .NET 10.0 SDK from [Microsoft's download page](https://dotnet.microsoft.com/download/dotnet/10.0).
 
 #### 2. Database Connection Issues
 
@@ -585,6 +602,39 @@ Coverage reports will be generated in the `coverage/` directory.
 - Use Node.js 18+ (recommended: LTS version)
 - Clear npm cache: `npm cache clean --force`
 - Delete `node_modules` and run `npm install` again
+
+#### 8. Angular MCP CLI Error
+
+**Error**: `Error: Unknown arguments: read-only, mcp`
+
+**Cause**: An older Angular CLI (e.g., v19) is being resolved by `npx`.
+
+**Solutions**:
+
+- Configure VS Code MCP to use the workspace-local CLI binary (Windows example):
+
+  - File: `.vscode/mcp.json`
+  - Snippet:
+
+    ```jsonc
+    {
+      "servers": {
+        "angular-cli": {
+          "type": "stdio",
+          "command": "ai-chat-ui/node_modules/.bin/ng.cmd",
+          "args": ["mcp", "--read-only"]
+        }
+      }
+    }
+    ```
+
+- Or pin CLI v21 when using `npx`:
+
+  ```bash
+  npx -y @angular/cli@21 mcp --read-only
+  ```
+
+Docs: https://angular.dev/ai/mcp
 
 #### 7. Port Conflicts
 
