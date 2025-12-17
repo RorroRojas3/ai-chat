@@ -27,8 +27,8 @@ import { SessionDeleteModalComponent } from '../../components/sessions/session-d
   imports: [
     FormsModule,
     SessionRenameModalComponent,
-    SessionDeleteModalComponent
-],
+    SessionDeleteModalComponent,
+  ],
   templateUrl: './menu-offcanvas.component.html',
   styleUrl: './menu-offcanvas.component.scss',
 })

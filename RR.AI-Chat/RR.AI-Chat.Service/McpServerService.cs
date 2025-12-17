@@ -89,7 +89,7 @@ namespace RR.AI_Chat.Service
         /// <inheritdoc />
         public async Task<IList<McpClientTool>> GetToolsFromServerAsync(McpClient mcpClient, CancellationToken cancellationToken)
         {
-            var tools = await mcpClient.ListToolsAsync(new RequestOptions() , cancellationToken).ConfigureAwait(false);
+            var tools = await mcpClient.ListToolsAsync(new RequestOptions(), cancellationToken).ConfigureAwait(false);
             return tools;
         }
 
