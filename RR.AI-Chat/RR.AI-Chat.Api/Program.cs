@@ -7,6 +7,7 @@ using FluentValidation;
 using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Graph;
@@ -154,6 +155,13 @@ builder.Services.AddSingleton(sp =>
     var credential = new AzureKeyCredential(apiKey!);
     return new DocumentIntelligenceClient(new Uri(endpoint!), credential);
 });
+
+// Register CosmosClient as a singleton
+// Get configuration values
+var cosmosConnectionString = builder.Configuration["CosmosDb:ConnectionString"];
+var cosmosDatabaseId = builder.Configuration["CosmosDb:DatabaseId"];
+var cosmosContainerId = builder.Configuration["CosmosDb:ContainerId"];
+builder.Services.AddSingleton(new CosmosClient(cosmosConnectionString));
 
 // Register configuration settings
 builder.Services.Configure<List<McpServerSettings>>(builder.Configuration.GetSection("McpServers"));
