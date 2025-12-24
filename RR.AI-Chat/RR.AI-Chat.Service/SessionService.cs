@@ -339,11 +339,7 @@ namespace RR.AI_Chat.Service
             await _ctx.SaveChangesAsync(cancellationToken);
 
             var prompt = string.Format(_defaultSystemPrompt, newSession.Id, userId);
-            var coversations = new List<ChatMessage>
-            {
-                new(ChatRole.System, prompt)
-            };
-            newSession.Chat = new Chat()
+            var newChat = new Chat()
             {
                 Id = newSession.Id,
                 UserId = userId,
@@ -358,13 +354,13 @@ namespace RR.AI_Chat.Service
                     Id = Guid.NewGuid(),
                     Role = ChatRoles.System,
                     Content = prompt,
-                    DateCreated = date
+                    DateCreated = date,
                 }]
             };
             newSession.DateModified = date;
             await _ctx.SaveChangesAsync(cancellationToken);
 
-            await _cosmosService.CreateItemAsync(newSession.Chat, userId.ToString());
+            await _cosmosService.CreateItemAsync(newChat, userId.ToString(), cancellationToken);
 
             await transaction.CommitAsync(cancellationToken);
 
@@ -382,7 +378,14 @@ namespace RR.AI_Chat.Service
             if (session == null)
             {
                 _logger.LogError("Session with id {id} not found", sessionId);
-                throw new InvalidOperationException($"Session with id {sessionId} not found");
+                throw new KeyNotFoundException($"Session with id {sessionId} not found");
+            }
+
+            var chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), session.UserId.ToString(), cancellationToken);
+            if (chat == null)
+            {
+                _logger.LogError("Chat for session id {id} not found in Cosmos DB", sessionId);
+                throw new KeyNotFoundException($"Chat for session id {sessionId} not found");
             }
 
             var modelName = await _ctx.Models

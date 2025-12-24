@@ -28,26 +28,6 @@ namespace RR.AI_Chat.Repository
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Session>(entity =>
-            {
-                entity.ComplexProperty(x => x.Chat, chatBuilder =>
-                {
-                    chatBuilder.ToJson();
-
-                    // Configure collection property names for JSON serialization
-                    chatBuilder.ComplexCollection(c => c.Conversations, conversationBuilder =>
-                    {
-                        conversationBuilder.HasJsonPropertyName("conversations");
-
-                        // Configure Usage complex property within each conversation
-                        conversationBuilder.ComplexProperty(conv => conv.Usage)
-                            .HasJsonPropertyName("usage");
-                    });
-
-                    chatBuilder.ComplexCollection(c => c.Documents)
-                        .HasJsonPropertyName("documents");
-                });
-            });
             modelBuilder.ApplyConfiguration(new AIServiceConfiguration());
             modelBuilder.ApplyConfiguration(new ModelConfiguration());
 

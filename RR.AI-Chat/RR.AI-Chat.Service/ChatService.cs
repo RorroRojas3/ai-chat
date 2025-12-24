@@ -107,18 +107,25 @@ namespace RR.AI_Chat.Service
                                 .SingleOrDefaultAsync(x => x.Id == sessionId && 
                                     x.UserId == userId && 
                                     !x.DateDeactivated.HasValue, cancellationToken);
-                if (session == null || session.Chat == null)
+                if (session == null)
                 {
-                    _logger.LogError("Session with id {id} not found.", sessionId);
-                    throw new InvalidOperationException($"Session with id {sessionId} not found.");
+                    _logger.LogError("Session with id {Id} not found.", sessionId);
+                    throw new KeyNotFoundException($"Session with id {sessionId} not found.");
                 }
 
-                if (session.Chat.Conversations.Count == 1)
+                var chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), userId.ToString(), cancellationToken);
+                if (chat == null)
+                {
+                    _logger.LogError("Chat with session id {Id} not found.", sessionId);
+                    throw new KeyNotFoundException($"Chat with session id {sessionId} not found.");
+                }
+
+                if (chat.Conversations.Count == 1)
                 {
                     _ = await _sessionService.CreateSessionNameAsync(sessionId, request, cancellationToken);
                 }
 
-                var conversations = new List<ChatMessage>(session.Chat.Conversations.Select(x => new ChatMessage(MappingService.MapToChatRole(x.Role), x.Content)))
+                var conversations = new List<ChatMessage>(chat.Conversations.Select(x => new ChatMessage(MappingService.MapToChatRole(x.Role), x.Content)))
                 {
                     new(ChatRole.User, request.Prompt)
                 };
@@ -153,10 +160,26 @@ namespace RR.AI_Chat.Service
                 }
 
                 var date = DateTimeOffset.UtcNow;
-                var currentChat = await _ctx.Sessions.Where(s => s.Id == sessionId)
-                                    .Select(s => s.Chat!)
-                                    .SingleAsync(cancellationToken);
-                currentChat.Conversations.Add(new()
+                
+                await _ctx.Sessions
+                    .Where(s => s.Id == sessionId)
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(x => x.InputTokens, x => x.InputTokens + totalInputTokens)
+                        .SetProperty(x => x.OutputTokens, x => x.OutputTokens + totalOutputTokens)
+                        .SetProperty(x => x.DateModified, date),
+                        cancellationToken);
+
+                chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), userId.ToString(), cancellationToken);
+                chat!.Conversations.Add(new()
+                {
+                    Id = Guid.NewGuid(),
+                    Content = request.Prompt,
+                    DateCreated = date,
+                    Model = model.Name,
+                    Role = ChatRoles.User,
+                    Tokens = 0,
+                });
+                chat!.Conversations.Add(new()
                 {
                     Id = Guid.NewGuid(),
                     Content = sb.ToString(),
@@ -171,16 +194,7 @@ namespace RR.AI_Chat.Service
                     }
                 });
 
-                await _ctx.Sessions
-                    .Where(s => s.Id == sessionId)
-                    .ExecuteUpdateAsync(s => s
-                        .SetProperty(x => x.Chat, currentChat)
-                        .SetProperty(x => x.InputTokens, x => x.InputTokens + totalInputTokens)
-                        .SetProperty(x => x.OutputTokens, x => x.OutputTokens + totalOutputTokens)
-                        .SetProperty(x => x.DateModified, date),
-                        cancellationToken);
-
-                await _cosmosService.UpdateItemAsync(currentChat, sessionId.ToString(), userId.ToString());
+                await _cosmosService.UpdateItemAsync(chat, sessionId.ToString(), userId.ToString(), cancellationToken);
             }
         }
 
@@ -188,15 +202,14 @@ namespace RR.AI_Chat.Service
         public async Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid()!.Value;
-            var session = await _ctx.Sessions.AsNoTracking()
-                            .FirstOrDefaultAsync(x => x.Id == sessionId && x.UserId == userId, cancellationToken);
-            if (session == null)
+            var chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), userId.ToString(), cancellationToken);
+            if (chat == null)
             {
-                _logger.LogError("Session with id {id} not found.", sessionId);
-                throw new InvalidOperationException($"Session with id {sessionId} not found.");
+                _logger.LogError("Chat with id {id} not found.", sessionId);
+                throw new KeyNotFoundException($"Chat with id {sessionId} not found.");
             }
 
-            var messages = session.Chat!.Conversations
+            var messages = chat.Conversations
                             .Where(x => x.Role != ChatRoles.System)
                             .Select(x => new SessionMessageDto() 
                             { 
@@ -213,9 +226,9 @@ namespace RR.AI_Chat.Service
             return new() 
             { 
                 Id = sessionId, 
-                Name = session.Name!, 
-                DateCreated = session.DateCreated,
-                DateModified = session.DateModified,
+                Name = chat.Name!, 
+                DateCreated = chat.DateCreated,
+                DateModified = chat.DateModified,
                 Messages = messages! 
             };
         }

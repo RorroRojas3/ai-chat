@@ -14,7 +14,7 @@ namespace RR.AI_Chat.Service
         /// <param name="id">The unique identifier of the item.</param>
         /// <param name="partitionKey">The partition key value of the item.</param>
         /// <returns>The item if found; otherwise, null.</returns>
-        Task<T?> GetItemAsync<T>(string id, string partitionKey);
+        Task<T?> GetItemAsync<T>(string id, string partitionKey, CancellationToken cancellationToken);
 
         /// <summary>
         /// Retrieves multiple items from the Cosmos DB container based on a query.
@@ -31,7 +31,7 @@ namespace RR.AI_Chat.Service
         /// <param name="item">The item to create.</param>
         /// <param name="partitionKey">The partition key value for the item.</param>
         /// <returns>The created item.</returns>
-        Task<T> CreateItemAsync<T>(T item, string partitionKey);
+        Task<T> CreateItemAsync<T>(T item, string partitionKey, CancellationToken cancellationToken);
 
         /// <summary>
         /// Updates an existing item in the Cosmos DB container.
@@ -41,7 +41,7 @@ namespace RR.AI_Chat.Service
         /// <param name="id">The unique identifier of the item to update.</param>
         /// <param name="partitionKey">The partition key value of the item.</param>
         /// <returns>The updated item.</returns>
-        Task<T> UpdateItemAsync<T>(T item, string id, string partitionKey);
+        Task<T> UpdateItemAsync<T>(T item, string id, string partitionKey, CancellationToken cancellationToken);
 
         /// <summary>
         /// Deletes an item from the Cosmos DB container.
@@ -49,7 +49,7 @@ namespace RR.AI_Chat.Service
         /// <param name="id">The unique identifier of the item to delete.</param>
         /// <param name="partitionKey">The partition key value of the item.</param>
         /// <returns>A task representing the asynchronous delete operation.</returns>
-        Task DeleteItemAsync(string id, string partitionKey);
+        Task DeleteItemAsync(string id, string partitionKey, CancellationToken cancellationToken);
     }
 
     /// <summary>
@@ -74,11 +74,11 @@ namespace RR.AI_Chat.Service
         }
 
         /// <inheritdoc/>
-        public async Task<T?> GetItemAsync<T>(string id, string partitionKey)
+        public async Task<T?> GetItemAsync<T>(string id, string partitionKey, CancellationToken cancellationToken)
         {
             try
             {
-                var response = await _container.ReadItemAsync<T>(id, new PartitionKey(partitionKey));
+                var response = await _container.ReadItemAsync<T>(id, new PartitionKey(partitionKey), cancellationToken: cancellationToken);
                 return response;
             }
             catch (CosmosException ex)
@@ -110,23 +110,23 @@ namespace RR.AI_Chat.Service
         }
 
         /// <inheritdoc/>
-        public async Task<T> CreateItemAsync<T>(T item, string partitionKey)
+        public async Task<T> CreateItemAsync<T>(T item, string partitionKey, CancellationToken cancellationToken)
         {
-            var response = await _container.CreateItemAsync(item, new PartitionKey(partitionKey));
+            var response = await _container.CreateItemAsync(item, new PartitionKey(partitionKey), cancellationToken: cancellationToken);
             return response;
         }
 
         /// <inheritdoc/>
-        public async Task<T> UpdateItemAsync<T>(T item, string id, string partitionKey)
+        public async Task<T> UpdateItemAsync<T>(T item, string id, string partitionKey, CancellationToken cancellationToken)
         {
-            var response = await _container.ReplaceItemAsync(item, id, new PartitionKey(partitionKey));
+            var response = await _container.ReplaceItemAsync(item, id, new PartitionKey(partitionKey), cancellationToken: cancellationToken);
             return response;
         }
 
         /// <inheritdoc/>
-        public async Task DeleteItemAsync(string id, string partitionKey)
+        public async Task DeleteItemAsync(string id, string partitionKey, CancellationToken cancellationToken)
         {
-            await _container.DeleteItemAsync<dynamic>(id, new PartitionKey(partitionKey));
+            await _container.DeleteItemAsync<dynamic>(id, new PartitionKey(partitionKey), cancellationToken: cancellationToken);
         }
     }
 }

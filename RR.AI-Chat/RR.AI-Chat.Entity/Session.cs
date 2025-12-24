@@ -16,8 +16,6 @@ namespace RR.AI_Chat.Entity
         [StringLength(256)]
         public string Name { get; set; } = "New Chat";
 
-        public Chat? Chat { get; set; }
-
         public long InputTokens { get; set; }
 
         public long OutputTokens { get; set; }
