@@ -4,8 +4,11 @@ using System.Text.Json.Serialization;
 
 namespace RR.AI_Chat.Entity
 {
-    public class Chat : BaseModifiedEntity
+    public class Chat
     {
+        [JsonPropertyName("id")]
+        public Guid Id { get; set; }
+
         [JsonPropertyName("partitionKey")]
         public Guid PartitionKey => UserId;
 
@@ -15,7 +18,6 @@ namespace RR.AI_Chat.Entity
         [JsonPropertyName("projectId")]
         public Guid? ProjectId { get; set; }
 
-        [StringLength(256)]
         [JsonPropertyName("name")]
         public string Name { get; set; } = null!;
 
@@ -30,6 +32,15 @@ namespace RR.AI_Chat.Entity
 
         [JsonPropertyName("conversations")]
         public List<ChatConversation> Conversations { get; set; } = [];
+
+        [JsonPropertyName("dateCreated")]
+        public DateTimeOffset DateCreated { get; set; }
+
+        [JsonPropertyName("dateModified")]
+        public DateTimeOffset DateModified { get; set; }
+
+        [JsonPropertyName("dateDeactivated")]
+        public DateTimeOffset? DateDeactivated { get; set; }
     }
 
     public class ChatDocument
@@ -37,15 +48,12 @@ namespace RR.AI_Chat.Entity
         [JsonPropertyName("id")]
         public Guid Id { get; set; }
 
-        [StringLength(256)]
         [JsonPropertyName("name")]
         public string Name { get; set; } = null!;
 
-        [StringLength(8)]
         [JsonPropertyName("extension")]
         public string Extension { get; set; } = null!;
 
-        [StringLength(256)]
         [JsonPropertyName("mimeType")]
         public string MimeType { get; set; } = null!;
 

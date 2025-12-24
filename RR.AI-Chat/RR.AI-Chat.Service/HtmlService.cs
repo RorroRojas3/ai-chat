@@ -1,6 +1,6 @@
 ﻿using Markdig;
-using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using RR.AI_Chat.Common.Enums;
 using RR.AI_Chat.Entity;
 using System.Text;
 
@@ -13,14 +13,14 @@ namespace RR.AI_Chat.Service
         /// </summary>
         /// <param name="conversations">
         /// The ordered list of conversation messages to render. Only messages with roles
-        /// <see cref="ChatRole.User"/> and <see cref="ChatRole.Assistant"/> are included. Message
+        /// <see cref="ChatRoles.User"/> and <see cref="ChatRoles.Assistant"/> are included. Message
         /// content may contain Markdown, which is converted to HTML.
         /// </param>
         /// <returns>
         /// A string containing the final HTML with the rendered messages and the current UTC timestamp,
         /// or <c>null</c> if <paramref name="conversations"/> is <c>null</c> or empty.
         /// </returns>
-        string? GenerateConversationHistoryAsync(List<Conversation> conversations);
+        string? GenerateConversationHistoryAsync(List<ChatConversation> conversations);
     }
 
     public class HtmlService(ILogger<HtmlService> logger) : IHtmlService
@@ -41,7 +41,7 @@ namespace RR.AI_Chat.Service
                                                 </div>";
 
         /// <inheritdoc />
-        public string? GenerateConversationHistoryAsync(List<Conversation> conversations)
+        public string? GenerateConversationHistoryAsync(List<ChatConversation> conversations)
         {
             if (conversations == null || conversations.Count == 0)
             {
@@ -52,11 +52,11 @@ namespace RR.AI_Chat.Service
             var sb = new StringBuilder();
             foreach (var convo in conversations)
             {
-                if (convo.Role == ChatRole.User)
+                if (convo.Role == ChatRoles.User)
                 {
                     sb.AppendLine(GetUserMessageHTMLContent(convo.Content));
                 }
-                else if (convo.Role == ChatRole.Assistant)
+                else if (convo.Role == ChatRoles.Assistant)
                 {
                     sb.AppendLine(GetAssistantMessageHTMLContent(convo.Content));
                 }

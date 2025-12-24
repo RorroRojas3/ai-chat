@@ -5,6 +5,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RR.AI_Chat.Common.Enums;
 using RR.AI_Chat.Common.Extensions;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
@@ -181,17 +182,17 @@ namespace RR.AI_Chat.Service
                     .AsNoTracking()
                     .FirstOrDefaultAsync(x => x.Id == sessionId &&
                                     x.UserId == oid.Value &&
-                                    x.Conversations != null &&
+                                    x.Chat != null &&
                                     !x.DateDeactivated.HasValue,
                                     cancellationToken);
 
-            if (session?.Conversations == null || session.Conversations.Count == 0)
+            if (session?.Chat == null || session.Chat.Conversations.Count == 0)
             {
                 return null;
             }
 
-            var conversations = session.Conversations
-                                      .Where(x => x.Role != ChatRole.System)
+            var conversations = session.Chat.Conversations
+                                      .Where(x => x.Role != ChatRoles.System)
                                       .ToList();
 
             if (conversations.Count == 0)

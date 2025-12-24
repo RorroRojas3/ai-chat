@@ -10,6 +10,7 @@ using RR.AI_Chat.Entity;
 using Microsoft.EntityFrameworkCore;
 using RR.AI_Chat.Dto.Actions.Chat;
 using FluentValidation;
+using RR.AI_Chat.Common.Enums;
 
 namespace RR.AI_Chat.Service
 {
@@ -105,23 +106,18 @@ namespace RR.AI_Chat.Service
                                 .SingleOrDefaultAsync(x => x.Id == sessionId && 
                                     x.UserId == userId && 
                                     !x.DateDeactivated.HasValue, cancellationToken);
-                if (session == null || session.Conversations == null)
+                if (session == null || session.Chat == null)
                 {
                     _logger.LogError("Session with id {id} not found.", sessionId);
                     throw new InvalidOperationException($"Session with id {sessionId} not found.");
                 }
 
-                if (session.Conversations.Count == 1)
+                if (session.Chat.Conversations.Count == 1)
                 {
-                    var sessionName = await _sessionService.CreateSessionNameAsync(sessionId, request, cancellationToken);
-                    await _ctx.Sessions
-                        .Where(x => x.Id == sessionId)
-                        .ExecuteUpdateAsync(s => s
-                            .SetProperty(x => x.Name, sessionName)
-                            .SetProperty(x => x.DateModified, DateTimeOffset.UtcNow), cancellationToken);
+                    _ = await _sessionService.CreateSessionNameAsync(sessionId, request, cancellationToken);
                 }
 
-                var conversations = new List<ChatMessage>(session.Conversations.Select(x => new ChatMessage(x.Role, x.Content)))
+                var conversations = new List<ChatMessage>(session.Chat.Conversations.Select(x => new ChatMessage(MappingService.MapToChatRole(x.Role), x.Content)))
                 {
                     new(ChatRole.User, request.Prompt)
                 };
@@ -155,20 +151,29 @@ namespace RR.AI_Chat.Service
                     yield return message.Text;
                 }
 
-                // Build updated conversation list
-                var updatedConversations = new List<Conversation>(session.Conversations)
+                var date = DateTimeOffset.UtcNow;
+                session.Chat.Conversations.Add(new()
                 {
-                    new(ChatRole.User, request.Prompt),
-                    new(ChatRole.Assistant, sb.ToString())
-                };
+                    Id = Guid.NewGuid(),
+                    Content = sb.ToString(),
+                    DateCreated = date,
+                    Model = model.Name,
+                    Role = ChatRoles.Assistant,
+                    Tokens = totalInputTokens + totalOutputTokens,
+                    Usage = new ChatUsage
+                    {
+                        InputTokens = totalInputTokens,
+                        OutputTokens = totalOutputTokens
+                    }
+                });
 
                 await _ctx.Sessions
                     .Where(s => s.Id == sessionId)
                     .ExecuteUpdateAsync(s => s
-                        .SetProperty(x => x.Conversations, updatedConversations)
+                        .SetProperty(x => x.Chat, session.Chat)
                         .SetProperty(x => x.InputTokens, x => x.InputTokens + totalInputTokens)
                         .SetProperty(x => x.OutputTokens, x => x.OutputTokens + totalOutputTokens)
-                        .SetProperty(x => x.DateModified, DateTimeOffset.UtcNow),
+                        .SetProperty(x => x.DateModified, date),
                         cancellationToken);
             }
         }
@@ -185,12 +190,12 @@ namespace RR.AI_Chat.Service
                 throw new InvalidOperationException($"Session with id {sessionId} not found.");
             }
 
-            var messages = session.Conversations!
-                            .Where(x => x.Role != ChatRole.System)
+            var messages = session.Chat!.Conversations
+                            .Where(x => x.Role != ChatRoles.System)
                             .Select(x => new SessionMessageDto() 
                             { 
                                 Text = x.Content ?? string.Empty,
-                                Role = x.Role == ChatRole.User ? ChatRoleType.User : ChatRoleType.System
+                                Role = x.Role == ChatRoles.User ? ChatRoles.User : ChatRoles.System
                             })
                             .ToList();
             if (messages == null || messages.Count == 0)

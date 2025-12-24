@@ -4,6 +4,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.Tokenizers;
+using RR.AI_Chat.Common.Enums;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Actions.Chat;
 using RR.AI_Chat.Dto.Actions.Session;
@@ -340,7 +341,24 @@ namespace RR.AI_Chat.Service
             {
                 new(ChatRole.System, prompt)
             };
-            newSession.Conversations = [.. coversations.Select(x => new Conversation(x.Role, x.Text))];
+            newSession.Chat = new Chat()
+            {
+                Id = newSession.Id,
+                UserId = userId,
+                ProjectId = request.ProjectId,
+                Name = newSession.Name,
+                TotalTokens = 0,
+                DateCreated = date,
+                DateModified = date,
+                Documents = [],
+                Conversations = [new() 
+                {
+                    Id = Guid.NewGuid(),
+                    Role = ChatRoles.System,
+                    Content = prompt,
+                    DateCreated = date
+                }]
+            };
             newSession.DateModified = date;
             await _ctx.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
@@ -386,6 +404,7 @@ namespace RR.AI_Chat.Service
             var name = response.Messages.Last().Text?.Trim() ?? string.Empty;
             session.Name = name;
             session.DateModified = DateTimeOffset.UtcNow;
+            session.Chat!.Name= name;
             await _ctx.SaveChangesAsync(cancellationToken);
 
             return session.Name;

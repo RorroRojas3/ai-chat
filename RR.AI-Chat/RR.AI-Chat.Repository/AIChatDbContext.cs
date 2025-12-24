@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository.Configurations;
-using System.Text.Json;
 
 namespace RR.AI_Chat.Repository
 {
@@ -31,12 +30,7 @@ namespace RR.AI_Chat.Repository
         {
             modelBuilder.Entity<Session>(entity =>
             {
-                // EF Core will handle ChatMessage serialization automatically
-                entity.Property(e => e.Conversations)
-                      .HasColumnType("nvarchar(max)")
-                      .HasConversion(
-                      v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                      v => JsonSerializer.Deserialize<List<Conversation>>(v, (JsonSerializerOptions?)null) ?? new());
+                entity.ComplexProperty(x => x.Chat, x => x.ToJson());
 
             });
             modelBuilder.ApplyConfiguration(new AIServiceConfiguration());

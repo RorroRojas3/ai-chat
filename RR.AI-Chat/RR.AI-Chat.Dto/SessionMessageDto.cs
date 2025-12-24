@@ -1,4 +1,4 @@
-﻿using RR.AI_Chat.Dto.Enums;
+﻿using RR.AI_Chat.Common.Enums;
 
 namespace RR.AI_Chat.Dto
 {
@@ -6,6 +6,6 @@ namespace RR.AI_Chat.Dto
     {
         public string Text { get; set; } = null!;
 
-        public ChatRoleType Role { get; set; }
+        public ChatRoles Role { get; set; }
     }
 }

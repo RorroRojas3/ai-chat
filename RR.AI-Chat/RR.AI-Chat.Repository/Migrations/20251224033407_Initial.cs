@@ -151,13 +151,13 @@ namespace RR.AI_Chat.Repository.Migrations
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ProjectId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    Conversations = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     InputTokens = table.Column<long>(type: "bigint", nullable: false),
                     OutputTokens = table.Column<long>(type: "bigint", nullable: false),
                     DateCreated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     DateDeactivated = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                     Version = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    DateModified = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
+                    DateModified = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    Chat = table.Column<string>(type: "json", nullable: true)
                 },
                 constraints: table =>
                 {
