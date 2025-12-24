@@ -396,7 +396,11 @@ namespace RR.AI_Chat.Repository.Migrations
 
                                             b3.Property<long>("OutputTokens")
                                                 .HasJsonPropertyName("outputTokens");
+
+                                            b3.HasJsonPropertyName("usage");
                                         });
+
+                                    b2.HasJsonPropertyName("conversations");
                                 });
 
                             b1.ComplexCollection(typeof(List<Dictionary<string, object>>), "Documents", "RR.AI_Chat.Entity.Session.Chat#Chat.Documents#ChatDocument", b2 =>
@@ -420,6 +424,8 @@ namespace RR.AI_Chat.Repository.Migrations
 
                                     b2.Property<long>("Size")
                                         .HasJsonPropertyName("size");
+
+                                    b2.HasJsonPropertyName("documents");
                                 });
 
                             b1.ToJson("Chat");

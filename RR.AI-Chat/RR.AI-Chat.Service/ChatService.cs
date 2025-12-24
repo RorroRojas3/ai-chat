@@ -152,7 +152,10 @@ namespace RR.AI_Chat.Service
                 }
 
                 var date = DateTimeOffset.UtcNow;
-                session.Chat.Conversations.Add(new()
+                var currentChat = await _ctx.Sessions.Where(s => s.Id == sessionId)
+                                    .Select(s => s.Chat!)
+                                    .SingleAsync(cancellationToken);
+                currentChat.Conversations.Add(new()
                 {
                     Id = Guid.NewGuid(),
                     Content = sb.ToString(),
@@ -170,7 +173,7 @@ namespace RR.AI_Chat.Service
                 await _ctx.Sessions
                     .Where(s => s.Id == sessionId)
                     .ExecuteUpdateAsync(s => s
-                        .SetProperty(x => x.Chat, session.Chat)
+                        .SetProperty(x => x.Chat, currentChat)
                         .SetProperty(x => x.InputTokens, x => x.InputTokens + totalInputTokens)
                         .SetProperty(x => x.OutputTokens, x => x.OutputTokens + totalOutputTokens)
                         .SetProperty(x => x.DateModified, date),

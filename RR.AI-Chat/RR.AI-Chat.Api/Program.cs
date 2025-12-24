@@ -160,15 +160,15 @@ builder.Services.AddSingleton(sp =>
 });
 
 // Register Azure Cosmos DB
-//var cosmosConnectionString = builder.Configuration["CosmosDb:ConnectionString"];
-//var cosmosDatabaseId = builder.Configuration["CosmosDb:DatabaseId"];
-//var cosmosContainerId = builder.Configuration["CosmosDb:ContainerId"];
-//builder.Services.AddSingleton(new CosmosClient(cosmosConnectionString));
-//builder.Services.AddScoped<IChatCosmosService>(provider =>
-//{
-//    var cosmosClient = provider.GetRequiredService<CosmosClient>();
-//    return new ChatCosmosService(cosmosClient, cosmosDatabaseId!, cosmosContainerId!);
-//});
+var cosmosConnectionString = builder.Configuration["CosmosDb:ConnectionString"];
+var cosmosDatabaseId = builder.Configuration["CosmosDb:DatabaseId"];
+var cosmosContainerId = builder.Configuration["CosmosDb:ContainerId"];
+builder.Services.AddSingleton(new CosmosClient(cosmosConnectionString));
+builder.Services.AddScoped<IChatCosmosService>(provider =>
+{
+    var cosmosClient = provider.GetRequiredService<CosmosClient>();
+    return new ChatCosmosService(cosmosClient, cosmosDatabaseId!, cosmosContainerId!);
+});
 
 // Register configuration settings
 builder.Services.Configure<List<McpServerSettings>>(builder.Configuration.GetSection("McpServers"));
@@ -221,6 +221,11 @@ using (var scope = app.Services.CreateScope())
         throw; // Rethrow to prevent app startup if migration fails
     }
 }
+
+// Apply cosmos DB migrations or setup if needed
+using var cosmosClient = new CosmosClient(cosmosConnectionString);
+var database = await cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDatabaseId);
+await database.Database.CreateContainerIfNotExistsAsync(cosmosContainerId, "/userId");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

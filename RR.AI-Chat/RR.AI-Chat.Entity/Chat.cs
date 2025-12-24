@@ -9,9 +9,6 @@ namespace RR.AI_Chat.Entity
         [JsonPropertyName("id")]
         public Guid Id { get; set; }
 
-        [JsonPropertyName("partitionKey")]
-        public Guid PartitionKey => UserId;
-
         [JsonPropertyName("userId")]
         public Guid UserId { get; set; }
 

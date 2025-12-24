@@ -397,7 +397,7 @@ namespace RR.AI_Chat.Service
                              ], new() { ModelId = modelName }, cancellationToken);
             if (response == null)
             {
-                _logger.LogError("Failed to create session name for session id {id}", sessionId);
+                _logger.LogError("Failed to create session name for session id {Id}", sessionId);
                 throw new InvalidOperationException($"Failed to create session name for id {sessionId}");
             }
 
@@ -405,6 +405,7 @@ namespace RR.AI_Chat.Service
             session.Name = name;
             session.DateModified = DateTimeOffset.UtcNow;
             session.Chat!.Name= name;
+            session.Chat!.DateModified = session.DateModified;
             await _ctx.SaveChangesAsync(cancellationToken);
 
             return session.Name;
