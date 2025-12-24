@@ -162,10 +162,14 @@ var cosmosConnectionString = builder.Configuration["CosmosDb:ConnectionString"];
 var cosmosDatabaseId = builder.Configuration["CosmosDb:DatabaseId"];
 var cosmosContainerId = builder.Configuration["CosmosDb:ContainerId"];
 builder.Services.AddSingleton(new CosmosClient(cosmosConnectionString));
+builder.Services.AddScoped<IChatCosmosService>(provider =>
+{
+    var cosmosClient = provider.GetRequiredService<CosmosClient>();
+    return new ChatCosmosService(cosmosClient, cosmosDatabaseId!, cosmosContainerId!);
+});
 
 // Register configuration settings
 builder.Services.Configure<List<McpServerSettings>>(builder.Configuration.GetSection("McpServers"));
-
 
 // Singletons
 builder.Services.AddSingleton<ISessionLockService, SessionLockService>();
@@ -180,7 +184,6 @@ builder.Services.AddSingleton<IMarkdownService, MarkdownService>();
 builder.Services.AddKeyedSingleton<IFileService, ExcelService>("excel");
 builder.Services.AddKeyedSingleton<IFileService, CommonFileService>("common");
 builder.Services.AddKeyedSingleton<IFileService, WordService>("word");
-
 
 // Keep other services as Scoped
 builder.Services.AddScoped<IChatService, ChatService>();
