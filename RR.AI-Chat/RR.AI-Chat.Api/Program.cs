@@ -163,11 +163,18 @@ builder.Services.AddSingleton(sp =>
 var cosmosConnectionString = builder.Configuration["CosmosDb:ConnectionString"];
 var cosmosDatabaseId = builder.Configuration["CosmosDb:DatabaseId"];
 var cosmosContainerId = builder.Configuration["CosmosDb:ContainerId"];
-builder.Services.AddSingleton(new CosmosClient(cosmosConnectionString));
-builder.Services.AddScoped<IChatCosmosService>(provider =>
+var cosmosClientOptions = new CosmosClientOptions
+{
+    SerializerOptions = new CosmosSerializationOptions
+    {
+        PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+    }
+};
+builder.Services.AddSingleton(new CosmosClient(cosmosConnectionString, cosmosClientOptions));
+builder.Services.AddScoped<IAzureCosmosService>(provider =>
 {
     var cosmosClient = provider.GetRequiredService<CosmosClient>();
-    return new ChatCosmosService(cosmosClient, cosmosDatabaseId!, cosmosContainerId!);
+    return new AzureCosmosService(cosmosClient, cosmosDatabaseId!, cosmosContainerId!);
 });
 
 // Register configuration settings

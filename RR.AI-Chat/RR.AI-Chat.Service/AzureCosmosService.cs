@@ -5,7 +5,7 @@ namespace RR.AI_Chat.Service
     /// <summary>
     /// Defines operations for interacting with Azure Cosmos DB.
     /// </summary>
-    public interface IChatCosmosService
+    public interface IAzureCosmosService
     {
         /// <summary>
         /// Retrieves a single item from the Cosmos DB container.
@@ -55,7 +55,7 @@ namespace RR.AI_Chat.Service
     /// <summary>
     /// Provides implementation for Azure Cosmos DB operations.
     /// </summary>
-    public class ChatCosmosService : IChatCosmosService
+    public class AzureCosmosService : IAzureCosmosService
     {
         private readonly CosmosClient _cosmosClient;
         private readonly Container _container;
@@ -66,7 +66,7 @@ namespace RR.AI_Chat.Service
         /// <param name="cosmosClient">The Cosmos DB client.</param>
         /// <param name="databaseId">The database identifier.</param>
         /// <param name="containerId">The container identifier.</param>
-        public ChatCosmosService(CosmosClient cosmosClient, string databaseId, string containerId)
+        public AzureCosmosService(CosmosClient cosmosClient, string databaseId, string containerId)
         {
             _cosmosClient = cosmosClient;
             var database = _cosmosClient.GetDatabase(databaseId);

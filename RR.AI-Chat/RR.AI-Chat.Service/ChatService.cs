@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using RR.AI_Chat.Dto;
-using RR.AI_Chat.Dto.Enums;
 using RR.AI_Chat.Repository;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -67,6 +66,7 @@ namespace RR.AI_Chat.Service
         IMcpServerService mcpServerService,
         ISessionLockService sessionLockService,
         ITokenService tokenService,
+        IAzureCosmosService cosmosService,
         IValidator<CreateChatStreamActionDto> createChatStreamActionValidator,
         AIChatDbContext ctx) : IChatService
     {
@@ -78,6 +78,7 @@ namespace RR.AI_Chat.Service
         private readonly IMcpServerService _mcpServerService = mcpServerService;
         private readonly ISessionLockService _sessionLockService = sessionLockService;
         private readonly ITokenService _tokenService = tokenService;
+        private readonly IAzureCosmosService _cosmosService = cosmosService;
         private readonly IValidator<CreateChatStreamActionDto> _createChatStreamActionValidator = createChatStreamActionValidator;
         private readonly AIChatDbContext _ctx = ctx;
 
@@ -178,6 +179,8 @@ namespace RR.AI_Chat.Service
                         .SetProperty(x => x.OutputTokens, x => x.OutputTokens + totalOutputTokens)
                         .SetProperty(x => x.DateModified, date),
                         cancellationToken);
+
+                await _cosmosService.UpdateItemAsync(currentChat, sessionId.ToString(), userId.ToString());
             }
         }
 

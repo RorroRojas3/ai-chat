@@ -188,6 +188,7 @@ namespace RR.AI_Chat.Service
     public class SessionService(ILogger<SessionService> logger,
         [FromKeyedServices("azureaifoundry")] IChatClient openAiClient,
         ITokenService tokenService,
+        IAzureCosmosService cosmosService,
         IValidator<CreateSessionActionDto> createSessionValidator,
         IValidator<UpdateSessionActionDto> updateSessionValidator,
         IValidator<CreateChatStreamActionDto> createChatStreamValidator,
@@ -197,6 +198,7 @@ namespace RR.AI_Chat.Service
         private readonly ILogger<SessionService> _logger = logger;
         private readonly IChatClient _chatClient = openAiClient;
         private readonly ITokenService _tokenService = tokenService;
+        private readonly IAzureCosmosService _cosmosService = cosmosService;
         private readonly IValidator<CreateSessionActionDto> _createSessionValidator = createSessionValidator;
         private readonly IValidator<UpdateSessionActionDto> _updateSessionValidator = updateSessionValidator;
         private readonly IValidator<CreateChatStreamActionDto> _createChatStreamValidator = createChatStreamValidator;
@@ -361,6 +363,9 @@ namespace RR.AI_Chat.Service
             };
             newSession.DateModified = date;
             await _ctx.SaveChangesAsync(cancellationToken);
+
+            await _cosmosService.CreateItemAsync(newSession.Chat, userId.ToString());
+
             await transaction.CommitAsync(cancellationToken);
 
             return newSession.MapToSessionDto();
@@ -407,6 +412,8 @@ namespace RR.AI_Chat.Service
             session.Chat!.Name= name;
             session.Chat!.DateModified = session.DateModified;
             await _ctx.SaveChangesAsync(cancellationToken);
+
+            await _cosmosService.UpdateItemAsync(session.Chat, session.Chat.Id.ToString(), session.UserId.ToString());
 
             return session.Name;
         }
