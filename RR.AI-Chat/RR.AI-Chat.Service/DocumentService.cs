@@ -180,7 +180,7 @@ namespace RR.AI_Chat.Service
         {
             var oid = _tokenService.GetOid();
 
-            var chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), oid.ToString()!, cancellationToken);
+            var chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), oid.ToString(), cancellationToken);
             if (chat == null)
             {
                 throw new InvalidOperationException($"Chat with id {sessionId} not found.");
@@ -241,7 +241,7 @@ namespace RR.AI_Chat.Service
             ArgumentNullException.ThrowIfNull(context, nameof(context));
             ArgumentNullException.ThrowIfNull(fileDataDto, nameof(fileDataDto));
 
-            var userId = _tokenService.GetOid()!.Value;
+            var userId = _tokenService.GetOid();
             var isProjectExist = await _ctx.Projects
                                     .Where(x => x.Id == projectId &&
                                                 x.UserId == userId &&

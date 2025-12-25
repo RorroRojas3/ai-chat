@@ -66,18 +66,20 @@ namespace RR.AI_Chat.Service
 
     public class ProjectService(ILogger<ProjectService> logger,
         ITokenService tokenService,
+        IAzureCosmosService cosmosService,
         IValidator<UpsertProjectActionDto> upsertProjectValidator,
         AIChatDbContext ctx) : IProjectService
     {
         private readonly ILogger<ProjectService> _logger = logger;
         private readonly ITokenService _tokenService = tokenService;
+        private readonly IAzureCosmosService _cosmosService = cosmosService;
         private readonly IValidator<UpsertProjectActionDto> _upsertProjectValidator = upsertProjectValidator;
         private readonly AIChatDbContext _ctx = ctx;
 
         /// <inheritdoc />
         public async Task<PaginatedResponseDto<ProjectDto>> SearchProjectsAsync(string? filter, int skip = 0, int take = 10, CancellationToken cancellationToken = default)
         {
-            var userId = _tokenService.GetOid()!.Value;
+            var userId = _tokenService.GetOid();
 
             var query = _ctx.Projects
                 .AsNoTracking()
@@ -113,7 +115,7 @@ namespace RR.AI_Chat.Service
 
             _upsertProjectValidator.ValidateAndThrow(request);
 
-            var userId = _tokenService.GetOid()!.Value;
+            var userId = _tokenService.GetOid();
 
             var date = DateTimeOffset.UtcNow;
             var newProject = new Project()
@@ -140,7 +142,7 @@ namespace RR.AI_Chat.Service
 
             _upsertProjectValidator.ValidateAndThrow(request);
 
-            var userId = _tokenService.GetOid()!.Value;
+            var userId = _tokenService.GetOid();
 
             var existingProject = await _ctx.Projects
                 .Where(x => x.Id == request.Id && 
@@ -167,7 +169,7 @@ namespace RR.AI_Chat.Service
         /// <inheritdoc />
         public async Task<ProjectDetailDto> GetProjectByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            var userId = _tokenService.GetOid()!.Value;
+            var userId = _tokenService.GetOid();
 
             var project = await _ctx.Projects
                 .Include(x => x.Sessions.Where(x => !x.DateDeactivated.HasValue))
@@ -189,7 +191,7 @@ namespace RR.AI_Chat.Service
         /// <inheritdoc />
         public async Task DeactivateProjectAsync(Guid id, CancellationToken cancellationToken)
         {
-            var userId = _tokenService.GetOid()!.Value;
+            var userId = _tokenService.GetOid();
 
             var projectExists = await _ctx.Projects
                 .Where(x => x.Id == id &&
@@ -237,6 +239,14 @@ namespace RR.AI_Chat.Service
                     cancellationToken);
 
             await transaction.CommitAsync(cancellationToken);
+
+            var chat = await _cosmosService.GetItemAsync<Chat>(id.ToString(), userId.ToString(), cancellationToken);
+            if (chat != null)
+            {
+                chat.ProjectId = null;
+                chat.DateModified = date;
+                await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), userId.ToString(), cancellationToken);
+            }
 
             _logger.LogInformation("Project {Id} successfully deactivated.", id);
         }
