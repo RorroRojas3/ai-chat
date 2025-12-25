@@ -19,7 +19,7 @@ namespace RR.AI_Chat.Service
         /// <exception cref="FormatException">
         /// Thrown if the OID claim is present but its value is not a valid GUID string.
         /// </exception>
-        Guid? GetOid();
+        Guid GetOid();
     }
 
     public class TokenService(ILogger<TokenService> logger, 
@@ -30,17 +30,17 @@ namespace RR.AI_Chat.Service
         private const string _oidClaimType = "http://schemas.microsoft.com/identity/claims/objectidentifier";
 
         /// <inheritdoc />
-        public Guid? GetOid() 
+        public Guid GetOid() 
         {  
             var user = _httpContextAccessor.HttpContext?.User;
             if (user == null)
             {
-                _logger.LogWarning("No user context available to extract OID.");
-                return null;
+                _logger.LogError("No authenticated user found in the HTTP context.");
+                throw new UnauthorizedAccessException("No authenticated user found in the HTTP context.");
             }
 
             var oidClaim = user?.Identities?.FirstOrDefault()?.Claims?.FirstOrDefault(x => x.Type == _oidClaimType);
-            return oidClaim != null ? Guid.Parse(oidClaim.Value) : null;
+            return oidClaim != null ? Guid.Parse(oidClaim.Value) : throw new UnauthorizedAccessException("No OID claim found.");
         }
     }
 }

@@ -7,6 +7,7 @@ using FluentValidation;
 using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Graph;
@@ -51,7 +52,10 @@ builder.Services.AddControllers()
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDbContext<AIChatDbContext>(options =>
-  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))); 
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
+    {
+        sqlOptions.UseCompatibilityLevel(170);
+    })); 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -155,9 +159,26 @@ builder.Services.AddSingleton(sp =>
     return new DocumentIntelligenceClient(new Uri(endpoint!), credential);
 });
 
+// Register Azure Cosmos DB
+var cosmosConnectionString = builder.Configuration["CosmosDb:ConnectionString"];
+var cosmosDatabaseId = builder.Configuration["CosmosDb:DatabaseId"];
+var cosmosContainerId = builder.Configuration["CosmosDb:ContainerId"];
+var cosmosClientOptions = new CosmosClientOptions
+{
+    SerializerOptions = new CosmosSerializationOptions
+    {
+        PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+    }
+};
+builder.Services.AddSingleton(sp => new CosmosClient(cosmosConnectionString, cosmosClientOptions));
+builder.Services.AddScoped<IAzureCosmosService>(provider =>
+{
+    var cosmosClient = provider.GetRequiredService<CosmosClient>();
+    return new AzureCosmosService(cosmosClient, cosmosDatabaseId!, cosmosContainerId!);
+});
+
 // Register configuration settings
 builder.Services.Configure<List<McpServerSettings>>(builder.Configuration.GetSection("McpServers"));
-
 
 // Singletons
 builder.Services.AddSingleton<ISessionLockService, SessionLockService>();
@@ -172,7 +193,6 @@ builder.Services.AddSingleton<IMarkdownService, MarkdownService>();
 builder.Services.AddKeyedSingleton<IFileService, ExcelService>("excel");
 builder.Services.AddKeyedSingleton<IFileService, CommonFileService>("common");
 builder.Services.AddKeyedSingleton<IFileService, WordService>("word");
-
 
 // Keep other services as Scoped
 builder.Services.AddScoped<IChatService, ChatService>();
@@ -190,24 +210,28 @@ builder.Services.AddValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssembli
 var app = builder.Build();
 
 // Apply database migrations at startup
-using (var scope = app.Services.CreateScope())
+using var scope = app.Services.CreateScope();
+var services = scope.ServiceProvider;
+try
 {
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AIChatDbContext>();
+    var context = services.GetRequiredService<AIChatDbContext>();
 
-        // This will create the database if it doesn't exist and apply all pending migrations
-        context.Database.Migrate();
+    // This will create the database if it doesn't exist and apply all pending migrations
+    context.Database.Migrate();
 
-        app.Logger.LogInformation("Database migrations applied successfully");
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogError(ex, "An error occurred while migrating the database");
-        throw; // Rethrow to prevent app startup if migration fails
-    }
+    app.Logger.LogInformation("Database migrations applied successfully");
 }
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "An error occurred while migrating the database");
+    throw; // Rethrow to prevent app startup if migration fails
+}
+
+// Apply cosmos DB migrations or setup if needed
+
+var cosmosClient = services.GetRequiredService<CosmosClient>();
+var database = await cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDatabaseId);
+await database.Database.CreateContainerIfNotExistsAsync(cosmosContainerId, "/userId");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

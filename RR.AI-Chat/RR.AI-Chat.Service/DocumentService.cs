@@ -5,6 +5,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RR.AI_Chat.Common.Enums;
 using RR.AI_Chat.Common.Extensions;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
@@ -40,6 +41,7 @@ namespace RR.AI_Chat.Service
         [FromKeyedServices("excel")] IFileService excelService,
         [FromKeyedServices("common")] IFileService commonFileService,
         [FromKeyedServices("word")] IFileService wordFileService,
+        IAzureCosmosService cosmosService,
         AIChatDbContext ctx) : IDocumentService
     {
         private readonly ILogger _logger = logger;
@@ -55,6 +57,7 @@ namespace RR.AI_Chat.Service
         private readonly IFileService _excelService = excelService;
         private readonly IFileService _commonFileService = commonFileService;
         private readonly IFileService _wordFileService = wordFileService;
+        private readonly IAzureCosmosService _cosmosService = cosmosService;
         private readonly AIChatDbContext _ctx = ctx;
 
         /// <summary>
@@ -175,31 +178,15 @@ namespace RR.AI_Chat.Service
 
         public async Task<FileDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken)
         {
-            var oid = _tokenService.GetOid()!;
+            var oid = _tokenService.GetOid();
 
-            var session = await _ctx.Sessions
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.Id == sessionId &&
-                                    x.UserId == oid.Value &&
-                                    x.Conversations != null &&
-                                    !x.DateDeactivated.HasValue,
-                                    cancellationToken);
-
-            if (session?.Conversations == null || session.Conversations.Count == 0)
+            var chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), oid.ToString(), cancellationToken);
+            if (chat == null)
             {
-                return null;
+                throw new InvalidOperationException($"Chat with id {sessionId} not found.");
             }
 
-            var conversations = session.Conversations
-                                      .Where(x => x.Role != ChatRole.System)
-                                      .ToList();
-
-            if (conversations.Count == 0)
-            {
-                return null;
-            }
-
-            var html = _htmlService.GenerateConversationHistoryAsync(conversations);
+            var html = _htmlService.GenerateConversationHistoryAsync(chat.Conversations);
             if (string.IsNullOrWhiteSpace(html))
             {
                 return null;
@@ -254,7 +241,7 @@ namespace RR.AI_Chat.Service
             ArgumentNullException.ThrowIfNull(context, nameof(context));
             ArgumentNullException.ThrowIfNull(fileDataDto, nameof(fileDataDto));
 
-            var userId = _tokenService.GetOid()!.Value;
+            var userId = _tokenService.GetOid();
             var isProjectExist = await _ctx.Projects
                                     .Where(x => x.Id == projectId &&
                                                 x.UserId == userId &&

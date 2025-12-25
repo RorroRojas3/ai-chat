@@ -20,18 +20,7 @@ namespace RR.AI_Chat.Service.Middleware
                 var userId = tokenService.GetOid();
                 var cancellationToken = context.RequestAborted;
 
-                if (userId == null)
-                {
-                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    await context.Response.WriteAsJsonAsync(new ErrorDto
-                    {
-                        Errors = ["Invalid JWT token."],
-                        StatusCode = HttpStatusCode.Unauthorized
-                    });
-                    return;
-                }
-
-                var userExists = await userService.IsUserInDatabaseAsync(userId.Value, cancellationToken);
+                var userExists = await userService.IsUserInDatabaseAsync(userId, cancellationToken);
 
                 if (!userExists)
                 {
