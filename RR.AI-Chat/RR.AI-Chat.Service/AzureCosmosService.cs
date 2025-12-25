@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Cosmos;
+using System.Net;
 
 namespace RR.AI_Chat.Service
 {
@@ -83,7 +84,7 @@ namespace RR.AI_Chat.Service
             }
             catch (CosmosException ex)
             {
-                if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+                if (ex.StatusCode == HttpStatusCode.NotFound)
                 {
                     return default;
                 }

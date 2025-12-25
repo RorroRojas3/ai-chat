@@ -41,6 +41,7 @@ namespace RR.AI_Chat.Service
         [FromKeyedServices("excel")] IFileService excelService,
         [FromKeyedServices("common")] IFileService commonFileService,
         [FromKeyedServices("word")] IFileService wordFileService,
+        IAzureCosmosService cosmosService,
         AIChatDbContext ctx) : IDocumentService
     {
         private readonly ILogger _logger = logger;
@@ -56,6 +57,7 @@ namespace RR.AI_Chat.Service
         private readonly IFileService _excelService = excelService;
         private readonly IFileService _commonFileService = commonFileService;
         private readonly IFileService _wordFileService = wordFileService;
+        private readonly IAzureCosmosService _cosmosService = cosmosService;
         private readonly AIChatDbContext _ctx = ctx;
 
         /// <summary>
@@ -176,31 +178,15 @@ namespace RR.AI_Chat.Service
 
         public async Task<FileDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken)
         {
-            var oid = _tokenService.GetOid()!;
+            var oid = _tokenService.GetOid();
 
-            var session = await _ctx.Sessions
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.Id == sessionId &&
-                                    x.UserId == oid.Value &&
-                                    x.Chat != null &&
-                                    !x.DateDeactivated.HasValue,
-                                    cancellationToken);
-
-            if (session?.Chat == null || session.Chat.Conversations.Count == 0)
+            var chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), oid.ToString()!, cancellationToken);
+            if (chat == null)
             {
-                return null;
+                throw new InvalidOperationException($"Chat with id {sessionId} not found.");
             }
 
-            var conversations = session.Chat.Conversations
-                                      .Where(x => x.Role != ChatRoles.System)
-                                      .ToList();
-
-            if (conversations.Count == 0)
-            {
-                return null;
-            }
-
-            var html = _htmlService.GenerateConversationHistoryAsync(conversations);
+            var html = _htmlService.GenerateConversationHistoryAsync(chat.Conversations);
             if (string.IsNullOrWhiteSpace(html))
             {
                 return null;

@@ -95,11 +95,11 @@ namespace RR.AI_Chat.Service
             var lockReleaser = await _sessionLockService.TryAcquireLockAsync(sessionId, cancellationToken);
             if (lockReleaser == null)
             {
-                _logger.LogWarning("Session {sessionId} is already being processed.", sessionId);
+                _logger.LogWarning("Session {SessionId} is already being processed.", sessionId);
                 throw new InvalidOperationException($"Session {sessionId} is currently being processed. Please wait for the current request to complete.");
             }
 
-            var userId = _tokenService.GetOid()!.Value;
+            var userId = _tokenService.GetOid();
             using (lockReleaser)
             {
                 var session = await _ctx.Sessions
@@ -170,6 +170,7 @@ namespace RR.AI_Chat.Service
                         cancellationToken);
 
                 chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), userId.ToString(), cancellationToken);
+                chat!.TotalTokens = chat.TotalTokens + totalInputTokens + totalOutputTokens;
                 chat!.Conversations.Add(new()
                 {
                     Id = Guid.NewGuid(),
@@ -201,35 +202,31 @@ namespace RR.AI_Chat.Service
         /// <inheritdoc />
         public async Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken)
         {
-            var userId = _tokenService.GetOid()!.Value;
+            var userId = _tokenService.GetOid();
             var chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), userId.ToString(), cancellationToken);
             if (chat == null)
             {
-                _logger.LogError("Chat with id {id} not found.", sessionId);
+                _logger.LogError("Chat with id {Id} not found.", sessionId);
                 throw new KeyNotFoundException($"Chat with id {sessionId} not found.");
             }
 
             var messages = chat.Conversations
                             .Where(x => x.Role != ChatRoles.System)
-                            .Select(x => new SessionMessageDto() 
-                            { 
+                            .Select(x => new SessionMessageDto()
+                            {
                                 Text = x.Content ?? string.Empty,
                                 Role = x.Role == ChatRoles.User ? ChatRoles.User : ChatRoles.System
                             })
-                            .ToList();
-            if (messages == null || messages.Count == 0)
-            {
-                _logger.LogError("Session with id {id} does not contain any messages.", sessionId);
-            }
+                            .ToList() ?? [];
 
             await Task.CompletedTask;
             return new() 
             { 
                 Id = sessionId, 
-                Name = chat.Name!, 
+                Name = chat.Name, 
                 DateCreated = chat.DateCreated,
                 DateModified = chat.DateModified,
-                Messages = messages! 
+                Messages = messages
             };
         }
 
