@@ -170,30 +170,34 @@ namespace RR.AI_Chat.Service
                         cancellationToken);
 
                 chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), userId.ToString(), cancellationToken);
-                chat!.TotalTokens = chat.TotalTokens + totalInputTokens + totalOutputTokens;
-                chat!.Conversations.Add(new()
+                if (chat != null)
                 {
-                    Id = Guid.NewGuid(),
-                    Content = request.Prompt,
-                    DateCreated = date,
-                    Model = model.Name,
-                    Role = ChatRoles.User,
-                    Tokens = 0,
-                });
-                chat!.Conversations.Add(new()
-                {
-                    Id = Guid.NewGuid(),
-                    Content = sb.ToString(),
-                    DateCreated = date,
-                    Model = model.Name,
-                    Role = ChatRoles.Assistant,
-                    Tokens = totalInputTokens + totalOutputTokens,
-                    Usage = new ChatUsage
+                    chat.DateModified = date;   
+                    chat.TotalTokens = chat.TotalTokens + totalInputTokens + totalOutputTokens;
+                    chat.Conversations.Add(new()
                     {
-                        InputTokens = totalInputTokens,
-                        OutputTokens = totalOutputTokens
-                    }
-                });
+                        Id = Guid.NewGuid(),
+                        Content = request.Prompt,
+                        DateCreated = date,
+                        Model = model.Name,
+                        Role = ChatRoles.User,
+                        Tokens = 0,
+                    });
+                    chat.Conversations.Add(new()
+                    {
+                        Id = Guid.NewGuid(),
+                        Content = sb.ToString(),
+                        DateCreated = date,
+                        Model = model.Name,
+                        Role = ChatRoles.Assistant,
+                        Usage = new ChatUsage
+                        {
+                            InputTokens = totalInputTokens,
+                            OutputTokens = totalOutputTokens
+                        }
+                    });
+                }
+                
 
                 await _cosmosService.UpdateItemAsync(chat, sessionId.ToString(), userId.ToString(), cancellationToken);
             }
@@ -215,7 +219,7 @@ namespace RR.AI_Chat.Service
                             .Select(x => new SessionMessageDto()
                             {
                                 Text = x.Content ?? string.Empty,
-                                Role = x.Role == ChatRoles.User ? ChatRoles.User : ChatRoles.System
+                                Role = x.Role
                             })
                             .ToList() ?? [];
 

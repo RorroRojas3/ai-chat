@@ -170,7 +170,7 @@ var cosmosClientOptions = new CosmosClientOptions
         PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
     }
 };
-builder.Services.AddSingleton(new CosmosClient(cosmosConnectionString, cosmosClientOptions));
+builder.Services.AddSingleton(sp => new CosmosClient(cosmosConnectionString, cosmosClientOptions));
 builder.Services.AddScoped<IAzureCosmosService>(provider =>
 {
     var cosmosClient = provider.GetRequiredService<CosmosClient>();
@@ -210,27 +210,26 @@ builder.Services.AddValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssembli
 var app = builder.Build();
 
 // Apply database migrations at startup
-using (var scope = app.Services.CreateScope())
+using var scope = app.Services.CreateScope();
+var services = scope.ServiceProvider;
+try
 {
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AIChatDbContext>();
+    var context = services.GetRequiredService<AIChatDbContext>();
 
-        // This will create the database if it doesn't exist and apply all pending migrations
-        context.Database.Migrate();
+    // This will create the database if it doesn't exist and apply all pending migrations
+    context.Database.Migrate();
 
-        app.Logger.LogInformation("Database migrations applied successfully");
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogError(ex, "An error occurred while migrating the database");
-        throw; // Rethrow to prevent app startup if migration fails
-    }
+    app.Logger.LogInformation("Database migrations applied successfully");
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "An error occurred while migrating the database");
+    throw; // Rethrow to prevent app startup if migration fails
 }
 
 // Apply cosmos DB migrations or setup if needed
-using var cosmosClient = new CosmosClient(cosmosConnectionString);
+
+var cosmosClient = services.GetRequiredService<CosmosClient>();
 var database = await cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDatabaseId);
 await database.Database.CreateContainerIfNotExistsAsync(cosmosContainerId, "/userId");
 

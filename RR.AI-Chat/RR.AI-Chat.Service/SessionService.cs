@@ -412,7 +412,7 @@ namespace RR.AI_Chat.Service
             var name = response.Messages.Last().Text?.Trim() ?? string.Empty;
             session.Name = name;
             session.DateModified = DateTimeOffset.UtcNow;
-            chat.Name= name;
+            chat.Name = name;
             chat.DateModified = session.DateModified;
             await _ctx.SaveChangesAsync(cancellationToken);
 
@@ -527,9 +527,11 @@ namespace RR.AI_Chat.Service
             }
 
             // Deactivate all pages for documents in these sessions
-            var chats = await _cosmosService.GetItemsAsync<Chat>(
-                $"SELECT * FROM c WHERE ARRAY_CONTAINS(@sessionIds, c.id) AND " +
-                $"c.UserId = @userId AND IS_NULL(c.DateDeactivated)");
+            var sessionIdsInClause = string.Join(", ", sessionIds.Select(id => $"'{id}'"));
+            var cosmosQuery =
+                $"SELECT * FROM c WHERE c.id IN ({sessionIdsInClause}) " +
+                $"AND c.UserId = '{userId}' AND IS_NULL(c.DateDeactivated)";
+            var chats = await _cosmosService.GetItemsAsync<Chat>(cosmosQuery);
             foreach (var chat in chats)
             {
                 chat.DateDeactivated = date;
@@ -537,10 +539,10 @@ namespace RR.AI_Chat.Service
             }
 
             await _ctx.SessionDocumentPages
-            .Where(p => sessionIds.Contains(p.SessionDocument.SessionId) && !p.DateDeactivated.HasValue)
-            .ExecuteUpdateAsync(p => p
-                .SetProperty(x => x.DateDeactivated, date),
-                cancellationToken);
+                .Where(p => sessionIds.Contains(p.SessionDocument.SessionId) && !p.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(p => p
+                    .SetProperty(x => x.DateDeactivated, date),
+                    cancellationToken);
 
             await _ctx.SessionDocuments
                 .Where(d => sessionIds.Contains(d.SessionId) && !d.DateDeactivated.HasValue)
