@@ -34,7 +34,6 @@ import { Location } from '@angular/common';
 import { DocumentFormats } from '../../../dtos/const/DocumentFormats';
 import { McpDto } from '../../../dtos/McpDto';
 
-
 @Component({
   selector: 'app-prompt-box',
   imports: [FormsModule],
@@ -98,7 +97,7 @@ export class PromptBoxComponent implements OnDestroy {
         const session = await firstValueFrom(
           this.sessionService.createSession({
             projectId: this.storeService.projectId(),
-          })
+          }),
         );
         this.storeService.session.set(session);
         this.location.replaceState(`chat/session/${session.id}`);
@@ -135,7 +134,7 @@ export class PromptBoxComponent implements OnDestroy {
             ]);
             this.storeService.isStreaming.set(false);
             this.storeService.streamMessage.set(
-              createMessage('', false, undefined)
+              createMessage('', false, undefined),
             );
             this.showAttachedFiles = true;
             this.sessionService.loadMenuSessions().subscribe();
@@ -255,7 +254,7 @@ export class PromptBoxComponent implements OnDestroy {
 
       // Check if file extension matches any allowed extension
       const isAllowed = allowedExtensions.some((ext) =>
-        fileName.endsWith(ext.toLowerCase())
+        fileName.endsWith(ext.toLowerCase()),
       );
 
       if (isAllowed) {
@@ -272,7 +271,7 @@ export class PromptBoxComponent implements OnDestroy {
         // Show error message for unsupported files
         const allowedList = allowedExtensions.join(', ');
         console.warn(
-          `File "${file.name}" is not supported. Allowed types: ${allowedList}`
+          `File "${file.name}" is not supported. Allowed types: ${allowedList}`,
         );
         // You could also show a toast notification or alert here
       }
@@ -282,7 +281,7 @@ export class PromptBoxComponent implements OnDestroy {
   // Remove a specific file
   removeFile(fileId: string): void {
     this.attachedFiles = this.attachedFiles.filter(
-      (file) => file.id !== fileId
+      (file) => file.id !== fileId,
     );
   }
 
@@ -315,8 +314,11 @@ export class PromptBoxComponent implements OnDestroy {
     // Upload files sequentially and wait for each to complete
     const uploadPromises = this.attachedFiles.map((attachedFile) =>
       firstValueFrom(
-        this.documentService.createSessionDocument(sessionId, attachedFile.file)
-      )
+        this.documentService.createSessionDocument(
+          sessionId,
+          attachedFile.file,
+        ),
+      ),
     );
 
     const jobs = await Promise.all(uploadPromises);
@@ -347,8 +349,8 @@ export class PromptBoxComponent implements OnDestroy {
             (status: JobStatusDto) =>
               status.state !== JobState.Succeeded &&
               status.state !== JobState.Failed,
-            true
-          )
+            true,
+          ),
         )
         .subscribe({
           next: (result: JobStatusDto) => {
@@ -363,7 +365,7 @@ export class PromptBoxComponent implements OnDestroy {
             } else if (result.state === JobState.Failed) {
               attachedFile.status = JobState.Failed;
               console.error(
-                `File ${attachedFile.name} upload failed: ${result.status}`
+                `File ${attachedFile.name} upload failed: ${result.status}`,
               );
               this.jobPollingSubscriptions.delete(attachedFile.id);
               reject(new Error(`Upload failed: ${result.status}`));
@@ -371,7 +373,7 @@ export class PromptBoxComponent implements OnDestroy {
               attachedFile.status = result.status;
               attachedFile.progress = result.progress;
               console.log(
-                `File ${attachedFile.name} processing: ${result.progress}%`
+                `File ${attachedFile.name} processing: ${result.progress}%`,
               );
             }
           },
@@ -379,7 +381,7 @@ export class PromptBoxComponent implements OnDestroy {
             attachedFile.status = 'failed';
             console.error(
               `Error polling status for file ${attachedFile.name}:`,
-              error
+              error,
             );
             this.jobPollingSubscriptions.delete(attachedFile.id);
             reject(error);
@@ -446,14 +448,8 @@ export class PromptBoxComponent implements OnDestroy {
    */
   getServiceIcon(aiServiceId: string): string {
     switch (aiServiceId) {
-      case AiServiceType.Ollama:
-        return 'bi bi-robot'; // Robot icon for Ollama
-      case AiServiceType.OpenAI:
-        return 'bi bi-openai'; // Lightning charge icon for OpenAI
       case AiServiceType.AzureAIFoundry:
-        return 'bi bi-microsoft';
-      case AiServiceType.Anthropic:
-        return 'bi bi-anthropic';
+        return 'bi bi-openai';
       default:
         return 'bi bi-question-circle'; // Question circle for unknown services
     }
@@ -552,7 +548,7 @@ export class PromptBoxComponent implements OnDestroy {
 
     // Clean up all job polling subscriptions
     this.jobPollingSubscriptions.forEach((subscription) =>
-      subscription.unsubscribe()
+      subscription.unsubscribe(),
     );
     this.jobPollingSubscriptions.clear();
   }

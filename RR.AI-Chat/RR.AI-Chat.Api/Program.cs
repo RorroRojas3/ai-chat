@@ -16,7 +16,6 @@ using RR.AI_Chat.Api.Middlewares;
 using RR.AI_Chat.Repository;
 using RR.AI_Chat.Service;
 using RR.AI_Chat.Service.Common.Interface;
-using RR.AI_Chat.Service.Middleware;
 using RR.AI_Chat.Service.Settings;
 using System.ClientModel;
 
