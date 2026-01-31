@@ -1,5 +1,4 @@
 ﻿using RR.AI_Chat.Common.Enums;
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace RR.AI_Chat.Entity
