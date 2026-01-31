@@ -96,7 +96,7 @@ export class HomeComponent implements OnInit {
         // Step 4: Process and update messages
         const mappedMessages = response.messages.map(
           (message: SessionMessageDto) => {
-            if (message.role === ChatRoles.USER) {
+            if (message.role === ChatRoles.ASSISTANT) {
               const html = this.md.render(message.text);
               const sanitizeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
               return createMessage(message.text, false, sanitizeHtml);
