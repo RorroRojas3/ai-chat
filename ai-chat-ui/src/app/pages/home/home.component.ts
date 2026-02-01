@@ -14,6 +14,7 @@ import { ChatService } from '../../services/chat.service';
 import { SessionService } from '../../services/session.service';
 import { NotificationService } from '../../services/notification.service';
 import { catchError, EMPTY, switchMap, tap } from 'rxjs';
+import { ChatRoles } from '../../dtos/const/ChatRoles';
 
 @Component({
   selector: 'app-home',
@@ -89,19 +90,19 @@ export class HomeComponent implements OnInit {
           this.storeService.clearForNewSession();
           return EMPTY;
         }),
-        takeUntilDestroyed(this.destroyRef) // Step 4: Prevent memory leaks
+        takeUntilDestroyed(this.destroyRef), // Step 4: Prevent memory leaks
       )
       .subscribe((response) => {
         // Step 4: Process and update messages
         const mappedMessages = response.messages.map(
           (message: SessionMessageDto) => {
-            if (message.role === 1) {
+            if (message.role === ChatRoles.ASSISTANT) {
               const html = this.md.render(message.text);
               const sanitizeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
               return createMessage(message.text, false, sanitizeHtml);
             }
             return createMessage(message.text, true, undefined);
-          }
+          },
         );
         this.storeService.messages.set(mappedMessages);
       });
