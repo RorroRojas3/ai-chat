@@ -13,9 +13,9 @@ namespace RR.AI_Chat.Repository
 
         public DbSet<Session> Sessions { get; set; }
 
-        public DbSet<SessionDocument> SessionDocuments { get; set; }
+        public DbSet<ChatDocument> SessionDocuments { get; set; }
 
-        public DbSet<SessionDocumentPage> SessionDocumentPages { get; set; }
+        public DbSet<ChatDocumentPage> SessionDocumentPages { get; set; }
 
         public DbSet<Project> Projects { get; set; }
 

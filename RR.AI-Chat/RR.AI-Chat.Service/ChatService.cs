@@ -113,7 +113,7 @@ namespace RR.AI_Chat.Service
                     throw new KeyNotFoundException($"Session with id {sessionId} not found.");
                 }
 
-                var chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), userId.ToString(), cancellationToken);
+                var chat = await _cosmosService.GetItemAsync<CosmosChat>(sessionId.ToString(), userId.ToString(), cancellationToken);
                 if (chat == null)
                 {
                     _logger.LogError("Chat with session id {Id} not found.", sessionId);
@@ -169,7 +169,7 @@ namespace RR.AI_Chat.Service
                         .SetProperty(x => x.DateModified, date),
                         cancellationToken);
 
-                chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), userId.ToString(), cancellationToken);
+                chat = await _cosmosService.GetItemAsync<CosmosChat>(sessionId.ToString(), userId.ToString(), cancellationToken);
                 if (chat != null)
                 {
                     chat.DateModified = date;   
@@ -207,7 +207,7 @@ namespace RR.AI_Chat.Service
         public async Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid();
-            var chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), userId.ToString(), cancellationToken);
+            var chat = await _cosmosService.GetItemAsync<CosmosChat>(sessionId.ToString(), userId.ToString(), cancellationToken);
             if (chat == null)
             {
                 _logger.LogError("Chat with id {Id} not found.", sessionId);

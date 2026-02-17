@@ -1,92 +1,46 @@
-﻿using RR.AI_Chat.Common.Enums;
-using System.Text.Json.Serialization;
+﻿using RR.AI_Chat.Dto;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RR.AI_Chat.Entity
 {
-    public class Chat
+    [Table(nameof(Chat), Schema = "Core")]
+    public class Chat : BaseModifiedEntity
     {
-        [JsonPropertyName("id")]
-        public Guid Id { get; set; }
-
-        [JsonPropertyName("userId")]
+        [ForeignKey(nameof(User))]
         public Guid UserId { get; set; }
 
-        [JsonPropertyName("projectId")]
+        [ForeignKey(nameof(Project))]
         public Guid? ProjectId { get; set; }
 
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = null!;
+        [StringLength(256)]
+        public string Name { get; set; } = "New Chat";
 
-        [JsonPropertyName("totalTokens")]
-        public long TotalTokens { get; set; }
-
-        [JsonPropertyName("messageCount")]
-        public long MessageCount => Conversations.Count;
-
-        [JsonPropertyName("documents")]
-        public List<ChatDocument> Documents { get; set; } = [];
-
-        [JsonPropertyName("conversations")]
-        public List<ChatConversation> Conversations { get; set; } = [];
-
-        [JsonPropertyName("dateCreated")]
-        public DateTimeOffset DateCreated { get; set; }
-
-        [JsonPropertyName("dateModified")]
-        public DateTimeOffset DateModified { get; set; }
-
-        [JsonPropertyName("dateDeactivated")]
-        public DateTimeOffset? DateDeactivated { get; set; }
-    }
-
-    public class ChatDocument
-    {
-        [JsonPropertyName("id")]
-        public Guid Id { get; set; }
-
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = null!;
-
-        [JsonPropertyName("extension")]
-        public string Extension { get; set; } = null!;
-
-        [JsonPropertyName("mimeType")]
-        public string MimeType { get; set; } = null!;
-
-        [JsonPropertyName("size")]
-        public long Size { get; set; }
-    }
-
-    public class ChatConversation
-    {
-        [JsonPropertyName("id")]
-        public Guid Id { get; set; }
-
-        [JsonPropertyName("role")]
-        public ChatRoles Role { get; set; }
-
-        [JsonPropertyName("content")]
-        public string Content { get; set; } = null!;
-
-        [JsonPropertyName("dateCreated")]
-        public DateTimeOffset DateCreated { get; set; }
-
-        [JsonPropertyName("tokens")]
-        public long Tokens { get; set; }
-
-        [JsonPropertyName("model")]
-        public string? Model { get; set; }
-
-        [JsonPropertyName("usage")]
-        public ChatUsage? Usage { get; set; }
-    }
-
-    public class ChatUsage 
-    {
-        [JsonPropertyName("inputTokens")]
         public long InputTokens { get; set; }
 
-        [JsonPropertyName("outputTokens")]
         public long OutputTokens { get; set; }
+
+        public long TotalTokens => InputTokens + OutputTokens;
+
+        public User User { get; set; } = null!;
+
+        public Project? Project { get; set; }
+
+        public List<ChatDocument> Documents { get; set; } = [];
+    }
+
+    public static class ChatExtensions
+    {
+        public static ChatDto MapToChatDto(this Chat source)
+        {
+            return new ChatDto
+            {
+                Id = source.Id,
+                ProjectId = source.ProjectId,
+                Name = source.Name,
+                DateCreated = source.DateCreated,
+                DateModified = source.DateModified
+            };
+        }
     }
 }

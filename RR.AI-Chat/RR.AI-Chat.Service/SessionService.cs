@@ -339,7 +339,7 @@ namespace RR.AI_Chat.Service
             await _ctx.SaveChangesAsync(cancellationToken);
 
             var prompt = string.Format(_defaultSystemPrompt, newSession.Id, userId);
-            var newChat = new Chat()
+            var newChat = new CosmosChat()
             {
                 Id = newSession.Id,
                 UserId = userId,
@@ -381,7 +381,7 @@ namespace RR.AI_Chat.Service
                 throw new KeyNotFoundException($"Session with id {sessionId} not found");
             }
 
-            var chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), session.UserId.ToString(), cancellationToken);
+            var chat = await _cosmosService.GetItemAsync<CosmosChat>(sessionId.ToString(), session.UserId.ToString(), cancellationToken);
             if (chat == null)
             {
                 _logger.LogError("Chat for session id {Id} not found in Cosmos DB", sessionId);
@@ -478,7 +478,7 @@ namespace RR.AI_Chat.Service
                 return;
             }
 
-            var chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), userId.ToString(), cancellationToken);
+            var chat = await _cosmosService.GetItemAsync<CosmosChat>(sessionId.ToString(), userId.ToString(), cancellationToken);
             if (chat != null)
             {
                 chat.DateDeactivated = date;
@@ -531,7 +531,7 @@ namespace RR.AI_Chat.Service
             var cosmosQuery =
                 $"SELECT * FROM c WHERE c.id IN ({sessionIdsInClause}) " +
                 $"AND c.UserId = '{userId}' AND IS_NULL(c.DateDeactivated)";
-            var chats = await _cosmosService.GetItemsAsync<Chat>(cosmosQuery);
+            var chats = await _cosmosService.GetItemsAsync<CosmosChat>(cosmosQuery);
             foreach (var chat in chats)
             {
                 chat.DateDeactivated = date;
@@ -585,7 +585,7 @@ namespace RR.AI_Chat.Service
                     .SetProperty(x => x.DateModified, date),
                     cancellationToken);
 
-            var chat = await _cosmosService.GetItemAsync<Chat>(request.Id.ToString(), userId.ToString(), cancellationToken);
+            var chat = await _cosmosService.GetItemAsync<CosmosChat>(request.Id.ToString(), userId.ToString(), cancellationToken);
             if (chat != null)
             {
                 chat.Name = request.Name;

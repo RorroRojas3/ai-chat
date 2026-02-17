@@ -105,7 +105,7 @@ namespace RR.AI_Chat.Service
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Extracting.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 50);
 
-            List<SessionDocumentPage> documentPages = [];
+            List<ChatDocumentPage> documentPages = [];
             var date = DateTimeOffset.UtcNow;
 
             var tasks = new List<Task<PageEmbeddingDto>>();
@@ -121,7 +121,7 @@ namespace RR.AI_Chat.Service
                     var completedTasks = await Task.WhenAll(tasks);
                     foreach (var result in completedTasks)
                     {
-                        documentPages.Add(new SessionDocumentPage
+                        documentPages.Add(new ChatDocumentPage
                         {
                             Number = result.Number,
                             Embedding = new SqlVector<float>(result.Embedding),
@@ -140,7 +140,7 @@ namespace RR.AI_Chat.Service
                 var completedTasks = await Task.WhenAll(tasks);
                 foreach (var result in completedTasks)
                 {
-                    documentPages.Add(new SessionDocumentPage
+                    documentPages.Add(new ChatDocumentPage
                     {
                         Number = result.Number,
                         Embedding = new SqlVector<float>(result.Embedding),
@@ -153,7 +153,7 @@ namespace RR.AI_Chat.Service
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Embedding.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 75);
 
-            var document = new SessionDocument
+            var document = new ChatDocument
             {
                 UserId = userId,
                 SessionId = sessionId,
@@ -180,7 +180,7 @@ namespace RR.AI_Chat.Service
         {
             var oid = _tokenService.GetOid();
 
-            var chat = await _cosmosService.GetItemAsync<Chat>(sessionId.ToString(), oid.ToString(), cancellationToken);
+            var chat = await _cosmosService.GetItemAsync<CosmosChat>(sessionId.ToString(), oid.ToString(), cancellationToken);
             if (chat == null)
             {
                 throw new InvalidOperationException($"Chat with id {sessionId} not found.");

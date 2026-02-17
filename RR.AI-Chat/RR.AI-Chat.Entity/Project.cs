@@ -21,10 +21,10 @@ namespace RR.AI_Chat.Entity
 
         public User User { get; set; } = null!;
 
-        public List<Session> Sessions { get; set; } = [];
+        public List<Chat> Chats { get; set; } = [];
     }
 
-    public static class SessionProjectExtensions
+    public static class ProjectExtensions
     {
         public static ProjectDto MapToProjectDto(this Project source)
         {
@@ -49,7 +49,7 @@ namespace RR.AI_Chat.Entity
                 Instructions = source.Instructions,
                 DateCreated = source.DateCreated,
                 DateModified = source.DateModified,
-                Sessions = [.. source.Sessions.Select(s => s.MapToSessionDto())]
+                Chats = [.. source.Chats.Select(s => s.MapToChatDto())]
             };
         }
     }

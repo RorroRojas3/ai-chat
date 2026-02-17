@@ -2,6 +2,6 @@
 {
     public class ProjectDetailDto : ProjectDto
     {
-        public List<SessionDto> Sessions { get; set; } = [];
+        public List<ChatDto> Chats { get; set; } = [];
     }
 }

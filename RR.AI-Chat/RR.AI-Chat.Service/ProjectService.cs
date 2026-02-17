@@ -240,7 +240,7 @@ namespace RR.AI_Chat.Service
 
             await transaction.CommitAsync(cancellationToken);
 
-            var chat = await _cosmosService.GetItemAsync<Chat>(id.ToString(), userId.ToString(), cancellationToken);
+            var chat = await _cosmosService.GetItemAsync<CosmosChat>(id.ToString(), userId.ToString(), cancellationToken);
             if (chat != null)
             {
                 chat.ProjectId = null;

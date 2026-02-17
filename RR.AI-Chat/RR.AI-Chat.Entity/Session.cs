@@ -26,7 +26,7 @@ namespace RR.AI_Chat.Entity
 
         public Project? Project { get; set; }
 
-        public List<SessionDocument> Documents { get; set; } = [];
+        public List<ChatDocument> Documents { get; set; } = [];
     }
 
     public static class SessionExtensions
