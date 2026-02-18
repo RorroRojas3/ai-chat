@@ -75,6 +75,8 @@ namespace RR.AI_Chat.Service
         IAzureCosmosService cosmosService,
         IValidator<CreateChatActionDto> createChatValidator,
         IValidator<CreateChatStreamActionDto> createChatStreamActionValidator,
+        IValidator<DeactivateChatBulkActionDto> deactivateChatBulkValidator,
+        IValidator<UpdateChatActionDto> updateSessionValidator,
         AIChatDbContext ctx) : IChatService
     {
         private readonly ILogger _logger = logger;
@@ -88,6 +90,8 @@ namespace RR.AI_Chat.Service
         private readonly IAzureCosmosService _cosmosService = cosmosService;
         private readonly IValidator<CreateChatActionDto> _createChatValidator = createChatValidator;
         private readonly IValidator<CreateChatStreamActionDto> _createChatStreamActionValidator = createChatStreamActionValidator;
+        private readonly IValidator<DeactivateChatBulkActionDto> _deactivateChatBulkValidator = deactivateChatBulkValidator;
+        private readonly IValidator<UpdateChatActionDto> _updateChatValidator = updateSessionValidator;
         private readonly AIChatDbContext _ctx = ctx;
 
         private readonly string _defaultSystemPrompt = @"
@@ -170,7 +174,7 @@ namespace RR.AI_Chat.Service
             Operate with invisible mastery: your sophisticated use of these capabilities should enhance every response without ever needing to explicitly mention the tools themselves.
             ";
 
-        public async Task<ChatDto> ChatChatAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<ChatDto> GetChatAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var userId = _tokenService.GetOid();
 
@@ -298,24 +302,24 @@ namespace RR.AI_Chat.Service
 
             _deactivateChatBulkValidator.ValidateAndThrow(request);
 
-            var userId = _tokenService.GetOid();`
+            var userId = _tokenService.GetOid();
             var date = DateTimeOffset.UtcNow;
 
-            var sessionIds = await _ctx.Sessions
-                .Where(x => request.SessionIds.Contains(x.Id) && x.UserId == userId && !x.DateDeactivated.HasValue)
+            var chatIds = await _ctx.Sessions
+                .Where(x => request.ChatIds.Contains(x.Id) && x.UserId == userId && !x.DateDeactivated.HasValue)
                 .Select(x => x.Id)
                 .ToListAsync(cancellationToken);
 
-            if (sessionIds.Count == 0)
+            if (chatIds.Count == 0)
             {
                 _logger.LogWarning("No valid sessions found to deactivate.");
                 return;
             }
 
             // Deactivate all pages for documents in these sessions
-            var sessionIdsInClause = string.Join(", ", sessionIds.Select(id => $"'{id}'"));
+            var chatIdsInClause = string.Join(", ", chatIds.Select(id => $"'{id}'"));
             var cosmosQuery =
-                $"SELECT * FROM c WHERE c.id IN ({sessionIdsInClause}) " +
+                $"SELECT * FROM c WHERE c.id IN ({chatIdsInClause}) " +
                 $"AND c.UserId = '{userId}' AND IS_NULL(c.DateDeactivated)";
             var chats = await _cosmosService.GetItemsAsync<CosmosChat>(cosmosQuery);
             foreach (var chat in chats)
@@ -324,20 +328,20 @@ namespace RR.AI_Chat.Service
                 await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), userId.ToString(), cancellationToken);
             }
 
-            await _ctx.SessionDocumentPages
-                .Where(p => sessionIds.Contains(p.SessionDocument.SessionId) && !p.DateDeactivated.HasValue)
+            await _ctx.ChatDocumentPages
+                .Where(p => chatIds.Contains(p.ChatDocument.ChatId) && !p.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(p => p
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
-            await _ctx.SessionDocuments
-                .Where(d => sessionIds.Contains(d.SessionId) && !d.DateDeactivated.HasValue)
+            await _ctx.ChatDocuments
+                .Where(d => chatIds.Contains(d.ChatId) && !d.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(d => d
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
             await _ctx.Sessions
-                .Where(s => sessionIds.Contains(s.Id))
+                .Where(s => chatIds.Contains(s.Id))
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.DateDeactivated, date)
                     .SetProperty(x => x.DateModified, date),
@@ -422,6 +426,46 @@ namespace RR.AI_Chat.Service
                 PageSize = take,
                 CurrentPage = (skip / take) + 1
             };
+        }
+
+        public async Task<ChatDto> UpdateChatAsync(UpdateChatActionDto request, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+
+            _updateChatValidator.ValidateAndThrow(request);
+
+            var userId = _tokenService.GetOid();
+
+            var anyChat = await _ctx.Chats
+                .Where(x => x.Id == request.Id && x.UserId == userId && !x.DateDeactivated.HasValue)
+                .AnyAsync(cancellationToken);
+            if (!anyChat)
+            {
+                _logger.LogWarning("Chat not found or already deactivated");
+                throw new InvalidOperationException($"Chat not found or already deactivated.");
+            }
+
+            var date = DateTimeOffset.UtcNow;
+            var rows = await _ctx.Chats
+                .Where(x => x.Id == request.Id && x.UserId == userId && !x.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(x => x.Name, request.Name)
+                    .SetProperty(x => x.ProjectId, request.ProjectId)
+                    .SetProperty(x => x.DateModified, date),
+                    cancellationToken);
+
+            var chat = await _cosmosService.GetItemAsync<CosmosChat>(request.Id.ToString(), userId.ToString(), cancellationToken);
+            if (chat != null)
+            {
+                chat.Name = request.Name;
+                chat.ProjectId = request.ProjectId;
+                chat.DateModified = date;
+                await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), userId.ToString(), cancellationToken);
+            }
+
+            _logger.LogInformation("Session {Id} successfully updated.", request.Id);
+
+            return await GetChatAsync(request.Id, cancellationToken);
         }
 
         /// <inheritdoc />

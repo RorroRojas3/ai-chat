@@ -58,4 +58,22 @@ namespace RR.AI_Chat.Dto.Actions.Chat
             RuleForEach(x => x.ChatIds).NotEmpty();
         }
     }
+
+    public class UpdateChatActionDto
+    {
+        public Guid Id { get; set; }
+
+        public string Name { get; set; } = null!;
+
+        public Guid? ProjectId { get; set; }
+    }
+
+    public class UpdateChatActionDtoValidator : AbstractValidator<UpdateChatActionDto>
+    {
+        public UpdateChatActionDtoValidator()
+        {
+            RuleFor(x => x.Id).NotEmpty();
+            RuleFor(x => x.Name).NotEmpty().MaximumLength(256);
+        }
+    }
 }
