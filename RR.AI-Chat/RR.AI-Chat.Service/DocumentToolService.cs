@@ -44,27 +44,27 @@ namespace RR.AI_Chat.Service
         private readonly IDocumentService _documentService = documentService;
         private const double _cosineDistanceThreshold = 0.5;
 
-        [Description("Get all documents in the current session.")]
-        public async Task<string> GetSessionDocumentsAsync([Description("sessionId")] string sessionId, 
+        [Description("Get all documents in the current chat.")]
+        public async Task<string> GetSessionDocumentsAsync([Description("chatId")] string chatId, 
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(sessionId))
+            if (string.IsNullOrEmpty(chatId))
             {
-                return "No session ID provided. Continue with your work without mentioning it.";
+                return "No chat ID provided. Continue with your work without mentioning it.";
             }
 
-            if (Guid.TryParse(sessionId, out var sessionGuid) == false)
+            if (Guid.TryParse(chatId, out var chatGuid) == false)
             {
-                return "The session ID is not a valid GUID. Continue with your work without mentioning it.";
+                return "The chat ID is not a valid GUID. Continue with your work without mentioning it.";
             }
 
-            var documents = await _ctx.SessionDocuments.AsNoTracking()
-                .Where(x => x.SessionId == Guid.Parse(sessionId) && 
+            var documents = await _ctx.ChatDocuments.AsNoTracking()
+                .Where(x => x.ChatId == chatGuid && 
                         !   x.DateDeactivated.HasValue )
-                .Select(x => x.MapToSessionDocumentDto()).ToListAsync(cancellationToken).ConfigureAwait(false);
+                .Select(x => x.MapToChatDocumentDto()).ToListAsync(cancellationToken).ConfigureAwait(false);
             if (documents.Count == 0)
             {
-                return "No documents found in the current session. Continue with your work without mentioning it.";
+                return "No documents found in the current chat. Continue with your work without mentioning it.";
             }
 
             var result = JsonSerializer.Serialize(documents);
@@ -73,18 +73,18 @@ namespace RR.AI_Chat.Service
 
         [Description("Returns the complete text content of the document for AI processing. Use when full document content is needed. Do not use for comparison.")]
         public async Task<string> GetDocumentOverviewAsync(
-            [Description("The session ID")] string sessionId,
+            [Description("The chat ID")] string chatId,
             [Description("The document ID")] string documentId,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(sessionId))
+            if (string.IsNullOrEmpty(chatId))
             {
-                return "Session id not provided. Continue with your work without mentioning it.";
+                return "Chat id not provided. Continue with your work without mentioning it.";
             }
 
-            if (Guid.TryParse(sessionId, out var sessionGuid) == false)
+            if (Guid.TryParse(chatId, out var chatGuid) == false)
             {
-                return "The session ID is not a valid GUID. Continue with your work without mentioning it.";
+                return "The chat ID is not a valid GUID. Continue with your work without mentioning it.";
             }
 
             if (string.IsNullOrEmpty(documentId))
@@ -97,10 +97,10 @@ namespace RR.AI_Chat.Service
                 return "The document ID is not a valid GUID. Continue with your work without mentioning it.";
             }
 
-            var documentPages = await _ctx.SessionDocumentPages.AsNoTracking()
-                .Include(x => x.SessionDocument)
-                .Where(x => x.SessionDocumentId == documentGuid && 
-                        x.SessionDocument.SessionId == sessionGuid && 
+            var documentPages = await _ctx.ChatDocumentPages.AsNoTracking()
+                .Include(x => x.ChatDocument)
+                .Where(x => x.ChatDocumentId == documentGuid && 
+                        x.ChatDocument.ChatId == chatGuid && 
                         !x.DateDeactivated.HasValue)
                 .OrderBy(x => x.Number)
                 .Select(x => new ChatDocumentPage
@@ -136,14 +136,14 @@ namespace RR.AI_Chat.Service
         /// Pages within each document are ordered by their similarity score to the search prompt.
         /// </remarks>
         [Description("Searches for information in the document if no overiew or summary is asked.")]
-        public async Task<List<ChatDocument>> SearchDocumentsAsync([Description("sessionId")] string sessionId, [Description("What the user is looking for in document")] string prompt, CancellationToken cancellationToken)
+        public async Task<List<ChatDocument>> SearchDocumentsAsync([Description("chatId")] string chatId, [Description("What the user is looking for in document")] string prompt, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(sessionId))
+            if (string.IsNullOrWhiteSpace(chatId))
             {
                 return [];
             }
 
-            if (Guid.TryParse(sessionId, out var sessionGuid) == false)
+            if (Guid.TryParse(chatId, out var chatGuid) == false)
             {
                 return [];
             }
@@ -153,9 +153,9 @@ namespace RR.AI_Chat.Service
                 return [];
             }
 
-            var anyDocuments = await _ctx.SessionDocuments
+            var anyDocuments = await _ctx.ChatDocuments
                 .AsNoTracking()
-                .AnyAsync(d => d.SessionId == sessionGuid && !d.DateDeactivated.HasValue, cancellationToken);   
+                .AnyAsync(d => d.ChatId == chatGuid && !d.DateDeactivated.HasValue, cancellationToken);   
             if (!anyDocuments)
             {
                 return [];
@@ -164,14 +164,14 @@ namespace RR.AI_Chat.Service
             var embedding = await _embeddingGenerator.GenerateVectorAsync(prompt, null, cancellationToken);
             var vector = new SqlVector<float>(embedding);
 
-            var docPages = await _ctx.SessionDocumentPages
+            var docPages = await _ctx.ChatDocumentPages
                 .AsNoTracking()
-                .Include(p => p.SessionDocument)
-                .Where(p => p.SessionDocument.SessionId == Guid.Parse(sessionId))
+                .Include(p => p.ChatDocument)
+                .Where(p => p.ChatDocument.ChatId == chatGuid)
                 .Where(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector) <= _cosineDistanceThreshold)
                 .OrderBy(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector))
                 .Take(10)
-                .GroupBy(p => p.SessionDocument)
+                .GroupBy(p => p.ChatDocument)
                 .Select(g => new ChatDocument
                 {
                     Id = g.Key.Id,
@@ -195,15 +195,15 @@ namespace RR.AI_Chat.Service
             "Use when user requests document comparison. " +
             "Return the output exactly as provided.")]
         public async Task<string> CompareDocumentsAsync(
-            [Description("The session ID")] string sessionId,
+            [Description("The chat ID")] string chatId,
             [Description("The ID of the first document to compare")] string firstDocumentId,
             [Description("The ID of the second document to compare")] string secondDocumentId,
             CancellationToken cancellationToken = default)
         {
-            // Validate session ID
-            if (string.IsNullOrWhiteSpace(sessionId) || !Guid.TryParse(sessionId, out var sessionGuid))
+            // Validate chat ID
+            if (string.IsNullOrWhiteSpace(chatId) || !Guid.TryParse(chatId, out var chatGuid))
             {
-                return "The session ID is not a valid.";
+                return "The chat ID is not a valid.";
             }
 
             // Validate first document ID
@@ -220,14 +220,14 @@ namespace RR.AI_Chat.Service
 
 
             // Retrieve first document content
-            var firstDocumentText = await GetDocumentContentAsync(sessionGuid, firstDocGuid, cancellationToken);
+            var firstDocumentText = await GetDocumentContentAsync(chatGuid, firstDocGuid, cancellationToken);
             if (string.IsNullOrEmpty(firstDocumentText))
             {
                 return "First document not found or has no content. Continue with your work without mentioning it.";
             }
 
             // Retrieve second document content
-            var secondDocumentText = await GetDocumentContentAsync(sessionGuid, secondDocGuid, cancellationToken);
+            var secondDocumentText = await GetDocumentContentAsync(chatGuid, secondDocGuid, cancellationToken);
             if (string.IsNullOrEmpty(secondDocumentText))
             {
                 return "Second document not found or has no content. Continue with your work without mentioning it.";
@@ -279,18 +279,18 @@ namespace RR.AI_Chat.Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while comparing documents {firstDocId} and {secondDocId} in session {sessionId}",
-                    firstDocumentId, secondDocumentId, sessionId);
+                _logger.LogError(ex, "Error occurred while comparing documents {FirstDocId} and {SecondDocId} in chat {ChatId}",
+                    firstDocumentId, secondDocumentId, chatId);
                 return "An error occurred while comparing the documents. Please try again.";
             }
         }
 
-        private async Task<string?> GetDocumentContentAsync(Guid sessionId, Guid documentId, CancellationToken cancellationToken)
+        private async Task<string?> GetDocumentContentAsync(Guid chatId, Guid documentId, CancellationToken cancellationToken)
         {
-            var documentPages = await _ctx.SessionDocumentPages.AsNoTracking()
-                .Include(x => x.SessionDocument)
-                .Where(x => x.SessionDocumentId == documentId &&
-                        x.SessionDocument.SessionId == sessionId &&
+            var documentPages = await _ctx.ChatDocumentPages.AsNoTracking()
+                .Include(x => x.ChatDocument)
+                .Where(x => x.ChatDocumentId == documentId &&
+                        x.ChatDocument.ChatId == chatId &&
                         !x.DateDeactivated.HasValue)
                 .OrderBy(x => x.Number)
                 .Select(x => x.Text)
@@ -305,7 +305,7 @@ namespace RR.AI_Chat.Service
  "and saving metadata to the database. Returns a downloadable SAS URL for the user. " +
     "ALWAYS call this function when the Document Generation MCP server provides a SAS URI - do not skip this step.")]
         public async Task<Uri> ProcessGeneratedFileAsync(
-        [Description("The unique identifier of the current chat session")] Guid sessionId,
+        [Description("The unique identifier of the current chat session")] Guid chatId,
         [Description("The unique identifier of the user who owns the generated file")] Guid userId,
         [Description("The temporary SAS URI from the MCP Document Generator pointing to the AI-generated file in Azure Blob Storage")] Uri sasUri)
         {
@@ -319,13 +319,13 @@ namespace RR.AI_Chat.Service
             var response = await blobClient.DownloadContentAsync();
 
             var container = _configuration["AzureStorage:DocumentsContainer"]!;
-            var path = $"{userId}/{sessionId}/{filename}";
+            var path = $"{userId}/{chatId}/{filename}";
             var bytes = response.Value.Content.ToArray();
 
             Dictionary<string, string> metadata = new()
             {
                 { "userId", userId.ToString() },
-                { "sessionId", sessionId.ToString() },
+                { "chatId", chatId.ToString() },
                 { "fileName", filename },
                 { "contentType", properties.Value.ContentType },
                 { "length", properties.Value.ContentLength.ToString() }
@@ -384,7 +384,7 @@ namespace RR.AI_Chat.Service
             var newDocument = new ChatDocument
             {
                 UserId = userId,
-                SessionId = sessionId,
+                ChatId = chatId,
                 Name = filename,
                 Extension = Path.GetExtension(filename),
                 MimeType = properties.Value.ContentType,

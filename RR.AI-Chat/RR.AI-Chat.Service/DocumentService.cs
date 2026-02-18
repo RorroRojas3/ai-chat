@@ -17,9 +17,9 @@ namespace RR.AI_Chat.Service
 {
     public interface IDocumentService 
     {
-        Task<ChatDocumentDto> CreateSessionDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken);
+        Task<ChatDocumentDto> CreateChatDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid chatId, CancellationToken cancellationToken);
 
-        Task<FileDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken);
+        Task<FileDto?> GenerateConversationHistoryAsync(Guid chatId, DocumentFormats documentFormat, CancellationToken cancellationToken);
 
         Task<List<DocumentExtractorDto>> ExtractTextAsync(FileDto fileDto, CancellationToken cancellationToken);
 
@@ -75,7 +75,7 @@ namespace RR.AI_Chat.Service
         /// 4. Creates document page entities with embeddings
         /// 5. Saves the document and all pages to the database
         /// </remarks>
-        public async Task<ChatDocumentDto> CreateSessionDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid sessionId, CancellationToken cancellationToken)
+        public async Task<ChatDocumentDto> CreateChatDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid chatId, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(context, nameof(context));
             ArgumentNullException.ThrowIfNull(fileDataDto, nameof(fileDataDto));
@@ -83,17 +83,17 @@ namespace RR.AI_Chat.Service
             var jobId = context.BackgroundJob.Id;
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Queued.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 0);
-            _logger.LogInformation("Starting document creation. Job ID: {JobId}, Session ID: {SessionId}, File Name: {FileName}", jobId, sessionId, fileDataDto.FileName);
+            _logger.LogInformation("Starting document creation. Job ID: {JobId}, Chat ID: {ChatId}, File Name: {FileName}", jobId, chatId, fileDataDto.FileName);
 
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Uploading.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 25);
 
             string container = _configuration.GetValue<string>("AzureStorage:DocumentsContainer")!;  
-            string blob = $"{userId}/{sessionId}/{fileDataDto.FileName}";
+            string blob = $"{userId}/{chatId}/{fileDataDto.FileName}";
             Dictionary<string, string> metadata = new()
             {
                 { "userId", userId.ToString() },
-                { "sessionId", sessionId.ToString() },
+                { "chatId", chatId.ToString() },
                 { "fileName", fileDataDto.FileName },
                 { "contentType", fileDataDto.ContentType },
                 { "length", fileDataDto.Length.ToString() }
@@ -156,7 +156,7 @@ namespace RR.AI_Chat.Service
             var document = new ChatDocument
             {
                 UserId = userId,
-                SessionId = sessionId,
+                ChatId = chatId,
                 Name = fileDataDto.FileName,
                 Extension = GetFileExtension(fileDataDto.FileName),
                 MimeType = fileDataDto.ContentType,
@@ -173,17 +173,17 @@ namespace RR.AI_Chat.Service
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Processed.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 100);
 
-            return document.MapToSessionDocumentDto();
+            return document.MapToChatDocumentDto();
         }
 
-        public async Task<FileDto?> GenerateConversationHistoryAsync(Guid sessionId, DocumentFormats documentFormat, CancellationToken cancellationToken)
+        public async Task<FileDto?> GenerateConversationHistoryAsync(Guid chatId, DocumentFormats documentFormat, CancellationToken cancellationToken)
         {
             var oid = _tokenService.GetOid();
 
-            var chat = await _cosmosService.GetItemAsync<CosmosChat>(sessionId.ToString(), oid.ToString(), cancellationToken);
+            var chat = await _cosmosService.GetItemAsync<CosmosChat>(chatId.ToString(), oid.ToString(), cancellationToken);
             if (chat == null)
             {
-                throw new InvalidOperationException($"Chat with id {sessionId} not found.");
+                throw new InvalidOperationException($"Chat with id {chatId} not found.");
             }
 
             var html = _htmlService.GenerateConversationHistoryAsync(chat.Conversations);
@@ -206,9 +206,9 @@ namespace RR.AI_Chat.Service
 
             var fileName = documentFormat switch
             {
-                DocumentFormats.Pdf => $"conversation-history-{sessionId}.pdf",
-                DocumentFormats.Word => $"conversation-history-{sessionId}.docx",
-                DocumentFormats.Markdown => $"conversation-history-{sessionId}.md",
+                DocumentFormats.Pdf => $"conversation-history-{chatId}.pdf",
+                DocumentFormats.Word => $"conversation-history-{chatId}.docx",
+                DocumentFormats.Markdown => $"conversation-history-{chatId}.md",
                 _ => null
             };
             if (string.IsNullOrWhiteSpace(fileName))

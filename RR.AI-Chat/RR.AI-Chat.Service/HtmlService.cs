@@ -20,7 +20,7 @@ namespace RR.AI_Chat.Service
         /// A string containing the final HTML with the rendered messages and the current UTC timestamp,
         /// or <c>null</c> if <paramref name="conversations"/> is <c>null</c> or empty.
         /// </returns>
-        string? GenerateConversationHistoryAsync(List<ChatConversation> conversations);
+        string? GenerateConversationHistoryAsync(List<CosmosChatConversation> conversations);
     }
 
     public class HtmlService(ILogger<HtmlService> logger) : IHtmlService
@@ -41,7 +41,7 @@ namespace RR.AI_Chat.Service
                                                 </div>";
 
         /// <inheritdoc />
-        public string? GenerateConversationHistoryAsync(List<ChatConversation> conversations)
+        public string? GenerateConversationHistoryAsync(List<CosmosChatConversation> conversations)
         {
             if (conversations == null || conversations.Count == 0)
             {

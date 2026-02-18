@@ -1,15 +1,11 @@
-﻿using Aspose.Pdf.AI;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Graph.Models;
-using Microsoft.Graph.Models.CallRecords;
 using RR.AI_Chat.Common.Enums;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Actions.Chat;
-using RR.AI_Chat.Dto.Actions.Session;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
 using System.Runtime.CompilerServices;
@@ -21,6 +17,20 @@ namespace RR.AI_Chat.Service
 {
     public interface IChatService 
     {
+        Task<ChatDto> GetChatAsync(Guid id, CancellationToken cancellationToken = default);
+
+        Task<ChatDto> CreateChasAsync(CreateChatActionDto request, CancellationToken cancellationToken = default);
+
+        Task DeactivateChatAsync(Guid id, CancellationToken cancellationToken = default);
+
+        Task DeactivateChatBulkAsync(DeactivateChatBulkActionDto request, CancellationToken cancellationToken = default);
+
+        Task UpdateChatNameAsync(Guid id, CreateChatStreamActionDto request, CancellationToken cancellationToken = default);
+
+        Task<PaginatedResponseDto<ChatDto>> SearchChatsAsync(string? name, int skip = 0, int take = 20, CancellationToken cancellationToken = default);
+
+        Task<ChatDto> UpdateChatAsync(UpdateChatActionDto request, CancellationToken cancellationToken = default);
+
         /// <summary>
         /// Streams chat responses asynchronously for a given session and user prompt.
         /// </summary>
@@ -54,7 +64,7 @@ namespace RR.AI_Chat.Service
         /// This method retrieves all non-system messages from the session and maps them to DTOs.
         /// System messages are excluded from the returned conversation history.
         /// </remarks>
-        Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken);
+        Task<ChatConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken);
 
         /// <summary>
         /// Checks whether a session is currently locked and being processed.
@@ -66,7 +76,6 @@ namespace RR.AI_Chat.Service
 
     public class ChatService(ILogger<ChatService> logger,
         IDocumentToolService documentToolService,
-        ISessionService sessionService,
         IModelService modelService,
         [FromKeyedServices("azureaifoundry")] IChatClient azureAIFoundry,
         IMcpServerService mcpServerService,
@@ -82,7 +91,6 @@ namespace RR.AI_Chat.Service
         private readonly ILogger _logger = logger;
         private readonly IChatClient _azureAIFoundry = azureAIFoundry;    
         private readonly IDocumentToolService _documentToolService = documentToolService;
-        private readonly ISessionService _sessionService = sessionService;
         private readonly IModelService _modelService = modelService;
         private readonly IMcpServerService _mcpServerService = mcpServerService;
         private readonly ISessionLockService _sessionLockService = sessionLockService;
@@ -288,7 +296,7 @@ namespace RR.AI_Chat.Service
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
-            await _ctx.Sessions
+            await _ctx.Chats
                 .Where(s => s.Id == id)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.DateDeactivated, date)
@@ -305,18 +313,18 @@ namespace RR.AI_Chat.Service
             var userId = _tokenService.GetOid();
             var date = DateTimeOffset.UtcNow;
 
-            var chatIds = await _ctx.Sessions
+            var chatIds = await _ctx.Chats
                 .Where(x => request.ChatIds.Contains(x.Id) && x.UserId == userId && !x.DateDeactivated.HasValue)
                 .Select(x => x.Id)
                 .ToListAsync(cancellationToken);
 
             if (chatIds.Count == 0)
             {
-                _logger.LogWarning("No valid sessions found to deactivate.");
+                _logger.LogWarning("No valid chats found to deactivate.");
                 return;
             }
 
-            // Deactivate all pages for documents in these sessions
+            // Deactivate all pages for documents in these chats
             var chatIdsInClause = string.Join(", ", chatIds.Select(id => $"'{id}'"));
             var cosmosQuery =
                 $"SELECT * FROM c WHERE c.id IN ({chatIdsInClause}) " +
@@ -340,7 +348,7 @@ namespace RR.AI_Chat.Service
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
-            await _ctx.Sessions
+            await _ctx.Chats
                 .Where(s => chatIds.Contains(s.Id))
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.DateDeactivated, date)
@@ -354,7 +362,7 @@ namespace RR.AI_Chat.Service
 
             _createChatStreamActionValidator.ValidateAndThrow(request);
 
-            var chat = await _ctx.Sessions.FindAsync([id], cancellationToken);
+            var chat = await _ctx.Chats.FindAsync([id], cancellationToken);
             if (chat == null)
             {
                 _logger.LogError("Chat with id {Id} not found", id);
@@ -381,7 +389,7 @@ namespace RR.AI_Chat.Service
 
             var response = await _azureAIFoundry.GetResponseAsync([
                                  new ChatMessage(ChatRole.System, _defaultSystemPrompt),
-                                 new ChatMessage(ChatRole.User, $"Create a session name based on the following prompt, please make it 25 maximum and make it a string. Do not have the name on the session nor the id. Just the name based on the prompt. The result must be a string, not markdown. Prompt: {request.Prompt}")
+                                 new ChatMessage(ChatRole.User, $"Create a chat name based on the following prompt, please make it 25 maximum and make it a string. Do not have the name on the chat nor the id. Just the name based on the prompt. The result must be a string, not markdown. Prompt: {request.Prompt}")
                              ], new() { ModelId = modelName }, cancellationToken);
             if (response == null)
             {
@@ -488,7 +496,7 @@ namespace RR.AI_Chat.Service
             var userId = _tokenService.GetOid();
             using (lockReleaser)
             {
-                var session = await _ctx.Sessions
+                var session = await _ctx.Chats
                                 .AsNoTracking()
                                 .SingleOrDefaultAsync(x => x.Id == sessionId && 
                                     x.UserId == userId && 
@@ -508,7 +516,7 @@ namespace RR.AI_Chat.Service
 
                 if (chat.Conversations.Count == 1)
                 {
-                    _ = await _sessionService.CreateSessionNameAsync(sessionId, request, cancellationToken);
+                    await UpdateChatNameAsync(sessionId, request, cancellationToken);
                 }
 
                 var conversations = new List<ChatMessage>(chat.Conversations.Select(x => new ChatMessage(MappingService.MapToChatRole(x.Role), x.Content)))
@@ -547,7 +555,7 @@ namespace RR.AI_Chat.Service
 
                 var date = DateTimeOffset.UtcNow;
                 
-                await _ctx.Sessions
+                await _ctx.Chats
                     .Where(s => s.Id == sessionId)
                     .ExecuteUpdateAsync(s => s
                         .SetProperty(x => x.InputTokens, x => x.InputTokens + totalInputTokens)
@@ -590,7 +598,7 @@ namespace RR.AI_Chat.Service
         }
 
         /// <inheritdoc />
-        public async Task<SessionConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken)
+        public async Task<ChatConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid();
             var chat = await _cosmosService.GetItemAsync<CosmosChat>(sessionId.ToString(), userId.ToString(), cancellationToken);
@@ -602,7 +610,7 @@ namespace RR.AI_Chat.Service
 
             var messages = chat.Conversations
                             .Where(x => x.Role != ChatRoles.System)
-                            .Select(x => new SessionMessageDto()
+                            .Select(x => new ChatMessageDto()
                             {
                                 Text = x.Content ?? string.Empty,
                                 Role = x.Role

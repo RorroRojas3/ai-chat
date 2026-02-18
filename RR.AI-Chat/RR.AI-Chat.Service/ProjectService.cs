@@ -172,7 +172,7 @@ namespace RR.AI_Chat.Service
             var userId = _tokenService.GetOid();
 
             var project = await _ctx.Projects
-                .Include(x => x.Sessions.Where(x => !x.DateDeactivated.HasValue))
+                .Include(x => x.Chats.Where(x => !x.DateDeactivated.HasValue))
                 .AsNoTracking()
                 .Where(x => x.Id == id &&
                         x.UserId == userId &&
@@ -229,7 +229,7 @@ namespace RR.AI_Chat.Service
                     .SetProperty(x => x.DateModified, date),
                     cancellationToken);
 
-            await _ctx.Sessions
+            await _ctx.Chats
                 .Where(s => s.ProjectId == id &&
                             s.UserId == userId &&
                             !s.DateDeactivated.HasValue)

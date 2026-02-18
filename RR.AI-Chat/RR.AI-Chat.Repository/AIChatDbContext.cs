@@ -13,8 +13,6 @@ namespace RR.AI_Chat.Repository
 
         public DbSet<Model> Models { get; set; }
 
-        public DbSet<Session> Sessions { get; set; }
-
         public DbSet<ChatDocument> ChatDocuments { get; set; }
 
         public DbSet<ChatDocumentPage> ChatDocumentPages { get; set; }

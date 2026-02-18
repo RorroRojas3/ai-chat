@@ -21,8 +21,8 @@ namespace RR.AI_Chat.Api.Controllers
         private readonly IStorageConnection _storageConnection = storageConnection;
         private readonly ITokenService _tokenService = tokenService;
 
-        [HttpPost("sessions/{sessionId}")]
-        public async Task<IActionResult> CreateSessionDocumentAsync([FromRoute] Guid sessionId, IFormFile file, CancellationToken cancellationToken)
+        [HttpPost("chats/{chatId}")]
+        public async Task<IActionResult> CreateChatDocumentAsync([FromRoute] Guid chatId, IFormFile file, CancellationToken cancellationToken)
         {
             if (file == null || file.Length == 0)
             {
@@ -37,7 +37,7 @@ namespace RR.AI_Chat.Api.Controllers
                 Length = file.Length,
                 Content = await ReadFileAsync(file)
             };
-            var jobId = BackgroundJob.Enqueue(() => _service.CreateSessionDocumentAsync(null, fileData, _tokenService.GetOid(), sessionId, cancellationToken));
+            var jobId = BackgroundJob.Enqueue(() => _service.CreateChatDocumentAsync(null, fileData, _tokenService.GetOid(), chatId, cancellationToken));
 
             return Accepted(new JobDto { Id = jobId});
         }

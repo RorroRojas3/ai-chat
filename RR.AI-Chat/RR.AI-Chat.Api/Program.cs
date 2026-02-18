@@ -197,7 +197,6 @@ builder.Services.AddKeyedSingleton<IFileService, WordService>("word");
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IDocumentToolService, DocumentToolService>();
-builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IModelService, ModelService>();
 builder.Services.AddScoped<IMcpServerService, McpServerService>();
 builder.Services.AddScoped<IUserService, UserService>();
