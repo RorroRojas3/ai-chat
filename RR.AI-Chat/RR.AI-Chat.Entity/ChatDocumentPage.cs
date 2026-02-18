@@ -5,8 +5,8 @@ namespace RR.AI_Chat.Entity
     [Table(nameof(ChatDocumentPage), Schema = "Core")]
     public class ChatDocumentPage : BaseDocumentPage
     {
-        public Guid SessionDocumentId { get; set; }
+        public Guid ChatDocumentId { get; set; }
 
-        public ChatDocument SessionDocument { get; set; } = null!;
+        public ChatDocument ChatDocument { get; set; } = null!;
     }
 }

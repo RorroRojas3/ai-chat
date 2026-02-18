@@ -512,7 +512,7 @@ namespace RR.AI_Chat.Service
 
             _deactivateSessionBulkValidator.ValidateAndThrow(request);
 
-            var userId = _tokenService.GetOid();
+            var userId = _tokenService.GetOid();`
             var date = DateTimeOffset.UtcNow;
 
             var sessionIds = await _ctx.Sessions

@@ -1,15 +1,21 @@
-﻿using Microsoft.Extensions.AI;
+﻿using Aspose.Pdf.AI;
+using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Graph.Models;
+using Microsoft.Graph.Models.CallRecords;
+using RR.AI_Chat.Common.Enums;
 using RR.AI_Chat.Dto;
+using RR.AI_Chat.Dto.Actions.Chat;
+using RR.AI_Chat.Dto.Actions.Session;
+using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Microsoft.Extensions.DependencyInjection;
-using RR.AI_Chat.Entity;
-using Microsoft.EntityFrameworkCore;
-using RR.AI_Chat.Dto.Actions.Chat;
-using FluentValidation;
-using RR.AI_Chat.Common.Enums;
+using Chat = RR.AI_Chat.Entity.Chat;
+using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
 
 namespace RR.AI_Chat.Service
 {
@@ -67,6 +73,7 @@ namespace RR.AI_Chat.Service
         ISessionLockService sessionLockService,
         ITokenService tokenService,
         IAzureCosmosService cosmosService,
+        IValidator<CreateChatActionDto> createChatValidator,
         IValidator<CreateChatStreamActionDto> createChatStreamActionValidator,
         AIChatDbContext ctx) : IChatService
     {
@@ -79,8 +86,343 @@ namespace RR.AI_Chat.Service
         private readonly ISessionLockService _sessionLockService = sessionLockService;
         private readonly ITokenService _tokenService = tokenService;
         private readonly IAzureCosmosService _cosmosService = cosmosService;
+        private readonly IValidator<CreateChatActionDto> _createChatValidator = createChatValidator;
         private readonly IValidator<CreateChatStreamActionDto> _createChatStreamActionValidator = createChatStreamActionValidator;
         private readonly AIChatDbContext _ctx = ctx;
+
+        private readonly string _defaultSystemPrompt = @"
+            You are an advanced AI assistant with comprehensive analytical capabilities and access to a powerful suite of specialized tools. Your primary mission is to provide thorough, insightful, and actionable responses that leverage all available resources to deliver maximum value.
+
+            **CRITICAL: ALL responses must be formatted in Markdown. Use proper Markdown syntax for headings, lists, code blocks, tables, links, emphasis, and other formatting elements to ensure clear, well-structured, and readable output.**
+
+            ## CORE CAPABILITIES & TOOLS AVAILABLE:
+            
+            ### Document Intelligence & Analysis
+            - **Document Discovery**: Automatically identify and catalog all documents within the current session
+            - **Content Extraction**: Access and retrieve complete document content for comprehensive analysis
+            - **Semantic Search**: Perform intelligent searches within documents using advanced vector-based similarity matching
+            - **Comparative Analysis**: Conduct detailed side-by-side document comparisons with structured insights
+            - **Cross-Reference Analysis**: Identify connections, patterns, and relationships across multiple documents
+
+            ### Advanced Processing & Analysis
+            - **Code Execution**: Run computational analysis, data processing, and algorithmic solutions
+            - **Data Visualization**: Generate charts, graphs, interactive tables, and visual representations
+            - **Statistical Analysis**: Perform quantitative analysis with detailed statistical insights
+            - **Pattern Recognition**: Identify trends, anomalies, and relationships in data
+            - **Predictive Modeling**: Where applicable, provide forecasting and trend analysis
+
+            ### Content Creation & Enhancement
+            - **Image Generation**: Create, edit, and enhance images to illustrate concepts and ideas
+            - **Structured Documentation**: Generate comprehensive reports, summaries, and formatted content
+            - **Multi-format Output**: Deliver information in various formats (tables, lists, diagrams, etc.)
+
+            ### Contextual Intelligence
+            - **Session Awareness**: Maintain full context of ongoing conversations and document interactions
+            - **Temporal Context**: Access and utilize locale-specific time information for relevant suggestions
+            - **Memory Integration**: For personalization features, direct users to Settings→Personalization→Memory
+            - **Task Management**: Set reminders and organize workflows as needed
+
+            ## OPERATIONAL PRINCIPLES:
+
+            ### Proactive Tool Utilization
+            - **Anticipate Needs**: Immediately assess what tools would enhance your response before answering
+            - **Multi-Tool Coordination**: Use multiple capabilities in combination for comprehensive analysis
+            - **Automatic Enhancement**: Always consider how document analysis, visualization, or computation could enrich your answer
+            - **Context-Driven Selection**: Choose tools based on the user's intent, even if not explicitly requested
+
+            ### Response Excellence Standards
+            - **Comprehensive Coverage**: Provide thorough, detailed responses that explore all relevant aspects
+            - **Evidence-Based Analysis**: Support conclusions with data, examples, and specific evidence from available sources
+            - **Structured Presentation**: Organize information logically with clear headings, sections, and formatting using Markdown
+            - **Actionable Insights**: Include practical recommendations, next steps, and implementation guidance
+            - **Multiple Perspectives**: When appropriate, present different viewpoints or approaches
+
+            ### Interactive Intelligence
+            - **Question Enhancement**: Expand on user queries to address related important aspects they may not have considered
+            - **Progressive Disclosure**: Provide detailed information while maintaining clarity and readability
+            - **Follow-up Suggestions**: Recommend additional analyses, investigations, or actions that could be valuable
+            - **Adaptive Communication**: Match the user's expertise level and preferred communication style
+
+            ## DOCUMENT WORKFLOW PROTOCOLS:
+
+            When users mention documents, files, or content analysis:
+            1. **Immediate Discovery**: First identify what documents are available in the current session
+            2. **Content Assessment**: Determine whether full document review or targeted search is most appropriate
+            3. **Comprehensive Analysis**: Provide detailed insights, summaries, and actionable findings
+            4. **Cross-Document Intelligence**: When multiple documents exist, look for relationships and comparative insights
+            5. **Visualization Opportunities**: Consider how charts, tables, or other visual aids could enhance understanding
+
+            ## QUALITY ASSURANCE:
+            - Never provide brief or superficial responses when comprehensive analysis is possible
+            - Always explain your reasoning and methodology
+            - Provide specific examples and evidence to support your conclusions
+            - Include relevant context from the session and available documents
+            - Suggest follow-up actions or additional analyses that could be valuable
+            - Seamlessly integrate tool outputs without exposing technical implementation details
+            - **Ensure all responses use proper Markdown formatting for maximum clarity and professionalism**
+
+            ## RESPONSE PHILOSOPHY:
+            Excellence means leveraging every available capability to provide the most comprehensive, insightful, and valuable response possible. Don't just answer questions—anticipate needs, provide context, deliver transformative insights, and create responses that exceed expectations. **All responses must be properly formatted in Markdown.**
+
+            Your session identifier is {0}. Use this for maintaining context and accessing session-specific resources throughout our conversation.
+            Your user identifier is {1}. Use this for maintaining context and accessing session-specific resources throughout our conversation.
+
+            Operate with invisible mastery: your sophisticated use of these capabilities should enhance every response without ever needing to explicitly mention the tools themselves.
+            ";
+
+        public async Task<ChatDto> ChatChatAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var userId = _tokenService.GetOid();
+
+            var chat = await _ctx.Chats
+                .AsNoTracking()
+                .Where(s => s.Id == id && s.UserId == userId && !s.DateDeactivated.HasValue)
+                .Select(s => s.MapToChatDto())
+                .FirstOrDefaultAsync(cancellationToken);
+            if (chat == null)
+            {
+                _logger.LogError("Chat with id {Id} not found", id);
+                throw new InvalidOperationException($"Chat with id {id} not found");
+            }
+
+            return chat;
+        }
+
+        public async Task<ChatDto> CreateChasAsync(CreateChatActionDto request, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+
+            _createChatValidator.ValidateAndThrow(request);
+
+            var userId = _tokenService.GetOid();
+
+            if (request.ProjectId.HasValue)
+            {
+                var projectExists = await _ctx.Projects
+                    .Where(p => p.Id == request.ProjectId.Value &&
+                            p.UserId == userId &&
+                            !p.DateDeactivated.HasValue)
+                    .AnyAsync(cancellationToken);
+                if (!projectExists)
+                {
+                    _logger.LogError("Project not found.");
+                    throw new InvalidOperationException($"Project with id {request.ProjectId.Value} not found");
+                }
+            }
+
+            var transaction = await _ctx.Database.BeginTransactionAsync(cancellationToken);
+            var date = DateTimeOffset.UtcNow;
+            var newChat = new Chat()
+            {
+                Name = "New Chat",
+                UserId = userId,
+                DateCreated = date,
+                DateModified = date
+            };
+            await _ctx.AddAsync(newChat, cancellationToken);
+            await _ctx.SaveChangesAsync(cancellationToken);
+
+            var prompt = string.Format(_defaultSystemPrompt, newChat.Id, userId);
+            var newCosmosChat = new CosmosChat()
+            {
+                Id = newChat.Id,
+                UserId = userId,
+                ProjectId = request.ProjectId,
+                Name = newChat.Name,
+                TotalTokens = 0,
+                DateCreated = date,
+                DateModified = date,
+                Documents = [],
+                Conversations = [new()
+                {
+                    Id = Guid.NewGuid(),
+                    Role = ChatRoles.System,
+                    Content = prompt,
+                    DateCreated = date,
+                }]
+            };
+            await _ctx.SaveChangesAsync(cancellationToken);
+
+            await _cosmosService.CreateItemAsync(newChat, userId.ToString(), cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+
+            return newChat.MapToChatDto();
+        }
+
+        public async Task DeactivateChatAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var userId = _tokenService.GetOid();
+            var date = DateTimeOffset.UtcNow;
+
+            var chatExists = await _ctx.Chats
+                .Where(x => x.Id == id && x.UserId == userId && !x.DateDeactivated.HasValue)
+                .AnyAsync(cancellationToken);
+
+            if (!chatExists)
+            {
+                _logger.LogWarning("Chat with id {Id} not found or already deactivated", id);
+                return;
+            }
+
+            var chat = await _cosmosService.GetItemAsync<CosmosChat>(id.ToString(), userId.ToString(), cancellationToken);
+            if (chat != null)
+            {
+                chat.DateDeactivated = date;
+                await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), userId.ToString(), cancellationToken);
+            }
+
+            await _ctx.ChatDocumentPages
+                .Where(p => p.ChatDocument.ChatId == id && !p.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(p => p
+                    .SetProperty(x => x.DateDeactivated, date),
+                    cancellationToken);
+
+            await _ctx.ChatDocuments
+                .Where(d => d.ChatId == id && !d.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(d => d
+                    .SetProperty(x => x.DateDeactivated, date),
+                    cancellationToken);
+
+            await _ctx.Sessions
+                .Where(s => s.Id == id)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(x => x.DateDeactivated, date)
+                    .SetProperty(x => x.DateModified, date),
+                    cancellationToken);
+        }
+
+        public async Task DeactivateChatBulkAsync(DeactivateChatBulkActionDto request, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+
+            _deactivateChatBulkValidator.ValidateAndThrow(request);
+
+            var userId = _tokenService.GetOid();`
+            var date = DateTimeOffset.UtcNow;
+
+            var sessionIds = await _ctx.Sessions
+                .Where(x => request.SessionIds.Contains(x.Id) && x.UserId == userId && !x.DateDeactivated.HasValue)
+                .Select(x => x.Id)
+                .ToListAsync(cancellationToken);
+
+            if (sessionIds.Count == 0)
+            {
+                _logger.LogWarning("No valid sessions found to deactivate.");
+                return;
+            }
+
+            // Deactivate all pages for documents in these sessions
+            var sessionIdsInClause = string.Join(", ", sessionIds.Select(id => $"'{id}'"));
+            var cosmosQuery =
+                $"SELECT * FROM c WHERE c.id IN ({sessionIdsInClause}) " +
+                $"AND c.UserId = '{userId}' AND IS_NULL(c.DateDeactivated)";
+            var chats = await _cosmosService.GetItemsAsync<CosmosChat>(cosmosQuery);
+            foreach (var chat in chats)
+            {
+                chat.DateDeactivated = date;
+                await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), userId.ToString(), cancellationToken);
+            }
+
+            await _ctx.SessionDocumentPages
+                .Where(p => sessionIds.Contains(p.SessionDocument.SessionId) && !p.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(p => p
+                    .SetProperty(x => x.DateDeactivated, date),
+                    cancellationToken);
+
+            await _ctx.SessionDocuments
+                .Where(d => sessionIds.Contains(d.SessionId) && !d.DateDeactivated.HasValue)
+                .ExecuteUpdateAsync(d => d
+                    .SetProperty(x => x.DateDeactivated, date),
+                    cancellationToken);
+
+            await _ctx.Sessions
+                .Where(s => sessionIds.Contains(s.Id))
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(x => x.DateDeactivated, date)
+                    .SetProperty(x => x.DateModified, date),
+                    cancellationToken);
+        }
+
+        public async Task UpdateChatNameAsync(Guid id, CreateChatStreamActionDto request, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+
+            _createChatStreamActionValidator.ValidateAndThrow(request);
+
+            var chat = await _ctx.Sessions.FindAsync([id], cancellationToken);
+            if (chat == null)
+            {
+                _logger.LogError("Chat with id {Id} not found", id);
+                throw new KeyNotFoundException($"Chat with id {id} not found");
+            }
+
+            var cosmosChat = await _cosmosService.GetItemAsync<CosmosChat>(id.ToString(), chat.UserId.ToString(), cancellationToken);
+            if (cosmosChat == null)
+            {
+                _logger.LogError("Chat for id {Id} not found in Cosmos DB", id);
+                throw new KeyNotFoundException($"Chat for id {id} not found");
+            }
+
+            var modelName = await _ctx.Models
+                        .AsNoTracking()
+                        .Where(x => x.Id == request.ModelId && !x.DateDeactivated.HasValue)
+                        .Select(x => x.Name)
+                        .FirstOrDefaultAsync(cancellationToken);
+            if (string.IsNullOrWhiteSpace(modelName))
+            {
+                _logger.LogError("Model with id {id} not found", request.ModelId);
+                throw new InvalidOperationException($"Model with id {request.ModelId} not found");
+            }
+
+            var response = await _azureAIFoundry.GetResponseAsync([
+                                 new ChatMessage(ChatRole.System, _defaultSystemPrompt),
+                                 new ChatMessage(ChatRole.User, $"Create a session name based on the following prompt, please make it 25 maximum and make it a string. Do not have the name on the session nor the id. Just the name based on the prompt. The result must be a string, not markdown. Prompt: {request.Prompt}")
+                             ], new() { ModelId = modelName }, cancellationToken);
+            if (response == null)
+            {
+                _logger.LogError("Failed to create name for chat id {Id}", id);
+                throw new InvalidOperationException($"Failed to create name for id {id}");
+            }
+
+            var name = response.Messages.Last().Text?.Trim() ?? string.Empty;
+            chat.Name = name;
+            chat.DateModified = DateTimeOffset.UtcNow;
+            await _ctx.SaveChangesAsync(cancellationToken);
+
+            await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), chat.UserId.ToString(), cancellationToken);
+        }
+
+        public async Task<PaginatedResponseDto<ChatDto>> SearchChatsAsync(string? name, int skip = 0, int take = 20, CancellationToken cancellationToken = default)
+        {
+            var userId = _tokenService.GetOid();
+
+            var query = _ctx.Chats
+                .AsNoTracking()
+                .Where(x => x.UserId == userId && !x.DateDeactivated.HasValue);
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                query = query.Where(x => !string.IsNullOrWhiteSpace(x.Name) && EF.Functions.Like(x.Name, $"%{name}%"));
+            }
+
+            var totalCount = await query.CountAsync(cancellationToken);
+
+            var items = await query
+                .OrderByDescending(x => x.DateCreated)
+                .Skip(skip)
+                .Take(take)
+                .Select(s => s.MapToChatDto())
+                .ToListAsync(cancellationToken);
+
+            return new PaginatedResponseDto<ChatDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageSize = take,
+                CurrentPage = (skip / take) + 1
+            };
+        }
 
         /// <inheritdoc />
         public bool IsSessionBusy(Guid sessionId) => _sessionLockService.IsSessionBusy(sessionId);
@@ -190,7 +532,7 @@ namespace RR.AI_Chat.Service
                         DateCreated = date,
                         Model = model.Name,
                         Role = ChatRoles.Assistant,
-                        Usage = new ChatUsage
+                        Usage = new CosmosChatUsage
                         {
                             InputTokens = totalInputTokens,
                             OutputTokens = totalOutputTokens

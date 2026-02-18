@@ -6,21 +6,21 @@ namespace RR.AI_Chat.Entity
     [Table(nameof(ChatDocument), Schema = "Core")]
     public class ChatDocument : BaseDocument
     {
-        public Guid SessionId { get; set; }
+        public Guid ChatId { get; set; }
 
-        public Session Session { get; set; } = null!;
+        public Chat Chat { get; set; } = null!;
 
         public List<ChatDocumentPage> Pages { get; set; } = [];
     }
 
-    public static class SessionDocumentExtensions
+    public static class ChatDocumentExtensions
     {
-        public static SessionDocumentDto MapToSessionDocumentDto(this ChatDocument source)
+        public static ChatDocumentDto MapToChatDocumentDto(this ChatDocument source)
         {
-            return new SessionDocumentDto
+            return new ChatDocumentDto
             {
                 Id = source.Id,
-                SessionId = source.SessionId,
+                ChatId = source.ChatId,
                 Name = source.Name
             };
         }
