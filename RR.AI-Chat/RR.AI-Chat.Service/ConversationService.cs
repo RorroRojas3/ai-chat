@@ -15,66 +15,30 @@ using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
 
 namespace RR.AI_Chat.Service
 {
-    public interface IChatService 
+    public interface IConversationService 
     {
-        Task<ChatDto> GetChatAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<ChatDto> GetConversationAsync(Guid id, CancellationToken cancellationToken = default);
 
-        Task<ChatDto> CreateChasAsync(CreateChatActionDto request, CancellationToken cancellationToken = default);
+        Task<ChatDto> CreateConversationAsync(CreateChatActionDto request, CancellationToken cancellationToken = default);
 
-        Task DeactivateChatAsync(Guid id, CancellationToken cancellationToken = default);
+        Task DeactivateConversationAsync(Guid id, CancellationToken cancellationToken = default);
 
-        Task DeactivateChatBulkAsync(DeactivateChatBulkActionDto request, CancellationToken cancellationToken = default);
+        Task DeactivateConversationsBulkAsync(DeactivateChatBulkActionDto request, CancellationToken cancellationToken = default);
 
-        Task UpdateChatNameAsync(Guid id, CreateChatStreamActionDto request, CancellationToken cancellationToken = default);
+        Task UpdateConversationNameAsync(Guid id, CreateChatStreamActionDto request, CancellationToken cancellationToken = default);
 
-        Task<PaginatedResponseDto<ChatDto>> SearchChatsAsync(string? name, int skip = 0, int take = 20, CancellationToken cancellationToken = default);
+        Task<PaginatedResponseDto<ChatDto>> SearchConversationsAsync(string? name, int skip = 0, int take = 20, CancellationToken cancellationToken = default);
+        
+        Task<ChatDto> UpdateConversationAsync(UpdateChatActionDto request, CancellationToken cancellationToken = default);
 
-        Task<ChatDto> UpdateChatAsync(UpdateChatActionDto request, CancellationToken cancellationToken = default);
+        IAsyncEnumerable<string?> StreamConversationAsync(Guid id, CreateChatStreamActionDto request, CancellationToken cancellationToken);
 
-        /// <summary>
-        /// Streams chat responses asynchronously for a given session and user prompt.
-        /// </summary>
-        /// <param name="sessionId">The unique identifier of the chat session.</param>
-        /// <param name="request">The chat stream request containing the user prompt, model ID, service ID, and optional MCP servers.</param>
-        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-        /// <returns>An asynchronous enumerable of strings representing the streamed chat response chunks.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is null.</exception>
-        /// <exception cref="ValidationException">Thrown when the request validation fails.</exception>
-        /// <exception cref="InvalidOperationException">Thrown when the session is already being processed or the session is not found.</exception>
-        /// <remarks>
-        /// This method performs the following operations:
-        /// <list type="number">
-        /// <item><description>Validates the request and acquires an exclusive lock on the session</description></item>
-        /// <item><description>Retrieves the session and validates it belongs to the current user</description></item>
-        /// <item><description>Updates the session name if this is the first conversation</description></item>
-        /// <item><description>Streams the AI response and tracks token usage</description></item>
-        /// <item><description>Updates the session with the new conversation and token counts</description></item>
-        /// </list>
-        /// </remarks>
-        IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, CreateChatStreamActionDto request, CancellationToken cancellationToken);
+        Task<ChatConversationDto> GetConversationHistoryAsync(Guid id, CancellationToken cancellationToken);
 
-        /// <summary>
-        /// Retrieves the conversation history for a specific chat session.
-        /// </summary>
-        /// <param name="sessionId">The unique identifier of the chat session.</param>
-        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the session conversation details including all messages.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when the session is not found or does not belong to the current user.</exception>
-        /// <remarks>
-        /// This method retrieves all non-system messages from the session and maps them to DTOs.
-        /// System messages are excluded from the returned conversation history.
-        /// </remarks>
-        Task<ChatConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Checks whether a session is currently locked and being processed.
-        /// </summary>
-        /// <param name="sessionId">The unique identifier of the session to check.</param>
-        /// <returns><c>true</c> if the session is currently locked and busy; otherwise, <c>false</c>.</returns>
-        bool IsSessionBusy(Guid sessionId);
+        bool IsConversationBusy(Guid id);
     }
 
-    public class ChatService(ILogger<ChatService> logger,
+    public class ConversationService(ILogger<ConversationService> logger,
         IDocumentToolService documentToolService,
         IModelService modelService,
         [FromKeyedServices("azureaifoundry")] IChatClient azureAIFoundry,
@@ -86,7 +50,7 @@ namespace RR.AI_Chat.Service
         IValidator<CreateChatStreamActionDto> createChatStreamActionValidator,
         IValidator<DeactivateChatBulkActionDto> deactivateChatBulkValidator,
         IValidator<UpdateChatActionDto> updateSessionValidator,
-        AIChatDbContext ctx) : IChatService
+        AIChatDbContext ctx) : IConversationService
     {
         private readonly ILogger _logger = logger;
         private readonly IChatClient _azureAIFoundry = azureAIFoundry;    
@@ -182,11 +146,11 @@ namespace RR.AI_Chat.Service
             Operate with invisible mastery: your sophisticated use of these capabilities should enhance every response without ever needing to explicitly mention the tools themselves.
             ";
 
-        public async Task<ChatDto> GetChatAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<ChatDto> GetConversationAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var userId = _tokenService.GetOid();
 
-            var chat = await _ctx.Chats
+            var chat = await _ctx.Conversations
                 .AsNoTracking()
                 .Where(s => s.Id == id && s.UserId == userId && !s.DateDeactivated.HasValue)
                 .Select(s => s.MapToChatDto())
@@ -200,7 +164,7 @@ namespace RR.AI_Chat.Service
             return chat;
         }
 
-        public async Task<ChatDto> CreateChasAsync(CreateChatActionDto request, CancellationToken cancellationToken = default)
+        public async Task<ChatDto> CreateConversationAsync(CreateChatActionDto request, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(request);
 
@@ -212,7 +176,7 @@ namespace RR.AI_Chat.Service
             var date = DateTimeOffset.UtcNow;
             var newChat = new Chat()
             {
-                Name = "New Chat",
+                Name = "New Conversation",
                 UserId = userId,
                 DateCreated = date,
                 DateModified = date
@@ -247,12 +211,12 @@ namespace RR.AI_Chat.Service
             return newChat.MapToChatDto();
         }
 
-        public async Task DeactivateChatAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task DeactivateConversationAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var userId = _tokenService.GetOid();
             var date = DateTimeOffset.UtcNow;
 
-            var chatExists = await _ctx.Chats
+            var chatExists = await _ctx.Conversations
                 .Where(x => x.Id == id && x.UserId == userId && !x.DateDeactivated.HasValue)
                 .AnyAsync(cancellationToken);
 
@@ -269,19 +233,19 @@ namespace RR.AI_Chat.Service
                 await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), userId.ToString(), cancellationToken);
             }
 
-            await _ctx.ChatDocumentPages
+            await _ctx.ConversationDocumentPages
                 .Where(p => p.ChatDocument.ChatId == id && !p.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(p => p
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
-            await _ctx.ChatDocuments
+            await _ctx.ConversationDocuments
                 .Where(d => d.ChatId == id && !d.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(d => d
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
-            await _ctx.Chats
+            await _ctx.Conversations
                 .Where(s => s.Id == id)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.DateDeactivated, date)
@@ -289,7 +253,7 @@ namespace RR.AI_Chat.Service
                     cancellationToken);
         }
 
-        public async Task DeactivateChatBulkAsync(DeactivateChatBulkActionDto request, CancellationToken cancellationToken = default)
+        public async Task DeactivateConversationsBulkAsync(DeactivateChatBulkActionDto request, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(request);
 
@@ -298,7 +262,7 @@ namespace RR.AI_Chat.Service
             var userId = _tokenService.GetOid();
             var date = DateTimeOffset.UtcNow;
 
-            var chatIds = await _ctx.Chats
+            var chatIds = await _ctx.Conversations
                 .Where(x => request.ChatIds.Contains(x.Id) && x.UserId == userId && !x.DateDeactivated.HasValue)
                 .Select(x => x.Id)
                 .ToListAsync(cancellationToken);
@@ -321,19 +285,19 @@ namespace RR.AI_Chat.Service
                 await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), userId.ToString(), cancellationToken);
             }
 
-            await _ctx.ChatDocumentPages
+            await _ctx.ConversationDocumentPages
                 .Where(p => chatIds.Contains(p.ChatDocument.ChatId) && !p.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(p => p
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
-            await _ctx.ChatDocuments
+            await _ctx.ConversationDocuments
                 .Where(d => chatIds.Contains(d.ChatId) && !d.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(d => d
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
-            await _ctx.Chats
+            await _ctx.Conversations
                 .Where(s => chatIds.Contains(s.Id))
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.DateDeactivated, date)
@@ -341,13 +305,13 @@ namespace RR.AI_Chat.Service
                     cancellationToken);
         }
 
-        public async Task UpdateChatNameAsync(Guid id, CreateChatStreamActionDto request, CancellationToken cancellationToken = default)
+        public async Task UpdateConversationNameAsync(Guid id, CreateChatStreamActionDto request, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(request);
 
             _createChatStreamActionValidator.ValidateAndThrow(request);
 
-            var chat = await _ctx.Chats.FindAsync([id], cancellationToken);
+            var chat = await _ctx.Conversations.FindAsync([id], cancellationToken);
             if (chat == null)
             {
                 _logger.LogError("Chat with id {Id} not found", id);
@@ -390,11 +354,11 @@ namespace RR.AI_Chat.Service
             await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), chat.UserId.ToString(), cancellationToken);
         }
 
-        public async Task<PaginatedResponseDto<ChatDto>> SearchChatsAsync(string? name, int skip = 0, int take = 20, CancellationToken cancellationToken = default)
+        public async Task<PaginatedResponseDto<ChatDto>> SearchConversationsAsync(string? name, int skip = 0, int take = 20, CancellationToken cancellationToken = default)
         {
             var userId = _tokenService.GetOid();
 
-            var query = _ctx.Chats
+            var query = _ctx.Conversations
                 .AsNoTracking()
                 .Where(x => x.UserId == userId && !x.DateDeactivated.HasValue);
 
@@ -421,7 +385,7 @@ namespace RR.AI_Chat.Service
             };
         }
 
-        public async Task<ChatDto> UpdateChatAsync(UpdateChatActionDto request, CancellationToken cancellationToken = default)
+        public async Task<ChatDto> UpdateConversationAsync(UpdateChatActionDto request, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(request);
 
@@ -429,7 +393,7 @@ namespace RR.AI_Chat.Service
 
             var userId = _tokenService.GetOid();
 
-            var anyChat = await _ctx.Chats
+            var anyChat = await _ctx.Conversations
                 .Where(x => x.Id == request.Id && x.UserId == userId && !x.DateDeactivated.HasValue)
                 .AnyAsync(cancellationToken);
             if (!anyChat)
@@ -439,7 +403,7 @@ namespace RR.AI_Chat.Service
             }
 
             var date = DateTimeOffset.UtcNow;
-            var rows = await _ctx.Chats
+            var rows = await _ctx.Conversations
                 .Where(x => x.Id == request.Id && x.UserId == userId && !x.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.Name, request.Name)
@@ -456,50 +420,50 @@ namespace RR.AI_Chat.Service
 
             _logger.LogInformation("Session {Id} successfully updated.", request.Id);
 
-            return await GetChatAsync(request.Id, cancellationToken);
+            return await GetConversationAsync(request.Id, cancellationToken);
         }
 
         /// <inheritdoc />
-        public bool IsSessionBusy(Guid sessionId) => _sessionLockService.IsSessionBusy(sessionId);
+        public bool IsConversationBusy(Guid id) => _sessionLockService.IsSessionBusy(id);
 
         /// <inheritdoc />
-        public async IAsyncEnumerable<string?> GetChatStreamingAsync(Guid sessionId, CreateChatStreamActionDto request, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public async IAsyncEnumerable<string?> StreamConversationAsync(Guid id, CreateChatStreamActionDto request, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(request, nameof(request));
 
             _createChatStreamActionValidator.ValidateAndThrow(request);
 
-            var lockReleaser = await _sessionLockService.TryAcquireLockAsync(sessionId, cancellationToken);
+            var lockReleaser = await _sessionLockService.TryAcquireLockAsync(id, cancellationToken);
             if (lockReleaser == null)
             {
-                _logger.LogWarning("Session {SessionId} is already being processed.", sessionId);
-                throw new InvalidOperationException($"Session {sessionId} is currently being processed. Please wait for the current request to complete.");
+                _logger.LogWarning("Conversation {ConversationId} is already being processed.", id);
+                throw new InvalidOperationException($"Conversation {id} is currently being processed. Please wait for the current request to complete.");
             }
 
             var userId = _tokenService.GetOid();
             using (lockReleaser)
             {
-                var session = await _ctx.Chats
+                var conversation = await _ctx.Conversations
                                 .AsNoTracking()
-                                .SingleOrDefaultAsync(x => x.Id == sessionId && 
+                                .SingleOrDefaultAsync(x => x.Id == id && 
                                     x.UserId == userId && 
                                     !x.DateDeactivated.HasValue, cancellationToken);
-                if (session == null)
+                if (conversation == null)
                 {
-                    _logger.LogError("Session with id {Id} not found.", sessionId);
-                    throw new KeyNotFoundException($"Session with id {sessionId} not found.");
+                    _logger.LogError("Conversation with id {Id} not found.", id);
+                    throw new KeyNotFoundException($"Conversation with id {id} not found.");
                 }
 
-                var chat = await _cosmosService.GetItemAsync<CosmosChat>(sessionId.ToString(), userId.ToString(), cancellationToken);
+                var chat = await _cosmosService.GetItemAsync<CosmosChat>(id.ToString(), userId.ToString(), cancellationToken);
                 if (chat == null)
                 {
-                    _logger.LogError("Chat with session id {Id} not found.", sessionId);
-                    throw new KeyNotFoundException($"Chat with session id {sessionId} not found.");
+                    _logger.LogError("Conversation {Id} not found.", id);
+                    throw new KeyNotFoundException($"Conversation {id} not found.");
                 }
 
                 if (chat.Conversations.Count == 1)
                 {
-                    await UpdateChatNameAsync(sessionId, request, cancellationToken);
+                    await UpdateConversationNameAsync(id, request, cancellationToken);
                 }
 
                 var conversations = new List<ChatMessage>(chat.Conversations.Select(x => new ChatMessage(MappingService.MapToChatRole(x.Role), x.Content)))
@@ -509,7 +473,7 @@ namespace RR.AI_Chat.Service
 
                 var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId, cancellationToken);
                 var chatClient = _azureAIFoundry;
-                var chatOptions = await CreateChatOptions(sessionId, model, request.McpServers, cancellationToken).ConfigureAwait(false);
+                var chatOptions = await CreateChatOptions(id, model, request.McpServers, cancellationToken).ConfigureAwait(false);
                 StringBuilder sb = new();
                 long totalInputTokens = 0, totalOutputTokens = 0;
 
@@ -538,15 +502,15 @@ namespace RR.AI_Chat.Service
 
                 var date = DateTimeOffset.UtcNow;
                 
-                await _ctx.Chats
-                    .Where(s => s.Id == sessionId)
+                await _ctx.Conversations
+                    .Where(s => s.Id == id)
                     .ExecuteUpdateAsync(s => s
                         .SetProperty(x => x.InputTokens, x => x.InputTokens + totalInputTokens)
                         .SetProperty(x => x.OutputTokens, x => x.OutputTokens + totalOutputTokens)
                         .SetProperty(x => x.DateModified, date),
                         cancellationToken);
 
-                chat = await _cosmosService.GetItemAsync<CosmosChat>(sessionId.ToString(), userId.ToString(), cancellationToken);
+                chat = await _cosmosService.GetItemAsync<CosmosChat>(id.ToString(), userId.ToString(), cancellationToken);
                 if (chat != null)
                 {
                     chat.DateModified = date;   
@@ -576,19 +540,19 @@ namespace RR.AI_Chat.Service
                 }
                 
 
-                await _cosmosService.UpdateItemAsync(chat, sessionId.ToString(), userId.ToString(), cancellationToken);
+                await _cosmosService.UpdateItemAsync(chat, id.ToString(), userId.ToString(), cancellationToken);
             }
         }
 
         /// <inheritdoc />
-        public async Task<ChatConversationDto> GetSessionConversationAsync(Guid sessionId, CancellationToken cancellationToken)
+        public async Task<ChatConversationDto> GetConversationHistoryAsync(Guid id, CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid();
-            var chat = await _cosmosService.GetItemAsync<CosmosChat>(sessionId.ToString(), userId.ToString(), cancellationToken);
+            var chat = await _cosmosService.GetItemAsync<CosmosChat>(id.ToString(), userId.ToString(), cancellationToken);
             if (chat == null)
             {
-                _logger.LogError("Chat with id {Id} not found.", sessionId);
-                throw new KeyNotFoundException($"Chat with id {sessionId} not found.");
+                _logger.LogError("Conversation {Id} not found.", id);
+                throw new KeyNotFoundException($"Conversation {id} not found.");
             }
 
             var messages = chat.Conversations
@@ -600,10 +564,9 @@ namespace RR.AI_Chat.Service
                             })
                             .ToList() ?? [];
 
-            await Task.CompletedTask;
             return new() 
             { 
-                Id = sessionId, 
+                Id = id, 
                 Name = chat.Name, 
                 DateCreated = chat.DateCreated,
                 DateModified = chat.DateModified,

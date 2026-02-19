@@ -194,7 +194,7 @@ builder.Services.AddKeyedSingleton<IFileService, CommonFileService>("common");
 builder.Services.AddKeyedSingleton<IFileService, WordService>("word");
 
 // Keep other services as Scoped
-builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IConversationService, ConversationService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IDocumentToolService, DocumentToolService>();
 builder.Services.AddScoped<IModelService, ModelService>();
