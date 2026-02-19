@@ -9,13 +9,13 @@ namespace RR.AI_Chat.Repository
         #region DbSets
         public DbSet<AIService> AIServices { get; set; }
 
-        public DbSet<Chat> Conversations { get; set; }
+        public DbSet<Conversation> Conversations { get; set; }
 
         public DbSet<Model> Models { get; set; }
 
-        public DbSet<ChatDocument> ConversationDocuments { get; set; }
+        public DbSet<ConversationDocument> ConversationDocuments { get; set; }
 
-        public DbSet<ChatDocumentPage> ConversationDocumentPages { get; set; }
+        public DbSet<ConversationDocumentPage> ConversationDocumentPages { get; set; }
 
         public DbSet<User> Users { get; set; }
         #endregion

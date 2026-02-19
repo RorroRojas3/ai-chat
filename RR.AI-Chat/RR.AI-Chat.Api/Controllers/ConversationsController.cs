@@ -13,7 +13,7 @@ namespace RR.AI_Chat.Api.Controllers
         private readonly IConversationService _chatService = chatService;
 
         [HttpPost("{id}/stream")]
-        public async Task GetChatStreamingAsync(Guid id, CreateChatStreamActionDto request, CancellationToken cancellationToken)
+        public async Task GetChatStreamingAsync(Guid id, CreateConversationStreamActionDto request, CancellationToken cancellationToken)
         {
             Response.Headers.Append("Content-Type", "text/event-stream");
             Response.Headers.Append("Cache-Control", "no-cache");

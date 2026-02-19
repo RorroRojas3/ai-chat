@@ -37,7 +37,7 @@ namespace RR.AI_Chat.Api.Controllers
                 Length = file.Length,
                 Content = await ReadFileAsync(file)
             };
-            var jobId = BackgroundJob.Enqueue(() => _service.CreateChatDocumentAsync(null, fileData, _tokenService.GetOid(), chatId, cancellationToken));
+            var jobId = BackgroundJob.Enqueue(() => _service.CreateConversationDocumentAsync(null, fileData, _tokenService.GetOid(), chatId, cancellationToken));
 
             return Accepted(new JobDto { Id = jobId});
         }

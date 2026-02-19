@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace RR.AI_Chat.Entity
 {
-    public class CosmosChat
+    public class CosmosConversation
     {
         [JsonPropertyName("id")]
         public Guid Id { get; set; }
@@ -18,13 +18,13 @@ namespace RR.AI_Chat.Entity
         public long TotalTokens { get; set; }
 
         [JsonPropertyName("messageCount")]
-        public long MessageCount => Conversations.Count;
+        public long MessageCount => Messages.Count;
 
         [JsonPropertyName("documents")]
-        public List<ChatDocument> Documents { get; set; } = [];
+        public List<ConversationDocument> Documents { get; set; } = [];
 
-        [JsonPropertyName("conversations")]
-        public List<CosmosChatConversation> Conversations { get; set; } = [];
+        [JsonPropertyName("messages")]
+        public List<CosmosConversationMessage> Messages { get; set; } = [];
 
         [JsonPropertyName("dateCreated")]
         public DateTimeOffset DateCreated { get; set; }
@@ -36,7 +36,7 @@ namespace RR.AI_Chat.Entity
         public DateTimeOffset? DateDeactivated { get; set; }
     }
 
-    public class CosmosChatDocument
+    public class CosmosConversationDocument
     {
         [JsonPropertyName("id")]
         public Guid Id { get; set; } 
@@ -54,7 +54,7 @@ namespace RR.AI_Chat.Entity
         public long Size { get; set; }
     }
 
-    public class CosmosChatConversation
+    public class CosmosConversationMessage
     {
         [JsonPropertyName("id")]
         public Guid Id { get; set; }
@@ -75,10 +75,10 @@ namespace RR.AI_Chat.Entity
         public string? Model { get; set; }
 
         [JsonPropertyName("usage")]
-        public CosmosChatUsage? Usage { get; set; }
+        public CosmosConversationUsage? Usage { get; set; }
     }
 
-    public class CosmosChatUsage 
+    public class CosmosConversationUsage 
     {
         [JsonPropertyName("inputTokens")]
         public long InputTokens { get; set; }

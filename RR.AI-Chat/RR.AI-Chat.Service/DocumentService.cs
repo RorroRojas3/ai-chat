@@ -1,11 +1,9 @@
 ﻿using Hangfire.Server;
 using Microsoft.Data.SqlTypes;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using RR.AI_Chat.Common.Enums;
 using RR.AI_Chat.Common.Extensions;
 using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Enums;
@@ -17,7 +15,7 @@ namespace RR.AI_Chat.Service
 {
     public interface IDocumentService 
     {
-        Task<ChatDocumentDto> CreateChatDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid chatId, CancellationToken cancellationToken);
+        Task<ConversationDocumentDto> CreateConversationDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid chatId, CancellationToken cancellationToken);
 
         Task<FileDto?> GenerateConversationHistoryAsync(Guid chatId, DocumentFormats documentFormat, CancellationToken cancellationToken);
 
@@ -58,22 +56,7 @@ namespace RR.AI_Chat.Service
         private readonly IAzureCosmosService _cosmosService = cosmosService;
         private readonly AIChatDbContext _ctx = ctx;
 
-        /// <summary>
-        /// Creates a new document asynchronously by extracting text from a PDF file, generating embeddings for each page, and storing the document in the database.
-        /// </summary>
-        /// <param name="formFile">The uploaded PDF file to process. Must not be null.</param>
-        /// <param name="sessionId">The unique identifier of the session to associate the document with.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="ChatDocumentDto"/> with the created document's ID and name.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="formFile"/> is null.</exception>
-        /// <remarks>
-        /// This method performs the following operations:
-        /// 1. Reads the uploaded file as a byte array
-        /// 2. Extracts text from each page of the PDF
-        /// 3. Generates vector embeddings for each page's text
-        /// 4. Creates document page entities with embeddings
-        /// 5. Saves the document and all pages to the database
-        /// </remarks>
-        public async Task<ChatDocumentDto> CreateChatDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid chatId, CancellationToken cancellationToken)
+        public async Task<ConversationDocumentDto> CreateConversationDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid userId, Guid chatId, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(context, nameof(context));
             ArgumentNullException.ThrowIfNull(fileDataDto, nameof(fileDataDto));
@@ -103,7 +86,7 @@ namespace RR.AI_Chat.Service
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Extracting.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 50);
 
-            List<ChatDocumentPage> documentPages = [];
+            List<ConversationDocumentPage> documentPages = [];
             var date = DateTimeOffset.UtcNow;
 
             var tasks = new List<Task<PageEmbeddingDto>>();
@@ -119,7 +102,7 @@ namespace RR.AI_Chat.Service
                     var completedTasks = await Task.WhenAll(tasks);
                     foreach (var result in completedTasks)
                     {
-                        documentPages.Add(new ChatDocumentPage
+                        documentPages.Add(new ConversationDocumentPage
                         {
                             Number = result.Number,
                             Embedding = new SqlVector<float>(result.Embedding),
@@ -138,7 +121,7 @@ namespace RR.AI_Chat.Service
                 var completedTasks = await Task.WhenAll(tasks);
                 foreach (var result in completedTasks)
                 {
-                    documentPages.Add(new ChatDocumentPage
+                    documentPages.Add(new ConversationDocumentPage
                     {
                         Number = result.Number,
                         Embedding = new SqlVector<float>(result.Embedding),
@@ -151,7 +134,7 @@ namespace RR.AI_Chat.Service
             context.SetJobParameter(JobName.Status.ToString(), JobStatus.Embedding.ToString());
             context.SetJobParameter(JobName.Progress.ToString(), 75);
 
-            var document = new ChatDocument
+            var document = new ConversationDocument
             {
                 UserId = userId,
                 ConversationId = chatId,
@@ -178,13 +161,13 @@ namespace RR.AI_Chat.Service
         {
             var oid = _tokenService.GetOid();
 
-            var chat = await _cosmosService.GetItemAsync<CosmosChat>(chatId.ToString(), oid.ToString(), cancellationToken);
+            var chat = await _cosmosService.GetItemAsync<CosmosConversation>(chatId.ToString(), oid.ToString(), cancellationToken);
             if (chat == null)
             {
                 throw new InvalidOperationException($"Chat with id {chatId} not found.");
             }
 
-            var html = _htmlService.GenerateConversationHistoryAsync(chat.Conversations);
+            var html = _htmlService.GenerateConversationHistoryAsync(chat.Messages);
             if (string.IsNullOrWhiteSpace(html))
             {
                 return null;

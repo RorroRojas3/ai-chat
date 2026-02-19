@@ -22,7 +22,7 @@ namespace RR.AI_Chat.Service
     
         IList<AITool> GetTools();
 
-        Task<List<ChatDocument>> SearchDocumentsAsync(string sessionId, string prompt, CancellationToken cancellationToken = default);
+        Task<List<ConversationDocument>> SearchDocumentsAsync(string sessionId, string prompt, CancellationToken cancellationToken = default);
 
         Task<string> CompareDocumentsAsync(string sessionId, string firstDocumentId, string secondDocumentId, CancellationToken cancellationToken = default);
     }
@@ -103,7 +103,7 @@ namespace RR.AI_Chat.Service
                         x.ConversationDocument.ConversationId == chatGuid && 
                         !x.DateDeactivated.HasValue)
                 .OrderBy(x => x.Number)
-                .Select(x => new ChatDocumentPage
+                .Select(x => new ConversationDocumentPage
                 {
                     Id = x.Id,
                     Number = x.Number,
@@ -136,7 +136,7 @@ namespace RR.AI_Chat.Service
         /// Pages within each document are ordered by their similarity score to the search prompt.
         /// </remarks>
         [Description("Searches for information in the document if no overiew or summary is asked.")]
-        public async Task<List<ChatDocument>> SearchDocumentsAsync([Description("chatId")] string chatId, [Description("What the user is looking for in document")] string prompt, CancellationToken cancellationToken)
+        public async Task<List<ConversationDocument>> SearchDocumentsAsync([Description("chatId")] string chatId, [Description("What the user is looking for in document")] string prompt, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(chatId))
             {
@@ -172,14 +172,14 @@ namespace RR.AI_Chat.Service
                 .OrderBy(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector))
                 .Take(10)
                 .GroupBy(p => p.ConversationDocument)
-                .Select(g => new ChatDocument
+                .Select(g => new ConversationDocument
                 {
                     Id = g.Key.Id,
                     Name = g.Key.Name,
                     Extension = g.Key.Extension,
                     DateCreated = g.Key.DateCreated,
                     Pages = g.OrderBy(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector))
-                           .Select(p => new ChatDocumentPage
+                           .Select(p => new ConversationDocumentPage
                            {
                                Id = p.Id,
                                Number = p.Number,
@@ -333,7 +333,7 @@ namespace RR.AI_Chat.Service
 
             await _blobStorageService.UploadAsync(container, path, bytes, metadata, CancellationToken.None);
 
-            List<ChatDocumentPage> documentPages = [];
+            List<ConversationDocumentPage> documentPages = [];
             var date = DateTime.UtcNow;
             var fileDto = new FileDto
             {
@@ -353,7 +353,7 @@ namespace RR.AI_Chat.Service
                     var completedTasks = await Task.WhenAll(tasks);
                     foreach (var result in completedTasks)
                     {
-                        documentPages.Add(new ChatDocumentPage
+                        documentPages.Add(new ConversationDocumentPage
                         {
                             Number = result.Number,
                             Embedding = new SqlVector<float>(result.Embedding),
@@ -370,7 +370,7 @@ namespace RR.AI_Chat.Service
                 var completedTasks = await Task.WhenAll(tasks);
                 foreach (var result in completedTasks)
                 {
-                    documentPages.Add(new ChatDocumentPage
+                    documentPages.Add(new ConversationDocumentPage
                     {
                         Number = result.Number,
                         Embedding = new SqlVector<float>(result.Embedding),
@@ -381,7 +381,7 @@ namespace RR.AI_Chat.Service
                 }
             }
 
-            var newDocument = new ChatDocument
+            var newDocument = new ConversationDocument
             {
                 UserId = userId,
                 ConversationId = chatId,

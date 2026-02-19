@@ -3,21 +3,21 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RR.AI_Chat.Entity
 {
-    [Table(nameof(ChatDocument), Schema = "Core")]
-    public class ChatDocument : BaseDocument
+    [Table(nameof(ConversationDocument), Schema = "Core")]
+    public class ConversationDocument : BaseDocument
     {
         public Guid ConversationId { get; set; }
 
-        public Chat Conversation { get; set; } = null!;
+        public Conversation Conversation { get; set; } = null!;
 
-        public List<ChatDocumentPage> Pages { get; set; } = [];
+        public List<ConversationDocumentPage> Pages { get; set; } = [];
     }
 
     public static class ChatDocumentExtensions
     {
-        public static ChatDocumentDto MapToChatDocumentDto(this ChatDocument source)
+        public static ConversationDocumentDto MapToChatDocumentDto(this ConversationDocument source)
         {
-            return new ChatDocumentDto
+            return new ConversationDocumentDto
             {
                 Id = source.Id,
                 ConversationId = source.ConversationId,

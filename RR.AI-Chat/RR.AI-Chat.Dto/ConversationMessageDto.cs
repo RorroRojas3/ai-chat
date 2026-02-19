@@ -2,7 +2,7 @@
 
 namespace RR.AI_Chat.Dto
 {
-    public class ChatMessageDto
+    public class ConversationMessageDto
     {
         public string Text { get; set; } = null!;
 

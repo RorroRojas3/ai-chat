@@ -2,18 +2,18 @@
 
 namespace RR.AI_Chat.Dto.Actions.Chat
 {
-    public class CreateChatActionDto
+    public class CreateConversationActionDto
     {
     }
 
-    public class CreateChatActionDtoValidator : AbstractValidator<CreateChatActionDto>
+    public class CreateConversationActionDtoValidator : AbstractValidator<CreateConversationActionDto>
     {
-        public CreateChatActionDtoValidator()
+        public CreateConversationActionDtoValidator()
         {
         }
     }
 
-    public class CreateChatStreamActionDto
+    public class CreateConversationStreamActionDto
     {
         public string Prompt { get; set; } = null!;
 
@@ -24,9 +24,9 @@ namespace RR.AI_Chat.Dto.Actions.Chat
         public List<McpDto> McpServers { get; set; } = [];
     }
 
-    public class CreateChatStreamActionDtoValidator : AbstractValidator<CreateChatStreamActionDto>
+    public class CreateConversationStreamActionDtoValidator : AbstractValidator<CreateConversationStreamActionDto>
     {
-        public CreateChatStreamActionDtoValidator()
+        public CreateConversationStreamActionDtoValidator()
         {
             RuleFor(x => x.Prompt)
                 .NotEmpty().WithMessage("Prompt is required.");
@@ -44,21 +44,21 @@ namespace RR.AI_Chat.Dto.Actions.Chat
         }
     }
 
-    public class DeactivateChatBulkActionDto
+    public class DeactivateConversationsBulkActionDto
     {
         public List<Guid> ChatIds { get; set; } = [];
     }
 
-    public class DeactivateChatBulkActionDtoValidator : AbstractValidator<DeactivateChatBulkActionDto>
+    public class DeactivateConversationsBulkActionDtoValidator : AbstractValidator<DeactivateConversationsBulkActionDto>
     {
-        public DeactivateChatBulkActionDtoValidator()
+        public DeactivateConversationsBulkActionDtoValidator()
         {
             RuleFor(x => x.ChatIds).NotEmpty();
             RuleForEach(x => x.ChatIds).NotEmpty();
         }
     }
 
-    public class UpdateChatActionDto
+    public class UpdateConversationActionDto
     {
         public Guid Id { get; set; }
 
@@ -67,9 +67,9 @@ namespace RR.AI_Chat.Dto.Actions.Chat
         public Guid? ProjectId { get; set; }
     }
 
-    public class UpdateChatActionDtoValidator : AbstractValidator<UpdateChatActionDto>
+    public class UpdateConversationActionDtoValidator : AbstractValidator<UpdateConversationActionDto>
     {
-        public UpdateChatActionDtoValidator()
+        public UpdateConversationActionDtoValidator()
         {
             RuleFor(x => x.Id).NotEmpty();
             RuleFor(x => x.Name).NotEmpty().MaximumLength(256);

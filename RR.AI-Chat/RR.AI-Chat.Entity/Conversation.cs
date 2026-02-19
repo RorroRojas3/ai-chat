@@ -4,14 +4,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RR.AI_Chat.Entity
 {
-    [Table(nameof(Chat), Schema = "Core")]
-    public class Chat : BaseModifiedEntity
+    [Table(nameof(Conversation), Schema = "Core")]
+    public class Conversation : BaseModifiedEntity
     {
         [ForeignKey(nameof(User))]
         public Guid UserId { get; set; }
 
         [StringLength(256)]
-        public string Name { get; set; } = "New Chat";
+        public string Name { get; set; } = "New Conversation";
 
         public long InputTokens { get; set; }
 
@@ -21,14 +21,14 @@ namespace RR.AI_Chat.Entity
 
         public User User { get; set; } = null!;
 
-        public List<ChatDocument> Documents { get; set; } = [];
+        public List<ConversationDocument> Documents { get; set; } = [];
     }
 
     public static class ChatExtensions
     {
-        public static ChatDto MapToChatDto(this Chat source)
+        public static ConversationDto MapToChatDto(this Conversation source)
         {
-            return new ChatDto
+            return new ConversationDto
             {
                 Id = source.Id,
                 Name = source.Name,

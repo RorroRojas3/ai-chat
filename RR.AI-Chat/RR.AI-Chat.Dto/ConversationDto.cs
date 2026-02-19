@@ -1,6 +1,6 @@
 ﻿namespace RR.AI_Chat.Dto
 {
-    public class ChatDto
+    public class ConversationDto
     {
         public Guid Id { get; set; }
 
@@ -11,8 +11,8 @@
         public DateTimeOffset DateModified { get; set; }
     }
 
-    public class ChatConversationDto : ChatDto
+    public class ChatConversationDto : ConversationDto
     {
-        public List<ChatMessageDto> Messages { get; set; } = [];
+        public List<ConversationMessageDto> Messages { get; set; } = [];
     }
 }

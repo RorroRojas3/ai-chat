@@ -2,7 +2,7 @@
 
 namespace RR.AI_Chat.Dto
 {
-    public class ChatDocumentDto
+    public class ConversationDocumentDto
     {
         [JsonPropertyName("id")]
         public Guid Id { get; set; } 
