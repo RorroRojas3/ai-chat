@@ -24,8 +24,6 @@ namespace RR.AI_Chat.Service
         Task<List<DocumentExtractorDto>> ExtractTextAsync(FileDto fileDto, CancellationToken cancellationToken);
 
         Task<PageEmbeddingDto> GeneratePageEmbeddingAsync(DocumentExtractorDto documentExtractor, CancellationToken cancellationToken);
-
-        Task<ProjectDocumentDto> CreateProjectDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid projectId, CancellationToken cancellationToken);
     }
 
     public class DocumentService(ILogger<DocumentService> logger, 
@@ -234,119 +232,6 @@ namespace RR.AI_Chat.Service
                 Embedding = embedding,
                 Text = documentExtractor.PageText
             };
-        }
-
-        public async Task<ProjectDocumentDto> CreateProjectDocumentAsync(PerformContext? context, FileDto fileDataDto, Guid projectId, CancellationToken cancellationToken)
-        {
-            ArgumentNullException.ThrowIfNull(context, nameof(context));
-            ArgumentNullException.ThrowIfNull(fileDataDto, nameof(fileDataDto));
-
-            var userId = _tokenService.GetOid();
-            var isProjectExist = await _ctx.Projects
-                                    .Where(x => x.Id == projectId &&
-                                                x.UserId == userId &&
-                                                !x.DateDeactivated.HasValue)
-                                    .AnyAsync(cancellationToken);
-            if (!isProjectExist)
-            {
-                _logger.LogError("Project does not exist.");
-                throw new InvalidOperationException("Project does not exist.");
-            }
-
-            var jobId = context.BackgroundJob.Id;
-            context.SetJobParameter(JobName.Status.ToString(), JobStatus.Queued.ToString());
-            context.SetJobParameter(JobName.Progress.ToString(), 0);
-            _logger.LogInformation("Starting document creation. Job ID: {JobId}, Project Id: {ProjectId}, File Name: {FileName}", jobId, projectId, fileDataDto.FileName);
-
-            context.SetJobParameter(JobName.Status.ToString(), JobStatus.Uploading.ToString());
-            context.SetJobParameter(JobName.Progress.ToString(), 25);
-
-            string container = _configuration.GetValue<string>("AzureStorage:DocumentsContainer")!;
-            string blob = $"{userId}/{projectId}/{fileDataDto.FileName}";
-            Dictionary<string, string> metadata = new()
-            {
-                { "userId", userId.ToString() },
-                { "projectId", projectId.ToString() },
-                { "fileName", fileDataDto.FileName },
-                { "contentType", fileDataDto.ContentType },
-                { "length", fileDataDto.Length.ToString() }
-            };
-
-            await _blobStorageService.UploadAsync(container, blob, fileDataDto.Content, metadata, cancellationToken);
-
-            var documentExtractors = await ExtractTextAsync(fileDataDto, cancellationToken);
-            context.SetJobParameter(JobName.Status.ToString(), JobStatus.Extracting.ToString());
-            context.SetJobParameter(JobName.Progress.ToString(), 50);
-
-            List<ProjectDocumentPage> documentPages = [];
-            var date = DateTimeOffset.UtcNow;
-
-            var tasks = new List<Task<PageEmbeddingDto>>();
-
-            foreach (var documentExtractor in documentExtractors)
-            {
-                var task = GeneratePageEmbeddingAsync(documentExtractor, cancellationToken);
-                tasks.Add(task);
-
-                // Process in batches of 10
-                if (tasks.Count == 10)
-                {
-                    var completedTasks = await Task.WhenAll(tasks);
-                    foreach (var result in completedTasks)
-                    {
-                        documentPages.Add(new ProjectDocumentPage
-                        {
-                            Number = result.Number,
-                            Embedding = new SqlVector<float>(result.Embedding),
-                            Text = result.Text,
-                            DateCreated = date,
-                            DateModified = date,
-                        });
-                    }
-                    tasks.Clear();
-                }
-            }
-
-            // Process remaining tasks (less than 10)
-            if (tasks.Count > 0)
-            {
-                var completedTasks = await Task.WhenAll(tasks);
-                foreach (var result in completedTasks)
-                {
-                    documentPages.Add(new ProjectDocumentPage
-                    {
-                        Number = result.Number,
-                        Embedding = new SqlVector<float>(result.Embedding),
-                        Text = result.Text,
-                        DateCreated = date,
-                        DateModified = date,
-                    });
-                }
-            }
-            context.SetJobParameter(JobName.Status.ToString(), JobStatus.Embedding.ToString());
-            context.SetJobParameter(JobName.Progress.ToString(), 75);
-
-            var document = new ProjectDocument
-            {
-                UserId = userId,
-                ProjectId = projectId,
-                Name = fileDataDto.FileName,
-                Extension = GetFileExtension(fileDataDto.FileName),
-                MimeType = fileDataDto.ContentType,
-                Size = fileDataDto.Length,
-                Path = blob,
-                Pages = documentPages,
-                DateCreated = date,
-                DateModified = date
-            };
-
-            await _ctx.AddAsync(document, cancellationToken);
-            await _ctx.SaveChangesAsync(cancellationToken);
-
-            context.SetJobParameter(JobName.Status.ToString(), JobStatus.Processed.ToString());
-            context.SetJobParameter(JobName.Progress.ToString(), 100);
-
-            return document.MapToProjectDocumentDto();
         }
 
         #region Static methods

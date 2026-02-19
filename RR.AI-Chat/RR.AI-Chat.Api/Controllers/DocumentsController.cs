@@ -90,27 +90,6 @@ namespace RR.AI_Chat.Api.Controllers
             return Ok(fileExtensions);
         }
 
-        [HttpPost("projects/{projectId}")]
-        public async Task<IActionResult> CreateProjectDocumentAsync([FromRoute] Guid projectId, IFormFile file, CancellationToken cancellationToken)
-        {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest("File is required and cannot be empty.");
-            }
-
-            // Extract file data before enqueueing the job
-            var fileData = new FileDto
-            {
-                FileName = file.FileName,
-                ContentType = file.ContentType,
-                Length = file.Length,
-                Content = await ReadFileAsync(file)
-            };
-            var jobId = BackgroundJob.Enqueue(() => _service.CreateProjectDocumentAsync(null, fileData, projectId, cancellationToken));
-
-            return Accepted(new JobDto { Id = jobId });
-        }
-
         private static async Task<byte[]> ReadFileAsync(IFormFile file)
         {
             using var memoryStream = new MemoryStream();

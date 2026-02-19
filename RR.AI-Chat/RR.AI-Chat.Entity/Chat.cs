@@ -10,9 +10,6 @@ namespace RR.AI_Chat.Entity
         [ForeignKey(nameof(User))]
         public Guid UserId { get; set; }
 
-        [ForeignKey(nameof(Project))]
-        public Guid? ProjectId { get; set; }
-
         [StringLength(256)]
         public string Name { get; set; } = "New Chat";
 
@@ -24,8 +21,6 @@ namespace RR.AI_Chat.Entity
 
         public User User { get; set; } = null!;
 
-        public Project? Project { get; set; }
-
         public List<ChatDocument> Documents { get; set; } = [];
     }
 
@@ -36,7 +31,6 @@ namespace RR.AI_Chat.Entity
             return new ChatDto
             {
                 Id = source.Id,
-                ProjectId = source.ProjectId,
                 Name = source.Name,
                 DateCreated = source.DateCreated,
                 DateModified = source.DateModified

@@ -17,12 +17,6 @@ namespace RR.AI_Chat.Repository
 
         public DbSet<ChatDocumentPage> ChatDocumentPages { get; set; }
 
-        public DbSet<Project> Projects { get; set; }
-
-        public DbSet<ProjectDocument> ProjectDocuments { get; set; }
-
-        public DbSet<ProjectDocumentPage> ProjectDocumentPages { get; set; }
-
         public DbSet<User> Users { get; set; }
         #endregion
 

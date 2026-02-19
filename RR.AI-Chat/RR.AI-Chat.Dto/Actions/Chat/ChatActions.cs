@@ -4,7 +4,6 @@ namespace RR.AI_Chat.Dto.Actions.Chat
 {
     public class CreateChatActionDto
     {
-        public Guid? ProjectId { get; set; }
     }
 
     public class CreateChatActionDtoValidator : AbstractValidator<CreateChatActionDto>

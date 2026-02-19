@@ -208,20 +208,6 @@ namespace RR.AI_Chat.Service
 
             var userId = _tokenService.GetOid();
 
-            if (request.ProjectId.HasValue)
-            {
-                var projectExists = await _ctx.Projects
-                    .Where(p => p.Id == request.ProjectId.Value &&
-                            p.UserId == userId &&
-                            !p.DateDeactivated.HasValue)
-                    .AnyAsync(cancellationToken);
-                if (!projectExists)
-                {
-                    _logger.LogError("Project not found.");
-                    throw new InvalidOperationException($"Project with id {request.ProjectId.Value} not found");
-                }
-            }
-
             var transaction = await _ctx.Database.BeginTransactionAsync(cancellationToken);
             var date = DateTimeOffset.UtcNow;
             var newChat = new Chat()
@@ -239,7 +225,6 @@ namespace RR.AI_Chat.Service
             {
                 Id = newChat.Id,
                 UserId = userId,
-                ProjectId = request.ProjectId,
                 Name = newChat.Name,
                 TotalTokens = 0,
                 DateCreated = date,
@@ -458,7 +443,6 @@ namespace RR.AI_Chat.Service
                 .Where(x => x.Id == request.Id && x.UserId == userId && !x.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.Name, request.Name)
-                    .SetProperty(x => x.ProjectId, request.ProjectId)
                     .SetProperty(x => x.DateModified, date),
                     cancellationToken);
 
@@ -466,7 +450,6 @@ namespace RR.AI_Chat.Service
             if (chat != null)
             {
                 chat.Name = request.Name;
-                chat.ProjectId = request.ProjectId;
                 chat.DateModified = date;
                 await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), userId.ToString(), cancellationToken);
             }

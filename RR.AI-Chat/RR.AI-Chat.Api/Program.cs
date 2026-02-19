@@ -200,7 +200,6 @@ builder.Services.AddScoped<IDocumentToolService, DocumentToolService>();
 builder.Services.AddScoped<IModelService, ModelService>();
 builder.Services.AddScoped<IMcpServerService, McpServerService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IProjectService, ProjectService>();
 
 // Fluent Validators
 builder.Services.AddValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());

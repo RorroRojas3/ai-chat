@@ -11,9 +11,6 @@ namespace RR.AI_Chat.Entity
         [JsonPropertyName("userId")]
         public Guid UserId { get; set; }
 
-        [JsonPropertyName("projectId")]
-        public Guid? ProjectId { get; set; }
-
         [JsonPropertyName("name")]
         public string Name { get; set; } = null!;
 
