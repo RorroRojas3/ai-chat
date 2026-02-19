@@ -33,7 +33,7 @@ namespace RR.AI_Chat.Service
 
         IAsyncEnumerable<string?> StreamConversationAsync(Guid id, CreateConversationStreamActionDto request, CancellationToken cancellationToken);
 
-        Task<ChatConversationDto> GetConversationHistoryAsync(Guid id, CancellationToken cancellationToken);
+        Task<ChatConversationDto> GetConversationMessagesAsync(Guid id, CancellationToken cancellationToken);
 
         bool IsConversationBusy(Guid id);
     }
@@ -545,7 +545,7 @@ namespace RR.AI_Chat.Service
         }
 
         /// <inheritdoc />
-        public async Task<ChatConversationDto> GetConversationHistoryAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<ChatConversationDto> GetConversationMessagesAsync(Guid id, CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid();
             var chat = await _cosmosService.GetItemAsync<CosmosConversation>(id.ToString(), userId.ToString(), cancellationToken);
