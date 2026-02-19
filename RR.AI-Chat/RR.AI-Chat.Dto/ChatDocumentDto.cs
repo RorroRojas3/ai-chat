@@ -7,8 +7,8 @@ namespace RR.AI_Chat.Dto
         [JsonPropertyName("id")]
         public Guid Id { get; set; } 
 
-        [JsonPropertyName("chatId")]
-        public Guid ChatId { get; set; }
+        [JsonPropertyName("conversationId")]
+        public Guid ConversationId { get; set; }
 
         [JsonPropertyName("documentId")]
         public Guid DocumentId => Id;

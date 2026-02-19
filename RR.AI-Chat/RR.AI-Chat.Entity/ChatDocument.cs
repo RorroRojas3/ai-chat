@@ -6,9 +6,9 @@ namespace RR.AI_Chat.Entity
     [Table(nameof(ChatDocument), Schema = "Core")]
     public class ChatDocument : BaseDocument
     {
-        public Guid ChatId { get; set; }
+        public Guid ConversationId { get; set; }
 
-        public Chat Chat { get; set; } = null!;
+        public Chat Conversation { get; set; } = null!;
 
         public List<ChatDocumentPage> Pages { get; set; } = [];
     }
@@ -20,7 +20,7 @@ namespace RR.AI_Chat.Entity
             return new ChatDocumentDto
             {
                 Id = source.Id,
-                ChatId = source.ChatId,
+                ConversationId = source.ConversationId,
                 Name = source.Name
             };
         }

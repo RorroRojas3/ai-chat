@@ -234,13 +234,13 @@ namespace RR.AI_Chat.Service
             }
 
             await _ctx.ConversationDocumentPages
-                .Where(p => p.ChatDocument.ChatId == id && !p.DateDeactivated.HasValue)
+                .Where(p => p.ConversationDocument.ConversationId == id && !p.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(p => p
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
             await _ctx.ConversationDocuments
-                .Where(d => d.ChatId == id && !d.DateDeactivated.HasValue)
+                .Where(d => d.ConversationId == id && !d.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(d => d
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
@@ -286,13 +286,13 @@ namespace RR.AI_Chat.Service
             }
 
             await _ctx.ConversationDocumentPages
-                .Where(p => chatIds.Contains(p.ChatDocument.ChatId) && !p.DateDeactivated.HasValue)
+                .Where(p => chatIds.Contains(p.ConversationDocument.ConversationId) && !p.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(p => p
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
             await _ctx.ConversationDocuments
-                .Where(d => chatIds.Contains(d.ChatId) && !d.DateDeactivated.HasValue)
+                .Where(d => chatIds.Contains(d.ConversationId) && !d.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(d => d
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);

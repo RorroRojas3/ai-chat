@@ -58,8 +58,8 @@ namespace RR.AI_Chat.Service
                 return "The chat ID is not a valid GUID. Continue with your work without mentioning it.";
             }
 
-            var documents = await _ctx.ChatDocuments.AsNoTracking()
-                .Where(x => x.ChatId == chatGuid && 
+            var documents = await _ctx.ConversationDocuments.AsNoTracking()
+                .Where(x => x.ConversationId == chatGuid && 
                         !   x.DateDeactivated.HasValue )
                 .Select(x => x.MapToChatDocumentDto()).ToListAsync(cancellationToken).ConfigureAwait(false);
             if (documents.Count == 0)
@@ -97,10 +97,10 @@ namespace RR.AI_Chat.Service
                 return "The document ID is not a valid GUID. Continue with your work without mentioning it.";
             }
 
-            var documentPages = await _ctx.ChatDocumentPages.AsNoTracking()
-                .Include(x => x.ChatDocument)
-                .Where(x => x.ChatDocumentId == documentGuid && 
-                        x.ChatDocument.ChatId == chatGuid && 
+            var documentPages = await _ctx.ConversationDocumentPages.AsNoTracking()
+                .Include(x => x.ConversationDocument)
+                .Where(x => x.ConversationDocumentId == documentGuid && 
+                        x.ConversationDocument.ConversationId == chatGuid && 
                         !x.DateDeactivated.HasValue)
                 .OrderBy(x => x.Number)
                 .Select(x => new ChatDocumentPage
@@ -153,9 +153,9 @@ namespace RR.AI_Chat.Service
                 return [];
             }
 
-            var anyDocuments = await _ctx.ChatDocuments
+            var anyDocuments = await _ctx.ConversationDocuments
                 .AsNoTracking()
-                .AnyAsync(d => d.ChatId == chatGuid && !d.DateDeactivated.HasValue, cancellationToken);   
+                .AnyAsync(d => d.ConversationId == chatGuid && !d.DateDeactivated.HasValue, cancellationToken);   
             if (!anyDocuments)
             {
                 return [];
@@ -164,14 +164,14 @@ namespace RR.AI_Chat.Service
             var embedding = await _embeddingGenerator.GenerateVectorAsync(prompt, null, cancellationToken);
             var vector = new SqlVector<float>(embedding);
 
-            var docPages = await _ctx.ChatDocumentPages
+            var docPages = await _ctx.ConversationDocumentPages
                 .AsNoTracking()
-                .Include(p => p.ChatDocument)
-                .Where(p => p.ChatDocument.ChatId == chatGuid)
+                .Include(p => p.ConversationDocument)
+                .Where(p => p.ConversationDocument.ConversationId == chatGuid)
                 .Where(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector) <= _cosineDistanceThreshold)
                 .OrderBy(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector))
                 .Take(10)
-                .GroupBy(p => p.ChatDocument)
+                .GroupBy(p => p.ConversationDocument)
                 .Select(g => new ChatDocument
                 {
                     Id = g.Key.Id,
@@ -287,10 +287,10 @@ namespace RR.AI_Chat.Service
 
         private async Task<string?> GetDocumentContentAsync(Guid chatId, Guid documentId, CancellationToken cancellationToken)
         {
-            var documentPages = await _ctx.ChatDocumentPages.AsNoTracking()
-                .Include(x => x.ChatDocument)
-                .Where(x => x.ChatDocumentId == documentId &&
-                        x.ChatDocument.ChatId == chatId &&
+            var documentPages = await _ctx.ConversationDocumentPages.AsNoTracking()
+                .Include(x => x.ConversationDocument)
+                .Where(x => x.ConversationDocumentId == documentId &&
+                        x.ConversationDocument.ConversationId == chatId &&
                         !x.DateDeactivated.HasValue)
                 .OrderBy(x => x.Number)
                 .Select(x => x.Text)
@@ -384,7 +384,7 @@ namespace RR.AI_Chat.Service
             var newDocument = new ChatDocument
             {
                 UserId = userId,
-                ChatId = chatId,
+                ConversationId = chatId,
                 Name = filename,
                 Extension = Path.GetExtension(filename),
                 MimeType = properties.Value.ContentType,

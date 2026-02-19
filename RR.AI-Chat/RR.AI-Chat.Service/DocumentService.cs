@@ -154,7 +154,7 @@ namespace RR.AI_Chat.Service
             var document = new ChatDocument
             {
                 UserId = userId,
-                ChatId = chatId,
+                ConversationId = chatId,
                 Name = fileDataDto.FileName,
                 Extension = GetFileExtension(fileDataDto.FileName),
                 MimeType = fileDataDto.ContentType,
