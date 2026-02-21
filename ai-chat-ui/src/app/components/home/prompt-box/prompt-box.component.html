@@ -10,12 +10,12 @@
   <div class="card-body">
     <!-- Drag and drop overlay -->
     @if (isDragOver) {
-    <div class="drag-overlay" aria-live="polite">
-      <div class="drag-content">
-        <i class="bi bi-files drag-icon" aria-hidden="true"></i>
-        <p class="drag-text">Drop file(s)</p>
+      <div class="drag-overlay" aria-live="polite">
+        <div class="drag-content">
+          <i class="bi bi-files drag-icon" aria-hidden="true"></i>
+          <p class="drag-text">Drop file(s)</p>
+        </div>
       </div>
-    </div>
     }
     <form
       id="promptForm"
@@ -59,50 +59,52 @@
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
                     [attr.aria-label]="
-                      storeService.selectedModel().name
-                        ? 'Selected model: ' + storeService.selectedModel().name
+                      modelStore.selectedModel()?.name
+                        ? 'Selected model: ' + modelStore.selectedModel()?.name
                         : 'Select a model'
                     "
                   >
-                    @if (storeService.selectedModel().name) {
-                    <i
-                      class="me-2 {{
-                        getServiceIcon(storeService.selectedModel().aiServiceId)
-                      }}"
-                      aria-hidden="true"
-                    ></i>
-                    <span class="d-none d-sm-inline">{{
-                      storeService.selectedModel().name
-                    }}</span>
+                    @if (modelStore.selectedModel()?.name) {
+                      <i
+                        class="me-2 {{
+                          getServiceIcon(
+                            modelStore.selectedModel()!.aiServiceId
+                          )
+                        }}"
+                        aria-hidden="true"
+                      ></i>
+                      <span class="d-none d-sm-inline">{{
+                        modelStore.selectedModel()?.name
+                      }}</span>
                     } @else {
-                    <i class="bi bi-robot me-2" aria-hidden="true"></i>
-                    <span class="d-none d-sm-inline">Models...</span>
+                      <i class="bi bi-robot me-2" aria-hidden="true"></i>
+                      <span class="d-none d-sm-inline">Models...</span>
                     }
                   </button>
                   <ul
                     class="dropdown-menu"
                     aria-labelledby="dropdownMenuButton"
                   >
-                    @for (model of storeService.models(); track model.id) {
-                    <li>
-                      <button
-                        type="button"
-                        class="dropdown-item d-flex align-items-center"
-                        (click)="onModelChange(model)"
-                      >
-                        <i
-                          class="me-2 {{ getServiceIcon(model.aiServiceId) }}"
-                          aria-hidden="true"
-                        ></i>
-                        <span class="flex-grow-1">{{ model.name }}</span>
-                        @if (storeService.selectedModel().id === model.id) {
-                        <i
-                          class="bi bi-check-circle-fill ms-2 text-success"
-                          aria-hidden="true"
-                        ></i>
-                        }
-                      </button>
-                    </li>
+                    @for (model of modelStore.models(); track model.id) {
+                      <li>
+                        <button
+                          type="button"
+                          class="dropdown-item d-flex align-items-center"
+                          (click)="onModelChange(model)"
+                        >
+                          <i
+                            class="me-2 {{ getServiceIcon(model.aiServiceId) }}"
+                            aria-hidden="true"
+                          ></i>
+                          <span class="flex-grow-1">{{ model.name }}</span>
+                          @if (modelStore.selectedModel()?.id === model.id) {
+                            <i
+                              class="bi bi-check-circle-fill ms-2 text-success"
+                              aria-hidden="true"
+                            ></i>
+                          }
+                        </button>
+                      </li>
                     }
                   </ul>
                 </div>
@@ -124,115 +126,123 @@
                     }}</span>
                   </button>
                   <ul class="dropdown-menu" aria-labelledby="mcpDropdownButton">
-                    @if (storeService.mcps().length === 0) {
-                    <li>
-                      <span class="dropdown-item-text text-muted"
-                        >No Tools available</span
-                      >
-                    </li>
-                    } @else { @for (mcp of storeService.mcps(); track mcp.name)
-                    {
-                    <li>
-                      <button
-                        type="button"
-                        class="dropdown-item d-flex align-items-center"
-                        (click)="toggleMcpSelection(mcp, $event)"
-                        [attr.aria-label]="
-                          isMcpSelected(mcp)
-                            ? 'Deselect tool: ' + mcp.name
-                            : 'Select tool: ' + mcp.name
-                        "
-                      >
-                        <i class="bi bi-wrench me-2" aria-hidden="true"></i>
-                        <span
-                          class="flex-grow-1 text-truncate"
-                          [title]="mcp.name"
-                          >{{ mcp.name }}</span
+                    @if (mcpStore.mcps().length === 0) {
+                      <li>
+                        <span class="dropdown-item-text text-muted"
+                          >No Tools available</span
                         >
-                        @if (isMcpSelected(mcp)) {
-                        <i
-                          class="bi bi-check-circle-fill ms-2 text-success"
-                          aria-hidden="true"
-                        ></i>
-                        }
-                      </button>
-                    </li>
-                    } }
+                      </li>
+                    } @else {
+                      @for (mcp of mcpStore.mcps(); track mcp.name) {
+                        <li>
+                          <button
+                            type="button"
+                            class="dropdown-item d-flex align-items-center"
+                            (click)="toggleMcpSelection(mcp, $event)"
+                            [attr.aria-label]="
+                              isMcpSelected(mcp)
+                                ? 'Deselect tool: ' + mcp.name
+                                : 'Select tool: ' + mcp.name
+                            "
+                          >
+                            <i class="bi bi-wrench me-2" aria-hidden="true"></i>
+                            <span
+                              class="flex-grow-1 text-truncate"
+                              [title]="mcp.name"
+                              >{{ mcp.name }}</span
+                            >
+                            @if (isMcpSelected(mcp)) {
+                              <i
+                                class="bi bi-check-circle-fill ms-2 text-success"
+                                aria-hidden="true"
+                              ></i>
+                            }
+                          </button>
+                        </li>
+                      }
+                    }
                   </ul>
                 </div>
 
                 <!-- File Attachment Button -->
                 @if (isFileAttachmentAllowed()) {
-                <button
-                  type="button"
-                  class="btn btn-primary"
-                  (click)="fileInput.click()"
-                  [attr.title]="
-                    'Attach files - Allowed types: ' + getAcceptedFileTypes()
-                  "
-                  aria-label="Attach files"
-                >
-                  <i class="bi bi-paperclip" aria-hidden="true"></i>
-                </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    (click)="fileInput.click()"
+                    [attr.title]="
+                      'Attach files - Allowed types: ' + getAcceptedFileTypes()
+                    "
+                    aria-label="Attach files"
+                  >
+                    <i class="bi bi-paperclip" aria-hidden="true"></i>
+                  </button>
                 }
 
                 <!-- Download Conversation History Dropdown -->
-                @if (storeService.session() && storeService.messages().length >
-                2 && !storeService.isStreaming()) {
-                <div class="dropdown">
-                  <button
-                    class="btn btn-primary dropdown-toggle"
-                    type="button"
-                    id="downloadDropdown"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                    title="Download conversation history"
-                    aria-label="Download conversation history"
-                  >
-                    <i class="bi bi-download" aria-hidden="true"></i>
-                  </button>
-                  <ul class="dropdown-menu" aria-labelledby="downloadDropdown">
-                    @for (format of getDocumentFormats(); track format) {
-                    <li>
-                      <button
-                        type="button"
-                        class="dropdown-item"
-                        (click)="onDownloadConversationHistory(format)"
-                      >
-                        <i
-                          class="me-2 {{ getFormatIcon(format) }}"
-                          aria-hidden="true"
-                        ></i>
-                        {{ getFormatName(format) }}
-                      </button>
-                    </li>
-                    }
-                  </ul>
-                </div>
+                @if (
+                  storeService.session() &&
+                  storeService.messages().length > 2 &&
+                  !storeService.isStreaming()
+                ) {
+                  <div class="dropdown">
+                    <button
+                      class="btn btn-primary dropdown-toggle"
+                      type="button"
+                      id="downloadDropdown"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                      title="Download conversation history"
+                      aria-label="Download conversation history"
+                    >
+                      <i class="bi bi-download" aria-hidden="true"></i>
+                    </button>
+                    <ul
+                      class="dropdown-menu"
+                      aria-labelledby="downloadDropdown"
+                    >
+                      @for (format of getDocumentFormats(); track format) {
+                        <li>
+                          <button
+                            type="button"
+                            class="dropdown-item"
+                            (click)="onDownloadConversationHistory(format)"
+                          >
+                            <i
+                              class="me-2 {{ getFormatIcon(format) }}"
+                              aria-hidden="true"
+                            ></i>
+                            {{ getFormatName(format) }}
+                          </button>
+                        </li>
+                      }
+                    </ul>
+                  </div>
                 }
               </div>
 
               <!-- Right side: Send button -->
               <div class="ms-auto">
                 @if (!storeService.isStreaming()) {
-                <button
-                  type="submit"
-                  class="btn btn-lg btn-primary"
-                  (click)="onClickCreateSession()"
-                  title="Send message"
-                  [attr.aria-label]="'Send message'"
-                >
-                  <i class="bi bi-send" aria-hidden="true"></i></button
-                >} @else {
-                <button
-                  type="button"
-                  class="btn btn-lg btn-primary"
-                  (click)="onClickStopSession()"
-                  title="Stop message"
-                  [attr.aria-label]="'Stop message'"
-                >
-                  <i class="bi bi-stop-circle" aria-hidden="true"></i>
-                </button>
+                  <button
+                    type="submit"
+                    class="btn btn-lg btn-primary"
+                    (click)="onClickCreateSession()"
+                    title="Send message"
+                    [attr.aria-label]="'Send message'"
+                  >
+                    <i class="bi bi-send" aria-hidden="true"></i>
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn btn-lg btn-primary"
+                    (click)="onClickStopSession()"
+                    title="Stop message"
+                    [attr.aria-label]="'Stop message'"
+                  >
+                    <i class="bi bi-stop-circle" aria-hidden="true"></i>
+                  </button>
                 }
               </div>
             </div>
@@ -252,35 +262,37 @@
 
     <!-- File cards display -->
     @if (attachedFiles.length > 0 && showAttachedFiles) {
-    <div
-      class="file-cards-container mt-1"
-      role="list"
-      aria-label="Attached files"
-    >
-      <div class="file-cards-scroll">
-        @for (file of attachedFiles; track file.id) {
-        <div class="file-card card" role="listitem">
-          <div class="file-card-body card-body text-center">
-            <div class="file-card-remove">
-              <button
-                type="button"
-                class="badge bg-danger border-0"
-                (click)="removeFile(file.id)"
-                [attr.aria-label]="'Remove file: ' + file.name"
-              >
-                <i class="bi bi-x" aria-hidden="true"></i>
-              </button>
+      <div
+        class="file-cards-container mt-1"
+        role="list"
+        aria-label="Attached files"
+      >
+        <div class="file-cards-scroll">
+          @for (file of attachedFiles; track file.id) {
+            <div class="file-card card" role="listitem">
+              <div class="file-card-body card-body text-center">
+                <div class="file-card-remove">
+                  <button
+                    type="button"
+                    class="badge bg-danger border-0"
+                    (click)="removeFile(file.id)"
+                    [attr.aria-label]="'Remove file: ' + file.name"
+                  >
+                    <i class="bi bi-x" aria-hidden="true"></i>
+                  </button>
+                </div>
+                <div class="file-card-icon">
+                  <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+                </div>
+                <div class="file-card-name">{{ file.name }}</div>
+                <div class="file-card-size">
+                  {{ formatFileSize(file.size) }}
+                </div>
+              </div>
             </div>
-            <div class="file-card-icon">
-              <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
-            </div>
-            <div class="file-card-name">{{ file.name }}</div>
-            <div class="file-card-size">{{ formatFileSize(file.size) }}</div>
-          </div>
+          }
         </div>
-        }
       </div>
-    </div>
     }
   </div>
 </div>

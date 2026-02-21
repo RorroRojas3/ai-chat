@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, Inject, OnDestroy, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { StoreService } from './store/store.service';
@@ -6,6 +6,8 @@ import { MenuOffcanvasComponent } from './shared/menu-offcanvas/menu-offcanvas.c
 import { NotificationComponent } from './shared/components/notification/notification.component';
 import { filter, forkJoin, Subject, takeUntil } from 'rxjs';
 import { ModelService } from './services/model.service';
+import { ModelStore } from './store/model.store';
+import { McpStore } from './store/mcp.store';
 import { SessionService } from './services/session.service';
 import {
   MSAL_GUARD_CONFIG,
@@ -44,8 +46,11 @@ export class AppComponent implements OnInit, OnDestroy {
     private sessionService: SessionService,
     private modelService: ModelService,
     private mcpService: McpService,
-    private documentService: DocumentService
+    private documentService: DocumentService,
   ) {}
+
+  private readonly modelStore = inject(ModelStore);
+  private readonly mcpStore = inject(McpStore);
 
   isIframe = false;
   loginDisplay = false;
@@ -62,8 +67,8 @@ export class AppComponent implements OnInit, OnDestroy {
         filter(
           (msg: EventMessage) =>
             msg.eventType === EventType.ACCOUNT_ADDED ||
-            msg.eventType === EventType.ACCOUNT_REMOVED
-        )
+            msg.eventType === EventType.ACCOUNT_REMOVED,
+        ),
       )
       .subscribe((result: EventMessage) => {
         if (this.authService.instance.getAllAccounts().length === 0) {
@@ -76,9 +81,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.msalBroadcastService.inProgress$
       .pipe(
         filter(
-          (status: InteractionStatus) => status === InteractionStatus.None
+          (status: InteractionStatus) => status === InteractionStatus.None,
         ),
-        takeUntil(this._destroying$)
+        takeUntil(this._destroying$),
       )
       .subscribe(() => {
         this.setLoginDisplay();
@@ -116,10 +121,9 @@ export class AppComponent implements OnInit, OnDestroy {
         this.mcpService.getMcpServers(),
         this.documentService.getFileExtensions(),
       ]).subscribe(([models, sessions, mcps, fileExtensions]) => {
-        this.storeService.models.set(models);
-        this.storeService.selectedModel.set(models[0]);
+        this.modelStore.setModels(models);
         this.storeService.updateMenuSessions(sessions.items);
-        this.storeService.mcps.set(mcps);
+        this.mcpStore.setMcps(mcps);
         this.storeService.fileExtensions.set(fileExtensions);
       });
     }

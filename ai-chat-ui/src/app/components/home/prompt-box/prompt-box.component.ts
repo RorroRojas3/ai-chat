@@ -7,6 +7,8 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StoreService } from '../../../store/store.service';
+import { ModelStore } from '../../../store/model.store';
+import { McpStore } from '../../../store/mcp.store';
 import { ChatService } from '../../../services/chat.service';
 import { FormsModule } from '@angular/forms';
 import {
@@ -45,6 +47,8 @@ export class PromptBoxComponent implements OnDestroy {
   readonly JOB_POLLING_INTERVAL_MS = 5000;
 
   public readonly storeService = inject(StoreService);
+  public readonly modelStore = inject(ModelStore);
+  public readonly mcpStore = inject(McpStore);
   private readonly chatService = inject(ChatService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly sessionService = inject(SessionService);
@@ -190,7 +194,7 @@ export class PromptBoxComponent implements OnDestroy {
    * @param event - The ID of the newly selected model
    */
   onModelChange(event: ModelDto): void {
-    this.storeService.selectedModel.set(event);
+    this.modelStore.setSelectedModel(event);
   }
 
   /**
@@ -199,31 +203,25 @@ export class PromptBoxComponent implements OnDestroy {
   toggleMcpSelection(mcp: McpDto, event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-
-    this.storeService.selectedMcps.update((current) => {
-      const index = current.findIndex((m) => m.name === mcp.name);
-      return index > -1
-        ? current.filter((m) => m.name !== mcp.name)
-        : [...current, mcp];
-    });
+    this.mcpStore.toggleMcpSelection(mcp);
   }
 
   /**
    * Checks if an MCP is selected
    */
   isMcpSelected(mcp: McpDto): boolean {
-    return this.storeService.selectedMcps().some((m) => m.name === mcp.name);
+    return this.mcpStore.isMcpSelected(mcp);
   }
 
   /**
    * Gets display text for MCP dropdown button
    */
   getMcpButtonText(): string {
-    const selectedCount = this.storeService.selectedMcps().length;
+    const selectedCount = this.mcpStore.selectedMcps().length;
     if (selectedCount === 0) {
       return 'Tools';
     } else if (selectedCount === 1) {
-      return this.storeService.selectedMcps()[0].name;
+      return this.mcpStore.selectedMcps()[0].name;
     } else {
       return `${selectedCount} Tools`;
     }

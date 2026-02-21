@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { SessionConversationDto } from '../dtos/SessionDto';
 import { environment } from '../../environments/environment';
 import { StoreService } from '../store/store.service';
+import { ModelStore } from '../store/model.store';
+import { McpStore } from '../store/mcp.store';
 import { MsalService } from '@azure/msal-angular';
 import { CreateChatStreamActionDto } from '../dtos/actions/chats/CreateChatStreamActionDto';
 
@@ -13,6 +15,8 @@ import { CreateChatStreamActionDto } from '../dtos/actions/chats/CreateChatStrea
 export class ChatService {
   private readonly http = inject(HttpClient);
   private readonly storeService = inject(StoreService);
+  private readonly modelStore = inject(ModelStore);
+  private readonly mcpStore = inject(McpStore);
   private readonly zone = inject(NgZone);
   private readonly msalService = inject(MsalService);
 
@@ -37,7 +41,7 @@ export class ChatService {
       const abortController = new AbortController();
 
       const readStream = async (
-        streamReader: ReadableStreamDefaultReader<Uint8Array>
+        streamReader: ReadableStreamDefaultReader<Uint8Array>,
       ) => {
         try {
           while (true) {
@@ -101,13 +105,13 @@ export class ChatService {
               body: JSON.stringify(
                 new CreateChatStreamActionDto(
                   prompt,
-                  this.storeService.selectedModel().id,
-                  this.storeService.selectedModel().aiServiceId,
-                  this.storeService.selectedMcps()
-                )
+                  this.modelStore.selectedModel()!.id,
+                  this.modelStore.selectedModel()!.aiServiceId,
+                  this.mcpStore.selectedMcps(),
+                ),
               ),
               signal: abortController.signal,
-            }
+            },
           );
         })
         .then((response) => {
@@ -145,7 +149,7 @@ export class ChatService {
    */
   getSessionConversation(id: string): Observable<SessionConversationDto> {
     return this.http.get<SessionConversationDto>(
-      `${environment.apiUrl}chats/sessions/${id}/conversations`
+      `${environment.apiUrl}chats/sessions/${id}/conversations`,
     );
   }
 }

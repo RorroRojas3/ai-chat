@@ -1,8 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { MessageDto, createMessage } from '../dtos/MessageDto';
-import { ModelDto } from '../dtos/ModelDto';
 import { SessionDto } from '../dtos/SessionDto';
-import { McpDto } from '../dtos/McpDto';
 
 @Injectable({
   providedIn: 'root',
@@ -19,10 +17,6 @@ export class StoreService {
   stream = signal<string>('');
   messages = signal<MessageDto[]>([]);
   streamMessage = signal<MessageDto>(createMessage('', false, undefined));
-  models = signal<ModelDto[]>([]);
-  selectedModel = signal<ModelDto>({} as ModelDto);
-  mcps = signal<McpDto[]>([]);
-  selectedMcps = signal<McpDto[]>([]);
   fileExtensions = signal<string[]>([]);
   projectId = signal<string | undefined>(undefined);
 
