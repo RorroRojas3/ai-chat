@@ -1,0 +1,1887 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications — Enterprise GPT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --brand-primary: #355872;
+            --brand-secondary: #7AAACE;
+            --brand-light: #9CD5FF;
+            --brand-surface: #F7F8F0;
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F9FAFB;
+            --bg-tertiary: #F3F4F6;
+            --bg-hover: rgba(0,0,0,0.04);
+            --border-default: #E5E7EB;
+            --border-strong: #D1D5DB;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --text-tertiary: #9CA3AF;
+            --success: #16A34A;
+            --error: #DC2626;
+            --warning: #D97706;
+            --info: #7AAACE;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1A1A1A;
+            --bg-secondary: #212121;
+            --bg-tertiary: #2A2A2A;
+            --bg-hover: rgba(255,255,255,0.06);
+            --border-default: #333333;
+            --border-strong: #444444;
+            --text-primary: #E5E7EB;
+            --text-secondary: #9CA3AF;
+            --text-tertiary: #6B7280;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            transition: background-color 150ms ease, color 150ms ease;
+        }
+
+        /* ========== LAYOUT ========== */
+        .app-layout {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            width: 260px;
+            min-width: 260px;
+            height: 100vh;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-default);
+            display: flex;
+            flex-direction: column;
+            transition: width 200ms ease-in-out, min-width 200ms ease-in-out, opacity 200ms ease-in-out;
+            overflow: hidden;
+            position: relative;
+            z-index: 100;
+        }
+
+        .sidebar.collapsed {
+            width: 0;
+            min-width: 0;
+            border-right: none;
+        }
+
+        .sidebar.collapsed .sidebar-inner {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .sidebar-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 260px;
+            opacity: 1;
+            transition: opacity 150ms ease;
+        }
+
+        .sidebar-header {
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: background-color 150ms ease, color 150ms ease;
+        }
+
+        .sidebar-toggle:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .new-conversation-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 9px 16px;
+            margin: 0 12px 8px 12px;
+            width: calc(100% - 24px);
+            background: transparent;
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 150ms ease, border-color 150ms ease;
+        }
+
+        .new-conversation-btn:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--border-strong);
+        }
+
+        /* Nav Links */
+        .nav-links {
+            padding: 0 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-link-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 150ms ease, color 150ms ease;
+            position: relative;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-link-item:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-link-item.active {
+            background-color: rgba(53, 88, 114, 0.08);
+            color: var(--brand-primary);
+            font-weight: 600;
+            border-left: 3px solid var(--brand-primary);
+            padding-left: 9px;
+        }
+
+        [data-theme="dark"] .nav-link-item.active {
+            color: var(--brand-secondary);
+            border-left-color: var(--brand-secondary);
+            background-color: rgba(122, 170, 206, 0.1);
+        }
+
+        .nav-link-item i {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background-color: var(--brand-primary);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 7px;
+            border-radius: 10px;
+            min-width: 20px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        [data-theme="dark"] .nav-badge {
+            background-color: var(--brand-secondary);
+            color: #1A1A1A;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background-color: var(--border-default);
+            margin: 8px 12px;
+        }
+
+        /* Recent Conversations */
+        .recent-section {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 0 12px;
+        }
+
+        .recent-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-tertiary);
+            padding: 8px 12px 6px;
+        }
+
+        .recent-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .recent-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .recent-list::-webkit-scrollbar-thumb {
+            background-color: var(--border-default);
+            border-radius: 4px;
+        }
+
+        .recent-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: background-color 150ms ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .recent-item:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .recent-item.selected {
+            background-color: rgba(53, 88, 114, 0.08);
+        }
+
+        .recent-item-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .recent-item-menu {
+            opacity: 0;
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: opacity 150ms ease, background-color 150ms ease;
+            flex-shrink: 0;
+        }
+
+        .recent-item:hover .recent-item-menu {
+            opacity: 1;
+        }
+
+        .recent-item-menu:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            padding: 4px;
+            z-index: 1000;
+            min-width: 140px;
+            display: none;
+        }
+
+        .context-menu.show {
+            display: block;
+        }
+
+        .context-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--text-primary);
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            transition: background-color 150ms ease;
+        }
+
+        .context-menu-item:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .context-menu-item.danger {
+            color: var(--error);
+        }
+
+        /* User Section */
+        .user-section {
+            border-top: 1px solid var(--border-default);
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--brand-primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .user-org {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            line-height: 1.3;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 150ms ease, color 150ms ease;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--bg-primary);
+            transition: background-color 150ms ease;
+        }
+
+        .main-content-inner {
+            width: 100%;
+            max-width: 900px;
+            padding: 32px 24px 120px;
+        }
+
+        /* Mobile sidebar toggle */
+        .mobile-sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            font-size: 18px;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 150ms ease, color 150ms ease;
+        }
+
+        .mobile-sidebar-toggle:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        /* Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            z-index: 99;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* ========== PAGE HEADER ========== */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .page-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .mark-all-read-btn {
+            padding: 5px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            background: transparent;
+            border: 1px solid var(--border-default);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+            white-space: nowrap;
+        }
+
+        .mark-all-read-btn:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--border-strong);
+            color: var(--text-primary);
+        }
+
+        /* ========== FILTER BAR ========== */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 5px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 20px;
+            border: 1px solid var(--border-default);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 150ms ease;
+            white-space: nowrap;
+        }
+
+        .filter-pill:hover {
+            border-color: var(--border-strong);
+            color: var(--text-primary);
+        }
+
+        .filter-pill.active {
+            background-color: var(--brand-primary);
+            border-color: var(--brand-primary);
+            color: #fff;
+        }
+
+        [data-theme="dark"] .filter-pill.active {
+            background-color: var(--brand-secondary);
+            border-color: var(--brand-secondary);
+            color: #1A1A1A;
+        }
+
+        /* ========== SELECT ALL BAR ========== */
+        .select-all-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border-default);
+        }
+
+        .select-all-bar label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            user-select: none;
+        }
+
+        .select-all-bar .notification-count {
+            margin-left: auto;
+            font-size: 13px;
+            color: var(--text-tertiary);
+        }
+
+        /* ========== NOTIFICATION LIST ========== */
+        .notification-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .notification-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-default);
+            border-left: 3px solid var(--border-default);
+            background-color: var(--bg-primary);
+            cursor: pointer;
+            transition: background-color 150ms ease, opacity 300ms ease, max-height 300ms ease, padding 300ms ease, margin 300ms ease, border-color 150ms ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notification-row:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .notification-row.severity-success {
+            border-left-color: var(--success);
+        }
+
+        .notification-row.severity-error {
+            border-left-color: var(--error);
+        }
+
+        .notification-row.severity-warning {
+            border-left-color: var(--warning);
+        }
+
+        .notification-row.severity-info {
+            border-left-color: var(--info);
+        }
+
+        .notification-row.dismissing {
+            opacity: 0;
+            max-height: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            border-width: 0 !important;
+            overflow: hidden;
+        }
+
+        .notification-checkbox {
+            margin-top: 3px;
+            flex-shrink: 0;
+            cursor: pointer;
+            accent-color: var(--brand-primary);
+        }
+
+        .notification-icon {
+            font-size: 18px;
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+
+        .notification-icon.icon-success { color: var(--success); }
+        .notification-icon.icon-error { color: var(--error); }
+        .notification-icon.icon-warning { color: var(--warning); }
+        .notification-icon.icon-info { color: var(--info); }
+
+        .notification-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 2px;
+            flex-wrap: wrap;
+        }
+
+        .notification-title {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .notification-row.unread .notification-title {
+            font-weight: 600;
+        }
+
+        .unread-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: none;
+        }
+
+        .notification-row.unread .unread-dot {
+            display: inline-block;
+        }
+
+        .notification-row.severity-success .unread-dot { background-color: var(--success); }
+        .notification-row.severity-error .unread-dot { background-color: var(--error); }
+        .notification-row.severity-warning .unread-dot { background-color: var(--warning); }
+        .notification-row.severity-info .unread-dot { background-color: var(--info); }
+
+        .severity-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 8px;
+            border-radius: 10px;
+            color: #fff;
+            text-transform: capitalize;
+            line-height: 1.6;
+        }
+
+        .severity-badge.badge-success { background-color: var(--success); }
+        .severity-badge.badge-error { background-color: var(--error); }
+        .severity-badge.badge-warning { background-color: var(--warning); }
+        .severity-badge.badge-info { background-color: var(--info); }
+
+        .notification-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 6px;
+        }
+
+        .notification-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .source-badge {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background-color: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .notification-timestamp {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            cursor: default;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            opacity: 0;
+            transition: opacity 150ms ease;
+        }
+
+        .notification-row:hover .notification-actions {
+            opacity: 1;
+        }
+
+        .notif-action-btn {
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 150ms ease, color 150ms ease;
+        }
+
+        .notif-action-btn:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .notif-action-btn.mark-read-btn {
+            display: none;
+        }
+
+        .notification-row.unread .notif-action-btn.mark-read-btn {
+            display: flex;
+        }
+
+        /* ========== SHOW MORE / PAGINATION ========== */
+        .pagination-section {
+            text-align: center;
+            padding: 24px 0 16px;
+        }
+
+        .pagination-counter {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            margin-bottom: 10px;
+        }
+
+        .show-more-btn {
+            padding: 8px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            background: transparent;
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+        }
+
+        .show-more-btn:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--border-strong);
+            color: var(--text-primary);
+        }
+
+        /* ========== EMPTY STATE ========== */
+        .empty-state {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .empty-state.show {
+            display: flex;
+        }
+
+        .empty-state-icon {
+            font-size: 56px;
+            color: var(--text-tertiary);
+            margin-bottom: 16px;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* ========== FLOATING BULK BAR ========== */
+        .bulk-action-bar {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 200;
+            transition: transform 200ms ease;
+            white-space: nowrap;
+        }
+
+        .bulk-action-bar.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .bulk-count {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .bulk-btn {
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 150ms ease, border-color 150ms ease;
+            border: 1px solid var(--border-default);
+            background: transparent;
+            color: var(--text-primary);
+        }
+
+        .bulk-btn:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--border-strong);
+        }
+
+        .bulk-btn.bulk-dismiss {
+            background-color: var(--error);
+            border-color: var(--error);
+            color: #fff;
+        }
+
+        .bulk-btn.bulk-dismiss:hover {
+            background-color: #b91c1c;
+            border-color: #b91c1c;
+        }
+
+        /* ========== TOAST ========== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 300;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 8px;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .toast-msg {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            padding: 10px 20px;
+            font-size: 13px;
+            color: var(--text-primary);
+            pointer-events: auto;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 200ms ease, transform 200ms ease;
+            border-left: 3px solid var(--text-tertiary);
+            white-space: nowrap;
+        }
+
+        .toast-msg.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-msg.toast-success { border-left-color: var(--success); }
+        .toast-msg.toast-error { border-left-color: var(--error); }
+        .toast-msg.toast-warning { border-left-color: var(--warning); }
+        .toast-msg.toast-info { border-left-color: var(--info); }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1023px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                z-index: 100;
+                box-shadow: 4px 0 16px rgba(0,0,0,0.1);
+            }
+
+            .sidebar.collapsed {
+                box-shadow: none;
+            }
+
+            .mobile-sidebar-toggle {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .main-content-inner {
+                padding: 16px 12px 120px;
+            }
+
+            .page-title {
+                font-size: 18px;
+            }
+
+            .notification-row {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+
+            .notification-actions {
+                opacity: 1;
+            }
+
+            .filter-bar {
+                gap: 6px;
+            }
+
+            .filter-pill {
+                padding: 4px 12px;
+                font-size: 12px;
+            }
+
+            .bulk-action-bar {
+                left: 12px;
+                right: 12px;
+                transform: translateX(0) translateY(100px);
+                width: auto;
+            }
+
+            .bulk-action-bar.show {
+                transform: translateX(0) translateY(0);
+            }
+        }
+
+        /* Custom checkbox style */
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-inner">
+                <div class="sidebar-header">
+                    <span style="font-size:15px;font-weight:700;color:var(--text-primary);">Enterprise GPT</span>
+                    <button class="sidebar-toggle" id="sidebarToggleInner" title="Collapse sidebar">
+                        <i class="bi bi-layout-sidebar"></i>
+                    </button>
+                </div>
+
+                <button class="new-conversation-btn">
+                    <i class="bi bi-plus-lg"></i>
+                    New Conversation
+                </button>
+
+                <nav class="nav-links">
+                    <a href="#" class="nav-link-item">
+                        <i class="bi bi-chat-dots"></i>
+                        Chat
+                    </a>
+                    <a href="#" class="nav-link-item">
+                        <i class="bi bi-clock-history"></i>
+                        Conversations
+                    </a>
+                    <a href="#" class="nav-link-item active">
+                        <i class="bi bi-bell"></i>
+                        Notifications
+                        <span class="nav-badge" id="navBadge">0</span>
+                    </a>
+                    <a href="#" class="nav-link-item">
+                        <i class="bi bi-gear"></i>
+                        Admin
+                    </a>
+                </nav>
+
+                <div class="nav-divider"></div>
+
+                <div class="recent-section">
+                    <div class="recent-label">Recent</div>
+                    <div class="recent-list" id="recentList">
+                        <div class="recent-item" data-id="r1">
+                            <span class="recent-item-text">Quarterly report analysis</span>
+                            <button class="recent-item-menu" data-menu="r1"><i class="bi bi-three-dots-vertical"></i></button>
+                        </div>
+                        <div class="recent-item" data-id="r2">
+                            <span class="recent-item-text">API integration planning</span>
+                            <button class="recent-item-menu" data-menu="r2"><i class="bi bi-three-dots-vertical"></i></button>
+                        </div>
+                        <div class="recent-item selected" data-id="r3">
+                            <span class="recent-item-text">Security audit findings review</span>
+                            <button class="recent-item-menu" data-menu="r3"><i class="bi bi-three-dots-vertical"></i></button>
+                        </div>
+                        <div class="recent-item" data-id="r4">
+                            <span class="recent-item-text">Customer onboarding flow</span>
+                            <button class="recent-item-menu" data-menu="r4"><i class="bi bi-three-dots-vertical"></i></button>
+                        </div>
+                        <div class="recent-item" data-id="r5">
+                            <span class="recent-item-text">Database migration strategy</span>
+                            <button class="recent-item-menu" data-menu="r5"><i class="bi bi-three-dots-vertical"></i></button>
+                        </div>
+                        <div class="recent-item" data-id="r6">
+                            <span class="recent-item-text">Employee training materials</span>
+                            <button class="recent-item-menu" data-menu="r6"><i class="bi bi-three-dots-vertical"></i></button>
+                        </div>
+                        <div class="recent-item" data-id="r7">
+                            <span class="recent-item-text">Marketing campaign draft</span>
+                            <button class="recent-item-menu" data-menu="r7"><i class="bi bi-three-dots-vertical"></i></button>
+                        </div>
+                        <div class="recent-item" data-id="r8">
+                            <span class="recent-item-text">Infrastructure cost optimization</span>
+                            <button class="recent-item-menu" data-menu="r8"><i class="bi bi-three-dots-vertical"></i></button>
+                        </div>
+                        <div class="recent-item" data-id="r9">
+                            <span class="recent-item-text">Legal compliance checklist</span>
+                            <button class="recent-item-menu" data-menu="r9"><i class="bi bi-three-dots-vertical"></i></button>
+                        </div>
+                        <div class="recent-item" data-id="r10">
+                            <span class="recent-item-text">Product roadmap Q2 planning</span>
+                            <button class="recent-item-menu" data-menu="r10"><i class="bi bi-three-dots-vertical"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="user-section">
+                    <div class="user-avatar">RR</div>
+                    <div class="user-info">
+                        <div class="user-name">Rodrigo Rojas</div>
+                        <div class="user-org">Enterprise AI</div>
+                    </div>
+                    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+                        <i class="bi bi-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="main-content-inner">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div class="page-header-left">
+                        <button class="mobile-sidebar-toggle" id="mobileSidebarToggle" title="Open sidebar">
+                            <i class="bi bi-layout-sidebar"></i>
+                        </button>
+                        <h1 class="page-title">Notifications</h1>
+                    </div>
+                    <button class="mark-all-read-btn" id="markAllReadBtn">
+                        <i class="bi bi-envelope-open"></i> Mark All as Read
+                    </button>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="filter-bar" id="filterBar">
+                    <button class="filter-pill active" data-filter="all">All</button>
+                    <button class="filter-pill" data-filter="success">
+                        <i class="bi bi-check-circle-fill" style="color:var(--success);margin-right:4px;font-size:12px;"></i>Success
+                    </button>
+                    <button class="filter-pill" data-filter="error">
+                        <i class="bi bi-x-circle-fill" style="color:var(--error);margin-right:4px;font-size:12px;"></i>Error
+                    </button>
+                    <button class="filter-pill" data-filter="warning">
+                        <i class="bi bi-exclamation-triangle-fill" style="color:var(--warning);margin-right:4px;font-size:12px;"></i>Warning
+                    </button>
+                    <button class="filter-pill" data-filter="info">
+                        <i class="bi bi-info-circle-fill" style="color:var(--info);margin-right:4px;font-size:12px;"></i>Info
+                    </button>
+                </div>
+
+                <!-- Select All Bar -->
+                <div class="select-all-bar" id="selectAllBar">
+                    <label>
+                        <input type="checkbox" id="selectAllCheckbox">
+                        Select All
+                    </label>
+                    <span class="notification-count" id="notificationCount"></span>
+                </div>
+
+                <!-- Notification List -->
+                <div class="notification-list" id="notificationList"></div>
+
+                <!-- Pagination -->
+                <div class="pagination-section" id="paginationSection">
+                    <div class="pagination-counter" id="paginationCounter"></div>
+                    <button class="show-more-btn" id="showMoreBtn">Show More</button>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState">
+                    <i class="bi bi-bell-slash empty-state-icon"></i>
+                    <div class="empty-state-title">No notifications</div>
+                    <div class="empty-state-text">You're all caught up.</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bulk Action Bar -->
+    <div class="bulk-action-bar" id="bulkActionBar">
+        <span class="bulk-count" id="bulkCount">0 selected</span>
+        <button class="bulk-btn" id="bulkMarkRead"><i class="bi bi-envelope-open"></i> Mark as Read</button>
+        <button class="bulk-btn bulk-dismiss" id="bulkDismiss"><i class="bi bi-x-lg"></i> Dismiss Selected</button>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <button class="context-menu-item" data-action="rename"><i class="bi bi-pencil"></i> Rename</button>
+        <button class="context-menu-item danger" data-action="delete"><i class="bi bi-trash3"></i> Delete</button>
+    </div>
+
+    <script>
+        // ============================================================
+        // MOCK DATA - 25 notifications
+        // ============================================================
+        var NOW = Date.now();
+        var MIN = 60 * 1000;
+        var HOUR = 60 * MIN;
+        var DAY = 24 * HOUR;
+
+        var mockNotifications = [
+            {
+                id: 'n1',
+                type: 'error',
+                title: 'File upload failed',
+                message: 'The file report.pdf exceeded the 10MB size limit. Please compress or split the file and try again.',
+                source: 'File Upload',
+                timestamp: NOW - 3 * MIN,
+                read: false
+            },
+            {
+                id: 'n2',
+                type: 'success',
+                title: 'File upload completed successfully',
+                message: 'The file quarterly-data.xlsx has been uploaded and processed. 2,450 rows imported.',
+                source: 'File Upload',
+                timestamp: NOW - 12 * MIN,
+                read: false
+            },
+            {
+                id: 'n3',
+                type: 'warning',
+                title: 'Storage usage at 85%',
+                message: 'Your organization has used 8.5 GB of 10 GB available storage. Consider archiving old conversations.',
+                source: 'System',
+                timestamp: NOW - 28 * MIN,
+                read: false
+            },
+            {
+                id: 'n4',
+                type: 'info',
+                title: 'New model GPT-4o Turbo available',
+                message: 'GPT-4o Turbo has been added to your organization\'s model roster. It offers improved speed and accuracy.',
+                source: 'Admin',
+                timestamp: NOW - 1 * HOUR,
+                read: false
+            },
+            {
+                id: 'n5',
+                type: 'success',
+                title: 'Conversation exported',
+                message: 'Your conversation "Quarterly report analysis" has been exported as PDF and is ready for download.',
+                source: 'Chat',
+                timestamp: NOW - 2 * HOUR,
+                read: false
+            },
+            {
+                id: 'n6',
+                type: 'error',
+                title: 'API rate limit exceeded',
+                message: 'Your organization has reached the hourly API call limit (500 requests/hr). Service will resume at the next hour.',
+                source: 'System',
+                timestamp: NOW - 3 * HOUR,
+                read: false
+            },
+            {
+                id: 'n7',
+                type: 'info',
+                title: 'Scheduled maintenance window',
+                message: 'System maintenance is scheduled for Saturday, Feb 22 from 2:00 AM to 4:00 AM UTC. Expect brief downtime.',
+                source: 'System',
+                timestamp: NOW - 5 * HOUR,
+                read: true
+            },
+            {
+                id: 'n8',
+                type: 'warning',
+                title: 'Token budget nearing limit',
+                message: 'Your team has consumed 92% of the monthly token allocation. Current usage: 4.6M of 5M tokens.',
+                source: 'Admin',
+                timestamp: NOW - 7 * HOUR,
+                read: false
+            },
+            {
+                id: 'n9',
+                type: 'success',
+                title: 'Team member added',
+                message: 'Maria Santos (m.santos@company.com) has been successfully added to the Enterprise AI workspace.',
+                source: 'Admin',
+                timestamp: NOW - 10 * HOUR,
+                read: true
+            },
+            {
+                id: 'n10',
+                type: 'error',
+                title: 'Authentication token expired',
+                message: 'Your SSO session has expired. Please re-authenticate through your identity provider to continue.',
+                source: 'System',
+                timestamp: NOW - 14 * HOUR,
+                read: true
+            },
+            {
+                id: 'n11',
+                type: 'info',
+                title: 'New prompt template shared',
+                message: 'Carlos Mendez shared the prompt template "Legal Contract Review" with your workspace.',
+                source: 'Chat',
+                timestamp: NOW - 1 * DAY,
+                read: false
+            },
+            {
+                id: 'n12',
+                type: 'warning',
+                title: 'Slow response times detected',
+                message: 'Average response latency has increased to 8.2 seconds over the past hour. The operations team has been notified.',
+                source: 'System',
+                timestamp: NOW - 1.5 * DAY,
+                read: true
+            },
+            {
+                id: 'n13',
+                type: 'success',
+                title: 'Bulk data import completed',
+                message: '15 files totaling 42 MB have been processed and indexed. All documents are now searchable.',
+                source: 'File Upload',
+                timestamp: NOW - 2 * DAY,
+                read: true
+            },
+            {
+                id: 'n14',
+                type: 'error',
+                title: 'Failed to generate summary',
+                message: 'The document "2025-annual-plan.docx" could not be summarized due to unsupported formatting. Try converting to plain text.',
+                source: 'Chat',
+                timestamp: NOW - 2.5 * DAY,
+                read: false
+            },
+            {
+                id: 'n15',
+                type: 'info',
+                title: 'Usage report available',
+                message: 'Your monthly usage report for January 2026 is now available in the Admin dashboard.',
+                source: 'Admin',
+                timestamp: NOW - 3 * DAY,
+                read: true
+            },
+            {
+                id: 'n16',
+                type: 'success',
+                title: 'Custom instructions saved',
+                message: 'Your organization\'s custom system instructions have been updated and will apply to all new conversations.',
+                source: 'Admin',
+                timestamp: NOW - 4 * DAY,
+                read: true
+            },
+            {
+                id: 'n17',
+                type: 'warning',
+                title: 'Unusual login activity detected',
+                message: 'A login from an unrecognized IP address (198.51.100.42) was detected on your account. Please verify.',
+                source: 'System',
+                timestamp: NOW - 5 * DAY,
+                read: false
+            },
+            {
+                id: 'n18',
+                type: 'error',
+                title: 'Webhook delivery failed',
+                message: 'The webhook endpoint https://api.company.com/hooks/gpt returned HTTP 503. 3 retry attempts exhausted.',
+                source: 'System',
+                timestamp: NOW - 6 * DAY,
+                read: true
+            },
+            {
+                id: 'n19',
+                type: 'info',
+                title: 'Feature update: Conversation branching',
+                message: 'You can now create branches within conversations to explore alternative responses without losing context.',
+                source: 'System',
+                timestamp: NOW - 8 * DAY,
+                read: true
+            },
+            {
+                id: 'n20',
+                type: 'success',
+                title: 'Data retention policy applied',
+                message: 'Conversations older than 90 days have been archived per your organization\'s data retention policy. 127 conversations archived.',
+                source: 'Admin',
+                timestamp: NOW - 10 * DAY,
+                read: true
+            },
+            {
+                id: 'n21',
+                type: 'warning',
+                title: 'Certificate expiring soon',
+                message: 'The TLS certificate for your custom domain gpt.company.com expires in 14 days. Please renew it promptly.',
+                source: 'System',
+                timestamp: NOW - 14 * DAY,
+                read: true
+            },
+            {
+                id: 'n22',
+                type: 'error',
+                title: 'Model response timeout',
+                message: 'A request to the GPT-4o model timed out after 120 seconds during conversation "Database migration strategy".',
+                source: 'Chat',
+                timestamp: NOW - 18 * DAY,
+                read: true
+            },
+            {
+                id: 'n23',
+                type: 'info',
+                title: 'New admin role assigned',
+                message: 'You have been granted the "Workspace Admin" role by the organization owner. You can now manage users and settings.',
+                source: 'Admin',
+                timestamp: NOW - 21 * DAY,
+                read: true
+            },
+            {
+                id: 'n24',
+                type: 'success',
+                title: 'Backup completed',
+                message: 'Full workspace backup completed successfully. Backup size: 2.3 GB. Stored in your organization\'s archive.',
+                source: 'System',
+                timestamp: NOW - 25 * DAY,
+                read: true
+            },
+            {
+                id: 'n25',
+                type: 'warning',
+                title: 'Deprecated API version in use',
+                message: 'Your integration is using API v1 which will be sunset on March 31, 2026. Please migrate to API v2.',
+                source: 'System',
+                timestamp: NOW - 30 * DAY,
+                read: true
+            }
+        ];
+
+        // ============================================================
+        // STATE
+        // ============================================================
+        var notifications = JSON.parse(JSON.stringify(mockNotifications));
+        var currentFilter = 'all';
+        var visibleCount = 15;
+        var selectedIds = new Set();
+
+        // ============================================================
+        // DOM REFERENCES
+        // ============================================================
+        var sidebar = document.getElementById('sidebar');
+        var sidebarOverlay = document.getElementById('sidebarOverlay');
+        var sidebarToggleInner = document.getElementById('sidebarToggleInner');
+        var mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+        var themeToggle = document.getElementById('themeToggle');
+        var filterBar = document.getElementById('filterBar');
+        var notificationList = document.getElementById('notificationList');
+        var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        var notificationCount = document.getElementById('notificationCount');
+        var paginationSection = document.getElementById('paginationSection');
+        var paginationCounter = document.getElementById('paginationCounter');
+        var showMoreBtn = document.getElementById('showMoreBtn');
+        var emptyState = document.getElementById('emptyState');
+        var selectAllBar = document.getElementById('selectAllBar');
+        var bulkActionBar = document.getElementById('bulkActionBar');
+        var bulkCount = document.getElementById('bulkCount');
+        var bulkMarkRead = document.getElementById('bulkMarkRead');
+        var bulkDismiss = document.getElementById('bulkDismiss');
+        var markAllReadBtn = document.getElementById('markAllReadBtn');
+        var navBadge = document.getElementById('navBadge');
+        var toastContainer = document.getElementById('toastContainer');
+        var contextMenu = document.getElementById('contextMenu');
+
+        // ============================================================
+        // THEME
+        // ============================================================
+        function initTheme() {
+            var saved = localStorage.getItem('egpt-theme');
+            if (saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggle.innerHTML = '<i class="bi bi-sun"></i>';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                themeToggle.innerHTML = '<i class="bi bi-moon"></i>';
+            }
+        }
+
+        themeToggle.addEventListener('click', function() {
+            var current = document.documentElement.getAttribute('data-theme');
+            if (current === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('egpt-theme', 'light');
+                themeToggle.innerHTML = '<i class="bi bi-moon"></i>';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('egpt-theme', 'dark');
+                themeToggle.innerHTML = '<i class="bi bi-sun"></i>';
+            }
+        });
+
+        initTheme();
+
+        // ============================================================
+        // SIDEBAR COLLAPSE
+        // ============================================================
+        function initSidebar() {
+            var collapsed = localStorage.getItem('egpt-sidebar-collapsed');
+            if (collapsed === 'true') {
+                sidebar.classList.add('collapsed');
+            }
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('collapsed');
+            localStorage.setItem('egpt-sidebar-collapsed', sidebar.classList.contains('collapsed'));
+            if (window.innerWidth < 1024) {
+                if (!sidebar.classList.contains('collapsed')) {
+                    sidebarOverlay.classList.add('show');
+                } else {
+                    sidebarOverlay.classList.remove('show');
+                }
+            }
+        }
+
+        sidebarToggleInner.addEventListener('click', toggleSidebar);
+        mobileSidebarToggle.addEventListener('click', function() {
+            sidebar.classList.remove('collapsed');
+            sidebarOverlay.classList.add('show');
+        });
+        sidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.add('collapsed');
+            sidebarOverlay.classList.remove('show');
+        });
+
+        initSidebar();
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                sidebarOverlay.classList.remove('show');
+            }
+        });
+
+        // ============================================================
+        // CONTEXT MENU (Recent items)
+        // ============================================================
+        var activeContextTarget = null;
+
+        document.querySelectorAll('.recent-item-menu').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var rect = btn.getBoundingClientRect();
+                contextMenu.style.top = rect.bottom + 4 + 'px';
+                contextMenu.style.left = Math.min(rect.left, window.innerWidth - 160) + 'px';
+                contextMenu.classList.add('show');
+                activeContextTarget = btn.closest('.recent-item');
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!contextMenu.contains(e.target)) {
+                contextMenu.classList.remove('show');
+                activeContextTarget = null;
+            }
+        });
+
+        contextMenu.querySelectorAll('.context-menu-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var action = item.getAttribute('data-action');
+                if (activeContextTarget) {
+                    if (action === 'rename') {
+                        var textEl = activeContextTarget.querySelector('.recent-item-text');
+                        var newName = prompt('Rename conversation:', textEl.textContent);
+                        if (newName && newName.trim()) {
+                            textEl.textContent = newName.trim();
+                        }
+                    } else if (action === 'delete') {
+                        activeContextTarget.style.transition = 'opacity 200ms ease';
+                        activeContextTarget.style.opacity = '0';
+                        var target = activeContextTarget;
+                        setTimeout(function() { target.remove(); }, 200);
+                    }
+                }
+                contextMenu.classList.remove('show');
+                activeContextTarget = null;
+            });
+        });
+
+        // ============================================================
+        // RELATIVE TIME
+        // ============================================================
+        function relativeTime(ts) {
+            var diff = NOW - ts;
+            if (diff < MIN) return 'Just now';
+            if (diff < HOUR) {
+                var m = Math.floor(diff / MIN);
+                return m === 1 ? '1 minute ago' : m + ' minutes ago';
+            }
+            if (diff < DAY) {
+                var h = Math.floor(diff / HOUR);
+                return h === 1 ? '1 hour ago' : h + ' hours ago';
+            }
+            var d = Math.floor(diff / DAY);
+            if (d === 1) return '1 day ago';
+            if (d < 30) return d + ' days ago';
+            return Math.floor(d / 30) + ' months ago';
+        }
+
+        function isoTime(ts) {
+            return new Date(ts).toISOString();
+        }
+
+        // ============================================================
+        // SEVERITY HELPERS
+        // ============================================================
+        var severityIcons = {
+            success: 'bi-check-circle-fill',
+            error: 'bi-x-circle-fill',
+            warning: 'bi-exclamation-triangle-fill',
+            info: 'bi-info-circle-fill'
+        };
+
+        // ============================================================
+        // RENDER NOTIFICATIONS
+        // ============================================================
+        function getFilteredNotifications() {
+            if (currentFilter === 'all') return notifications;
+            return notifications.filter(function(n) { return n.type === currentFilter; });
+        }
+
+        function renderNotifications() {
+            var filtered = getFilteredNotifications();
+            var toShow = filtered.slice(0, visibleCount);
+
+            if (filtered.length === 0) {
+                notificationList.innerHTML = '';
+                emptyState.classList.add('show');
+                selectAllBar.style.display = 'none';
+                paginationSection.style.display = 'none';
+                markAllReadBtn.style.display = 'none';
+                return;
+            }
+
+            emptyState.classList.remove('show');
+            selectAllBar.style.display = 'flex';
+            markAllReadBtn.style.display = '';
+
+            var html = '';
+            toShow.forEach(function(n) {
+                var unreadClass = n.read ? '' : ' unread';
+                var severityClass = 'severity-' + n.type;
+                var checked = selectedIds.has(n.id) ? ' checked' : '';
+
+                html += '<div class="notification-row ' + severityClass + unreadClass + '" data-id="' + n.id + '" data-type="' + n.type + '">' +
+                    '<input type="checkbox" class="notification-checkbox" data-id="' + n.id + '"' + checked + '>' +
+                    '<i class="bi ' + severityIcons[n.type] + ' notification-icon icon-' + n.type + '"></i>' +
+                    '<div class="notification-body">' +
+                        '<div class="notification-title-row">' +
+                            '<span class="notification-title">' + escHtml(n.title) + '</span>' +
+                            '<span class="unread-dot"></span>' +
+                            '<span class="severity-badge badge-' + n.type + '">' + n.type + '</span>' +
+                        '</div>' +
+                        '<div class="notification-message">' + escHtml(n.message) + '</div>' +
+                        '<div class="notification-meta">' +
+                            '<span class="source-badge">' + escHtml(n.source) + '</span>' +
+                            '<span class="notification-timestamp" title="' + isoTime(n.timestamp) + '">' + relativeTime(n.timestamp) + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="notification-actions">' +
+                        '<button class="notif-action-btn mark-read-btn" title="Mark as read" data-id="' + n.id + '">' +
+                            '<i class="bi bi-envelope-open"></i>' +
+                        '</button>' +
+                        '<button class="notif-action-btn dismiss-btn" title="Dismiss" data-id="' + n.id + '">' +
+                            '<i class="bi bi-x-lg"></i>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+            });
+
+            notificationList.innerHTML = html;
+
+            // Pagination
+            if (filtered.length > visibleCount) {
+                paginationSection.style.display = '';
+                showMoreBtn.style.display = '';
+                paginationCounter.textContent = 'Showing ' + toShow.length + ' of ' + filtered.length + ' notifications';
+            } else {
+                if (filtered.length > 0) {
+                    paginationSection.style.display = '';
+                    showMoreBtn.style.display = 'none';
+                    paginationCounter.textContent = 'Showing ' + filtered.length + ' of ' + filtered.length + ' notifications';
+                } else {
+                    paginationSection.style.display = 'none';
+                }
+            }
+
+            notificationCount.textContent = filtered.length + ' notification' + (filtered.length !== 1 ? 's' : '');
+
+            updateSelectAllState();
+            updateBulkBar();
+            updateNavBadge();
+            bindNotificationEvents();
+        }
+
+        function escHtml(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function bindNotificationEvents() {
+            notificationList.querySelectorAll('.notification-checkbox').forEach(function(cb) {
+                cb.addEventListener('change', function() {
+                    var id = cb.getAttribute('data-id');
+                    if (cb.checked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
+                    updateSelectAllState();
+                    updateBulkBar();
+                });
+            });
+
+            notificationList.querySelectorAll('.mark-read-btn').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var id = btn.getAttribute('data-id');
+                    markAsRead(id);
+                });
+            });
+
+            notificationList.querySelectorAll('.dismiss-btn').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var id = btn.getAttribute('data-id');
+                    dismissNotification(id);
+                });
+            });
+        }
+
+        // ============================================================
+        // ACTIONS
+        // ============================================================
+        function markAsRead(id) {
+            var n = notifications.find(function(x) { return x.id === id; });
+            if (n && !n.read) {
+                n.read = true;
+                showToast('Notification marked as read', 'info');
+                renderNotifications();
+            }
+        }
+
+        function dismissNotification(id) {
+            var row = notificationList.querySelector('.notification-row[data-id="' + id + '"]');
+            if (row) {
+                row.style.maxHeight = row.offsetHeight + 'px';
+                row.offsetHeight; // force reflow
+                row.classList.add('dismissing');
+                setTimeout(function() {
+                    notifications = notifications.filter(function(n) { return n.id !== id; });
+                    selectedIds.delete(id);
+                    renderNotifications();
+                }, 300);
+                showToast('Notification dismissed', 'warning');
+            } else {
+                notifications = notifications.filter(function(n) { return n.id !== id; });
+                selectedIds.delete(id);
+                renderNotifications();
+            }
+        }
+
+        function markAllAsRead() {
+            var changed = false;
+            notifications.forEach(function(n) {
+                if (!n.read) {
+                    n.read = true;
+                    changed = true;
+                }
+            });
+            if (changed) {
+                showToast('All notifications marked as read', 'info');
+                renderNotifications();
+            }
+        }
+
+        // ============================================================
+        // SELECT ALL
+        // ============================================================
+        selectAllCheckbox.addEventListener('change', function() {
+            var filtered = getFilteredNotifications();
+            var visible = filtered.slice(0, visibleCount);
+            if (selectAllCheckbox.checked) {
+                visible.forEach(function(n) { selectedIds.add(n.id); });
+            } else {
+                visible.forEach(function(n) { selectedIds.delete(n.id); });
+            }
+            renderNotifications();
+        });
+
+        function updateSelectAllState() {
+            var filtered = getFilteredNotifications();
+            var visible = filtered.slice(0, visibleCount);
+            if (visible.length === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+                return;
+            }
+            var allChecked = visible.every(function(n) { return selectedIds.has(n.id); });
+            var someChecked = visible.some(function(n) { return selectedIds.has(n.id); });
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = someChecked && !allChecked;
+        }
+
+        // ============================================================
+        // BULK ACTIONS
+        // ============================================================
+        function updateBulkBar() {
+            if (selectedIds.size > 0) {
+                bulkActionBar.classList.add('show');
+                bulkCount.textContent = selectedIds.size + ' selected';
+            } else {
+                bulkActionBar.classList.remove('show');
+            }
+        }
+
+        bulkMarkRead.addEventListener('click', function() {
+            var count = 0;
+            selectedIds.forEach(function(id) {
+                var n = notifications.find(function(x) { return x.id === id; });
+                if (n && !n.read) {
+                    n.read = true;
+                    count++;
+                }
+            });
+            selectedIds.clear();
+            if (count > 0) {
+                showToast(count + ' notification' + (count !== 1 ? 's' : '') + ' marked as read', 'info');
+            }
+            renderNotifications();
+        });
+
+        bulkDismiss.addEventListener('click', function() {
+            var count = selectedIds.size;
+            notifications = notifications.filter(function(n) { return !selectedIds.has(n.id); });
+            selectedIds.clear();
+            if (count > 0) {
+                showToast(count + ' notification' + (count !== 1 ? 's' : '') + ' dismissed', 'warning');
+            }
+            renderNotifications();
+        });
+
+        // ============================================================
+        // MARK ALL READ
+        // ============================================================
+        markAllReadBtn.addEventListener('click', markAllAsRead);
+
+        // ============================================================
+        // FILTERS
+        // ============================================================
+        filterBar.querySelectorAll('.filter-pill').forEach(function(pill) {
+            pill.addEventListener('click', function() {
+                filterBar.querySelectorAll('.filter-pill').forEach(function(p) { p.classList.remove('active'); });
+                pill.classList.add('active');
+                currentFilter = pill.getAttribute('data-filter');
+                visibleCount = 15;
+                selectedIds.clear();
+                renderNotifications();
+            });
+        });
+
+        // ============================================================
+        // SHOW MORE
+        // ============================================================
+        showMoreBtn.addEventListener('click', function() {
+            visibleCount += 15;
+            renderNotifications();
+        });
+
+        // ============================================================
+        // NAV BADGE
+        // ============================================================
+        function updateNavBadge() {
+            var unread = notifications.filter(function(n) { return !n.read; }).length;
+            if (unread > 0) {
+                navBadge.textContent = unread;
+                navBadge.style.display = '';
+            } else {
+                navBadge.style.display = 'none';
+            }
+        }
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        function showToast(message, type) {
+            var toast = document.createElement('div');
+            toast.className = 'toast-msg toast-' + (type || 'info');
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+
+            requestAnimationFrame(function() {
+                toast.classList.add('show');
+            });
+
+            setTimeout(function() {
+                toast.classList.remove('show');
+                setTimeout(function() {
+                    if (toast.parentNode) toast.parentNode.removeChild(toast);
+                }, 200);
+            }, 3000);
+        }
+
+        // ============================================================
+        // INITIAL RENDER
+        // ============================================================
+        renderNotifications();
+    </script>
+</body>
+</html>

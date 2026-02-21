@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversations - Enterprise GPT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        /* ===== CSS Custom Properties ===== */
+        :root {
+            --brand-primary: #355872;
+            --brand-secondary: #7AAACE;
+            --brand-light: #9CD5FF;
+            --brand-surface: #F7F8F0;
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F9FAFB;
+            --bg-tertiary: #F3F4F6;
+            --bg-hover: rgba(0,0,0,0.04);
+            --border-default: #E5E7EB;
+            --border-strong: #D1D5DB;
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --text-tertiary: #9CA3AF;
+            --success: #16A34A;
+            --error: #DC2626;
+            --warning: #D97706;
+            --info: #7AAACE;
+            --sidebar-width: 260px;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1A1A1A;
+            --bg-secondary: #212121;
+            --bg-tertiary: #2A2A2A;
+            --bg-hover: rgba(255,255,255,0.06);
+            --border-default: #333333;
+            --border-strong: #444444;
+            --text-primary: #E5E7EB;
+            --text-secondary: #9CA3AF;
+            --text-tertiary: #6B7280;
+        }
+
+        /* ===== Reset & Base ===== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            transition: background-color 150ms ease, color 150ms ease;
+        }
+
+        /* ===== Layout ===== */
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            min-width: var(--sidebar-width);
+            max-width: var(--sidebar-width);
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-default);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1040;
+            transition: transform 200ms ease-in-out, opacity 200ms ease-in-out;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1035;
+            opacity: 0;
+            transition: opacity 200ms ease-in-out;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .main-content-wrapper {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: margin-left 200ms ease-in-out;
+            min-height: 100vh;
+        }
+
+        .main-content-wrapper.sidebar-collapsed {
+            margin-left: 0;
+        }
+
+        /* Sidebar header */
+        .sidebar-header {
+            padding: 12px 12px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-brand {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 150ms ease, color 150ms ease;
+        }
+
+        .sidebar-toggle:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .external-toggle {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 1030;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 150ms ease, color 150ms ease, opacity 200ms ease;
+        }
+
+        .external-toggle.visible {
+            display: flex;
+        }
+
+        .external-toggle:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        /* New Conversation button */
+        .btn-new-conversation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            margin: 4px 12px 8px;
+            width: calc(100% - 24px);
+            background: transparent;
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 150ms ease, border-color 150ms ease;
+        }
+
+        .btn-new-conversation:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--border-strong);
+        }
+
+        /* Navigation links */
+        .sidebar-nav {
+            padding: 4px 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            margin-bottom: 2px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 450;
+            cursor: pointer;
+            position: relative;
+            transition: background-color 150ms ease, color 150ms ease;
+        }
+
+        .nav-item:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            color: var(--brand-primary);
+            background-color: rgba(53,88,114,0.08);
+            font-weight: 550;
+            border-left: 3px solid var(--brand-primary);
+            padding-left: 9px;
+        }
+
+        [data-theme="dark"] .nav-item.active {
+            color: var(--brand-secondary);
+            background-color: rgba(122,170,206,0.1);
+            border-left-color: var(--brand-secondary);
+        }
+
+        .nav-item .badge {
+            background-color: var(--error);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-left: auto;
+        }
+
+        .nav-item i {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background-color: var(--border-default);
+            margin: 8px 12px;
+        }
+
+        /* Recent conversations list */
+        .sidebar-recent {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 12px;
+            min-height: 0;
+        }
+
+        .sidebar-recent::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-recent::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-recent::-webkit-scrollbar-thumb {
+            background: var(--border-strong);
+            border-radius: 4px;
+        }
+
+        .recent-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary);
+            padding: 8px 12px 6px;
+        }
+
+        .recent-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            cursor: pointer;
+            position: relative;
+            transition: background-color 150ms ease;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .recent-item:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .recent-item.selected {
+            background-color: rgba(53,88,114,0.08);
+        }
+
+        .recent-item-title {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .recent-item-menu {
+            opacity: 0;
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            transition: opacity 150ms ease, background-color 150ms ease;
+            flex-shrink: 0;
+        }
+
+        .recent-item:hover .recent-item-menu {
+            opacity: 1;
+        }
+
+        .recent-item-menu:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        /* User section */
+        .sidebar-user {
+            border-top: 1px solid var(--border-default);
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--brand-primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 550;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .user-subtitle {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            line-height: 1.3;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 150ms ease, color 150ms ease;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        /* ===== Main Content ===== */
+        .main-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        /* Search bar */
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 11px 16px 11px 44px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .search-input:focus {
+            border-color: var(--brand-secondary);
+            box-shadow: 0 0 0 3px rgba(122,170,206,0.15);
+        }
+
+        /* Conversation counter */
+        .conversation-counter {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        /* Conversation list */
+        .conversation-list-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-default);
+        }
+
+        .conversation-list-header .form-check-input {
+            margin: 0;
+        }
+
+        .conversation-list-header span {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: var(--text-tertiary);
+        }
+
+        .conversation-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--border-default);
+            transition: background-color 150ms ease;
+            position: relative;
+        }
+
+        .conversation-row:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .conversation-row .form-check-input {
+            margin-top: 4px;
+            flex-shrink: 0;
+        }
+
+        .form-check-input {
+            width: 16px;
+            height: 16px;
+            border: 1.5px solid var(--border-default);
+            background-color: transparent;
+            cursor: pointer;
+            transition: border-color 150ms ease, background-color 150ms ease;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--brand-primary);
+            border-color: var(--brand-primary);
+        }
+
+        .form-check-input:focus {
+            box-shadow: 0 0 0 2px rgba(53,88,114,0.2);
+        }
+
+        .conversation-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .conversation-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-decoration: none;
+            cursor: pointer;
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: color 150ms ease;
+        }
+
+        .conversation-title:hover {
+            color: var(--brand-primary);
+        }
+
+        [data-theme="dark"] .conversation-title:hover {
+            color: var(--brand-secondary);
+        }
+
+        .conversation-title-edit {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            border: 1px solid var(--brand-secondary);
+            border-radius: 4px;
+            padding: 2px 6px;
+            outline: none;
+            width: 100%;
+            max-width: 500px;
+            font-family: inherit;
+        }
+
+        .conversation-snippet {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 600px;
+        }
+
+        .conversation-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .conversation-time {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            white-space: nowrap;
+        }
+
+        .conversation-menu-btn {
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 150ms ease, background-color 150ms ease, color 150ms ease;
+        }
+
+        .conversation-row:hover .conversation-menu-btn {
+            opacity: 1;
+        }
+
+        .conversation-menu-btn:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        /* Load more */
+        .load-more-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px 0 8px;
+        }
+
+        .btn-load-more {
+            padding: 9px 28px;
+            background: transparent;
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 150ms ease, border-color 150ms ease;
+        }
+
+        .btn-load-more:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--border-strong);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-tertiary);
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .empty-state p {
+            font-size: 15px;
+            margin: 0;
+        }
+
+        /* ===== Bulk Action Bar ===== */
+        .bulk-action-bar {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: 12px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            z-index: 1050;
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 200ms ease, opacity 200ms ease;
+        }
+
+        .bulk-action-bar.visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .bulk-action-bar .selected-count {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .btn-bulk-delete {
+            padding: 7px 18px;
+            background-color: var(--error);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 550;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 150ms ease;
+        }
+
+        .btn-bulk-delete:hover {
+            background-color: #b91c1c;
+        }
+
+        /* ===== Dropdown Menu ===== */
+        .dropdown-menu {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: 10px;
+            padding: 4px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            min-width: 160px;
+        }
+
+        .dropdown-item {
+            font-size: 13px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            color: var(--text-primary);
+            transition: background-color 150ms ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .dropdown-item.text-danger {
+            color: var(--error) !important;
+        }
+
+        .dropdown-item.text-danger:hover {
+            background-color: rgba(220,38,38,0.06);
+        }
+
+        /* ===== Modal ===== */
+        .modal-content {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: 14px;
+            color: var(--text-primary);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid var(--border-default);
+            padding: 16px 20px;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-default);
+            padding: 14px 20px;
+        }
+
+        .btn-modal-cancel {
+            padding: 8px 18px;
+            background: transparent;
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 150ms ease, border-color 150ms ease;
+        }
+
+        .btn-modal-cancel:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--border-strong);
+        }
+
+        .btn-modal-delete {
+            padding: 8px 18px;
+            background-color: var(--error);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 550;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 150ms ease;
+        }
+
+        .btn-modal-delete:hover {
+            background-color: #b91c1c;
+        }
+
+        .modal .btn-close {
+            filter: none;
+            opacity: 0.5;
+        }
+
+        [data-theme="dark"] .modal .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        /* ===== Toast ===== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1090;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 8px;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .custom-toast {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: 10px;
+            padding: 12px 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            font-size: 13px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 260px;
+            animation: toastSlideUp 200ms ease forwards;
+            border-left: 3px solid var(--success);
+            pointer-events: auto;
+        }
+
+        .custom-toast.error {
+            border-left-color: var(--error);
+        }
+
+        .custom-toast.success {
+            border-left-color: var(--success);
+        }
+
+        .custom-toast i {
+            font-size: 16px;
+        }
+
+        .custom-toast.success i {
+            color: var(--success);
+        }
+
+        .custom-toast.error i {
+            color: var(--error);
+        }
+
+        @keyframes toastSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes toastFadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 1023px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content-wrapper {
+                margin-left: 0 !important;
+            }
+
+            .external-toggle {
+                display: flex !important;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .main-content {
+                padding: 20px 16px;
+            }
+
+            .page-header h1 {
+                font-size: 20px;
+            }
+
+            .conversation-snippet {
+                max-width: 260px;
+            }
+
+            .conversation-meta {
+                margin-top: 6px;
+            }
+        }
+
+        /* Sidebar context menu */
+        .sidebar-context-menu {
+            position: fixed;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-default);
+            border-radius: 10px;
+            padding: 4px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            min-width: 140px;
+            z-index: 1060;
+            display: none;
+        }
+
+        .sidebar-context-menu.show {
+            display: block;
+        }
+
+        .sidebar-context-menu button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            background: none;
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background-color 150ms ease;
+        }
+
+        .sidebar-context-menu button:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .sidebar-context-menu button.text-danger {
+            color: var(--error);
+        }
+
+        .sidebar-context-menu button.text-danger:hover {
+            background-color: rgba(220,38,38,0.06);
+        }
+
+        /* Search highlight */
+        mark {
+            background-color: rgba(122,170,206,0.25);
+            color: inherit;
+            padding: 0 1px;
+            border-radius: 2px;
+        }
+
+        /* Modal backdrop override for dark mode */
+        [data-theme="dark"] .modal-backdrop {
+            --bs-backdrop-bg: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-brand">Enterprise GPT</span>
+                <button class="sidebar-toggle" id="sidebarCloseBtn" title="Toggle sidebar">
+                    <i class="bi bi-layout-sidebar" style="font-size:18px;"></i>
+                </button>
+            </div>
+
+            <!-- New Conversation button -->
+            <button class="btn-new-conversation" onclick="window.location.href='index.html'">
+                <i class="bi bi-plus-lg"></i>
+                New Conversation
+            </button>
+
+            <!-- Nav links -->
+            <nav class="sidebar-nav">
+                <a class="nav-item" href="index.html">
+                    <i class="bi bi-chat-dots"></i>
+                    Chat
+                </a>
+                <a class="nav-item active" href="conversations.html">
+                    <i class="bi bi-clock-history"></i>
+                    Conversations
+                </a>
+                <a class="nav-item" href="#">
+                    <i class="bi bi-bell"></i>
+                    Notifications
+                    <span class="badge">3</span>
+                </a>
+                <a class="nav-item" href="#">
+                    <i class="bi bi-gear"></i>
+                    Admin
+                </a>
+            </nav>
+
+            <div class="nav-divider"></div>
+
+            <!-- Recent conversations -->
+            <div class="sidebar-recent" id="sidebarRecent">
+                <div class="recent-label">Recent</div>
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- User section -->
+            <div class="sidebar-user">
+                <div class="user-avatar">RR</div>
+                <div class="user-info">
+                    <div class="user-name">Rodrigo Rojas</div>
+                    <div class="user-subtitle">Enterprise AI</div>
+                </div>
+                <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+                    <i class="bi bi-sun" style="font-size:16px;"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- External sidebar toggle (shown when sidebar is collapsed) -->
+        <button class="external-toggle" id="externalToggle" title="Open sidebar">
+            <i class="bi bi-layout-sidebar" style="font-size:18px;"></i>
+        </button>
+
+        <!-- Main content -->
+        <div class="main-content-wrapper" id="mainContentWrapper">
+            <div class="main-content">
+                <!-- Page header -->
+                <div class="page-header">
+                    <h1>Conversations</h1>
+                </div>
+
+                <!-- Search bar -->
+                <div class="search-container">
+                    <i class="bi bi-search"></i>
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search conversations...">
+                </div>
+
+                <!-- Conversation counter -->
+                <div class="conversation-counter" id="conversationCounter"></div>
+
+                <!-- Select all header -->
+                <div class="conversation-list-header">
+                    <input type="checkbox" class="form-check-input" id="selectAllCheckbox" title="Select all">
+                    <span>Title</span>
+                </div>
+
+                <!-- Conversation list -->
+                <div id="conversationList"></div>
+
+                <!-- Load more -->
+                <div class="load-more-container" id="loadMoreContainer" style="display:none;">
+                    <button class="btn-load-more" id="loadMoreBtn">Load More</button>
+                </div>
+
+                <!-- Empty state -->
+                <div class="empty-state" id="emptyState" style="display:none;">
+                    <i class="bi bi-chat-square-text"></i>
+                    <p>No conversations found.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk action bar -->
+    <div class="bulk-action-bar" id="bulkActionBar">
+        <span class="selected-count" id="selectedCount">0 selected</span>
+        <button class="btn-bulk-delete" id="bulkDeleteBtn">Delete Selected</button>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Conversation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="deleteModalBody">
+                    Are you sure you want to delete this conversation?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-modal-delete" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk delete confirmation modal -->
+    <div class="modal fade" id="bulkDeleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Conversations</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="bulkDeleteModalBody">
+                    Are you sure you want to delete the selected conversations?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-modal-delete" id="confirmBulkDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar context menu -->
+    <div class="sidebar-context-menu" id="sidebarContextMenu">
+        <button id="sidebarCtxRenameBtn"><i class="bi bi-pencil"></i> Rename</button>
+        <button class="text-danger" id="sidebarCtxDeleteBtn"><i class="bi bi-trash3"></i> Delete</button>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        // ===== Mock Data (30 conversations, varied topics, timestamps spanning 30 days) =====
+        var MOCK_CONVERSATIONS = [
+            { id: 'c1', title: 'Python REST API error handling best practices', snippet: 'You should use structured exception handling with proper HTTP status codes and consistent error response bodies...', updatedAt: new Date(Date.now() - 1000 * 60 * 25) },
+            { id: 'c2', title: 'Q4 revenue forecast analysis', snippet: 'Based on the current trends, the projected revenue for Q4 is approximately $4.2M with a 12% growth rate...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 2) },
+            { id: 'c3', title: 'React component lifecycle optimization', snippet: 'To optimize re-renders, you should use React.memo for functional components and implement shouldComponentUpdate...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 5) },
+            { id: 'c4', title: 'Docker multi-stage build configuration', snippet: 'Here is a multi-stage Dockerfile that separates the build and runtime stages to reduce final image size...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 8) },
+            { id: 'c5', title: 'Marketing campaign strategy for product launch', snippet: 'I recommend a phased approach starting with teaser content two weeks before the official announcement...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 12) },
+            { id: 'c6', title: 'SQL query performance tuning', snippet: 'The main bottleneck is the missing index on the orders table. Adding a composite index on customer_id and created_at...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 18) },
+            { id: 'c7', title: 'Machine learning model evaluation metrics', snippet: 'For your classification task, you should focus on precision-recall rather than accuracy due to class imbalance...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24) },
+            { id: 'c8', title: 'Kubernetes pod scaling configuration', snippet: 'Set the HPA with a minimum of 3 replicas and maximum of 20, targeting 70% CPU utilization as the threshold...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 30) },
+            { id: 'c9', title: 'Annual budget planning template', snippet: 'The template includes sections for operational expenses, capital expenditures, personnel costs, and contingency...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 36) },
+            { id: 'c10', title: 'TypeScript generics deep dive', snippet: 'Generics allow you to create reusable components. Here is how to create a typed repository pattern...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 48) },
+            { id: 'c11', title: 'Customer onboarding flow redesign', snippet: 'The new flow reduces steps from 7 to 4 by combining profile setup and preferences into a single screen...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 60) },
+            { id: 'c12', title: 'AWS Lambda cold start optimization', snippet: 'Provisioned concurrency can eliminate cold starts. Configure it for your most latency-sensitive functions...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 72) },
+            { id: 'c13', title: 'Data pipeline architecture with Apache Kafka', snippet: 'Using Kafka as the central event bus, you can connect producers and consumers with guaranteed ordering...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 96) },
+            { id: 'c14', title: 'Employee engagement survey results analysis', snippet: 'The overall satisfaction score increased from 7.2 to 8.1. Key improvement areas include work-life balance...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 120) },
+            { id: 'c15', title: 'Git branching strategy for microservices', snippet: 'I recommend trunk-based development with short-lived feature branches for each microservice repository...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 144) },
+            { id: 'c16', title: 'CSS Grid vs Flexbox layout comparison', snippet: 'Use CSS Grid for two-dimensional layouts and Flexbox for one-dimensional alignment. Here are the key differences...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 168) },
+            { id: 'c17', title: 'Product roadmap prioritization framework', snippet: 'Using the RICE scoring model: Reach x Impact x Confidence / Effort. Here is how to apply it to your backlog...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 200) },
+            { id: 'c18', title: 'Node.js memory leak debugging guide', snippet: 'Use the --inspect flag and Chrome DevTools heap snapshots to identify retained objects and closure leaks...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 240) },
+            { id: 'c19', title: 'Competitive analysis presentation outline', snippet: 'Slide 1: Market overview. Slide 2: Key competitors. Slide 3: Feature comparison matrix. Slide 4: Pricing...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 280) },
+            { id: 'c20', title: 'GraphQL schema design patterns', snippet: 'Use the Relay connection spec for pagination and implement DataLoader for batching and caching database queries...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 320) },
+            { id: 'c21', title: 'Terraform infrastructure modules refactor', snippet: 'Split the monolithic configuration into reusable modules for networking, compute, storage, and monitoring...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 360) },
+            { id: 'c22', title: 'Sales funnel conversion rate optimization', snippet: 'The biggest drop-off is between demo and proposal stages at 42%. To improve this, implement automated follow-ups...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 400) },
+            { id: 'c23', title: 'Redis caching strategies for web applications', snippet: 'Implement cache-aside pattern with TTL-based expiration. For frequently accessed data, use read-through caching...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 440) },
+            { id: 'c24', title: 'API versioning approach comparison', snippet: 'URL path versioning (v1/v2) is the most common and explicit approach. Header-based versioning is cleaner but harder...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 480) },
+            { id: 'c25', title: 'Team standup meeting format improvements', snippet: 'Instead of the traditional what-I-did format, try focusing on blockers first and then goals for the day...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 520) },
+            { id: 'c26', title: 'CI/CD pipeline with GitHub Actions setup', snippet: 'Here is a complete workflow file that runs tests, builds the Docker image, and deploys to staging on push...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 560) },
+            { id: 'c27', title: 'Data visualization dashboard requirements', snippet: 'The dashboard should include real-time KPI widgets, trend charts, and exportable reports in PDF and CSV formats...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 600) },
+            { id: 'c28', title: 'OAuth 2.0 PKCE flow implementation', snippet: 'For single-page applications, use the Authorization Code flow with PKCE. Generate a code verifier and challenge...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 640) },
+            { id: 'c29', title: 'Quarterly OKR planning session notes', snippet: 'Objective 1: Improve platform reliability to 99.95% uptime. Key Results: reduce P1 incidents by 60%...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 680) },
+            { id: 'c30', title: 'PostgreSQL database migration strategy', snippet: 'Use a blue-green deployment approach with logical replication to minimize downtime during the major version upgrade...', updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 720) }
+        ];
+
+        // ===== State =====
+        var conversations = MOCK_CONVERSATIONS.slice();
+        var visibleCount = 15;
+        var selectedIds = new Set();
+        var searchQuery = '';
+        var deleteTargetId = null;
+        var sidebarContextTarget = null;
+
+        // ===== DOM References =====
+        var sidebar = document.getElementById('sidebar');
+        var sidebarOverlay = document.getElementById('sidebarOverlay');
+        var mainContentWrapper = document.getElementById('mainContentWrapper');
+        var externalToggle = document.getElementById('externalToggle');
+        var sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+        var themeToggle = document.getElementById('themeToggle');
+        var searchInput = document.getElementById('searchInput');
+        var conversationList = document.getElementById('conversationList');
+        var conversationCounter = document.getElementById('conversationCounter');
+        var loadMoreContainer = document.getElementById('loadMoreContainer');
+        var loadMoreBtn = document.getElementById('loadMoreBtn');
+        var emptyState = document.getElementById('emptyState');
+        var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        var bulkActionBar = document.getElementById('bulkActionBar');
+        var selectedCountEl = document.getElementById('selectedCount');
+        var bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        var confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        var confirmBulkDeleteBtn = document.getElementById('confirmBulkDeleteBtn');
+        var toastContainer = document.getElementById('toastContainer');
+        var sidebarRecent = document.getElementById('sidebarRecent');
+        var sidebarContextMenu = document.getElementById('sidebarContextMenu');
+        var sidebarCtxRenameBtn = document.getElementById('sidebarCtxRenameBtn');
+        var sidebarCtxDeleteBtn = document.getElementById('sidebarCtxDeleteBtn');
+
+        var deleteModalEl = document.getElementById('deleteModal');
+        var bulkDeleteModalEl = document.getElementById('bulkDeleteModal');
+        var deleteModal = new bootstrap.Modal(deleteModalEl);
+        var bulkDeleteModal = new bootstrap.Modal(bulkDeleteModalEl);
+
+        // ===== Utilities =====
+        function relativeTime(date) {
+            var now = new Date();
+            var diffMs = now - date;
+            var diffSec = Math.floor(diffMs / 1000);
+            var diffMin = Math.floor(diffSec / 60);
+            var diffHr = Math.floor(diffMin / 60);
+            var diffDay = Math.floor(diffHr / 24);
+
+            if (diffSec < 60) return 'Just now';
+            if (diffMin < 60) return diffMin + (diffMin === 1 ? ' minute ago' : ' minutes ago');
+            if (diffHr < 24) return diffHr + (diffHr === 1 ? ' hour ago' : ' hours ago');
+            if (diffDay < 30) return diffDay + (diffDay === 1 ? ' day ago' : ' days ago');
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function highlightMatch(text, query) {
+            if (!query) return escapeHtml(text);
+            var escaped = escapeHtml(text);
+            var safeQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            var regex = new RegExp('(' + safeQuery + ')', 'gi');
+            return escaped.replace(regex, '<mark>$1</mark>');
+        }
+
+        // ===== Toast Notifications =====
+        function showToast(message, type) {
+            type = type || 'success';
+            var toast = document.createElement('div');
+            toast.className = 'custom-toast ' + type;
+            var iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill';
+            toast.innerHTML = '<i class="bi ' + iconClass + '"></i><span>' + escapeHtml(message) + '</span>';
+            toastContainer.appendChild(toast);
+
+            setTimeout(function() {
+                toast.style.animation = 'toastFadeOut 200ms ease forwards';
+                setTimeout(function() {
+                    if (toast.parentNode) toast.parentNode.removeChild(toast);
+                }, 200);
+            }, 3000);
+        }
+
+        // ===== Theme =====
+        function initTheme() {
+            var saved = localStorage.getItem('egpt-theme');
+            if (saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+            updateThemeIcon();
+        }
+
+        function toggleTheme() {
+            var current = document.documentElement.getAttribute('data-theme');
+            var next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('egpt-theme', next);
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            var theme = document.documentElement.getAttribute('data-theme');
+            var icon = themeToggle.querySelector('i');
+            icon.className = theme === 'dark' ? 'bi bi-moon' : 'bi bi-sun';
+            icon.style.fontSize = '16px';
+        }
+
+        // ===== Sidebar =====
+        function initSidebar() {
+            var collapsed = localStorage.getItem('egpt-sidebar-collapsed') === 'true';
+            var isMobile = window.innerWidth < 1024;
+
+            if (isMobile) {
+                sidebar.classList.remove('collapsed');
+                sidebar.classList.remove('open');
+                mainContentWrapper.classList.add('sidebar-collapsed');
+                externalToggle.classList.add('visible');
+            } else {
+                if (collapsed) {
+                    sidebar.classList.add('collapsed');
+                    mainContentWrapper.classList.add('sidebar-collapsed');
+                    externalToggle.classList.add('visible');
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    mainContentWrapper.classList.remove('sidebar-collapsed');
+                    externalToggle.classList.remove('visible');
+                }
+            }
+        }
+
+        function toggleSidebar() {
+            var isMobile = window.innerWidth < 1024;
+
+            if (isMobile) {
+                if (sidebar.classList.contains('open')) {
+                    closeMobileSidebar();
+                } else {
+                    sidebar.classList.add('open');
+                    sidebarOverlay.classList.add('active');
+                }
+            } else {
+                if (sidebar.classList.contains('collapsed')) {
+                    sidebar.classList.remove('collapsed');
+                    mainContentWrapper.classList.remove('sidebar-collapsed');
+                    externalToggle.classList.remove('visible');
+                    localStorage.setItem('egpt-sidebar-collapsed', 'false');
+                } else {
+                    sidebar.classList.add('collapsed');
+                    mainContentWrapper.classList.add('sidebar-collapsed');
+                    externalToggle.classList.add('visible');
+                    localStorage.setItem('egpt-sidebar-collapsed', 'true');
+                }
+            }
+        }
+
+        function closeMobileSidebar() {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+        }
+
+        // ===== Sidebar Recent Items =====
+        function renderSidebarRecent() {
+            var label = sidebarRecent.querySelector('.recent-label');
+            while (label.nextSibling) {
+                label.nextSibling.remove();
+            }
+
+            var items = conversations.slice(0, 10);
+            items.forEach(function(conv) {
+                var item = document.createElement('div');
+                item.className = 'recent-item';
+                item.setAttribute('data-id', conv.id);
+                item.innerHTML =
+                    '<span class="recent-item-title">' + escapeHtml(conv.title) + '</span>' +
+                    '<button class="recent-item-menu" title="More options"><i class="bi bi-three-dots"></i></button>';
+
+                item.querySelector('.recent-item-title').addEventListener('click', function() {
+                    window.location.href = 'index.html?conversationId=' + conv.id;
+                });
+
+                item.querySelector('.recent-item-menu').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    showSidebarContextMenu(e, conv.id);
+                });
+
+                sidebarRecent.appendChild(item);
+            });
+        }
+
+        // ===== Sidebar Context Menu =====
+        function showSidebarContextMenu(e, convId) {
+            sidebarContextTarget = convId;
+            sidebarContextMenu.style.top = e.clientY + 'px';
+            sidebarContextMenu.style.left = e.clientX + 'px';
+            sidebarContextMenu.classList.add('show');
+
+            setTimeout(function() {
+                var rect = sidebarContextMenu.getBoundingClientRect();
+                if (rect.right > window.innerWidth) {
+                    sidebarContextMenu.style.left = (window.innerWidth - rect.width - 8) + 'px';
+                }
+                if (rect.bottom > window.innerHeight) {
+                    sidebarContextMenu.style.top = (window.innerHeight - rect.height - 8) + 'px';
+                }
+            }, 0);
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!sidebarContextMenu.contains(e.target)) {
+                sidebarContextMenu.classList.remove('show');
+            }
+        });
+
+        sidebarCtxRenameBtn.addEventListener('click', function() {
+            sidebarContextMenu.classList.remove('show');
+            if (!sidebarContextTarget) return;
+            var conv = conversations.find(function(c) { return c.id === sidebarContextTarget; });
+            if (!conv) return;
+            var newTitle = prompt('Rename conversation:', conv.title);
+            if (newTitle && newTitle.trim() && newTitle.trim() !== conv.title) {
+                conv.title = newTitle.trim();
+                renderAll();
+                showToast('Conversation renamed');
+            }
+        });
+
+        sidebarCtxDeleteBtn.addEventListener('click', function() {
+            sidebarContextMenu.classList.remove('show');
+            if (!sidebarContextTarget) return;
+            deleteTargetId = sidebarContextTarget;
+            var conv = conversations.find(function(c) { return c.id === deleteTargetId; });
+            if (!conv) return;
+            document.getElementById('deleteModalBody').innerHTML =
+                'Are you sure you want to delete <strong>&ldquo;' + escapeHtml(conv.title) + '&rdquo;</strong>? This action cannot be undone.';
+            deleteModal.show();
+        });
+
+        // ===== Filtered Conversations =====
+        function getFiltered() {
+            if (!searchQuery) return conversations;
+            var q = searchQuery.toLowerCase();
+            return conversations.filter(function(c) {
+                return c.title.toLowerCase().indexOf(q) !== -1 || c.snippet.toLowerCase().indexOf(q) !== -1;
+            });
+        }
+
+        // ===== Render All =====
+        function renderAll() {
+            renderConversationList();
+            renderSidebarRecent();
+            updateBulkBar();
+        }
+
+        function renderConversationList() {
+            var filtered = getFiltered();
+            var visible = filtered.slice(0, visibleCount);
+            var total = filtered.length;
+
+            // Dispose existing tooltips
+            conversationList.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+                var tip = bootstrap.Tooltip.getInstance(el);
+                if (tip) tip.dispose();
+            });
+
+            conversationList.innerHTML = '';
+
+            if (total === 0) {
+                emptyState.style.display = 'block';
+                loadMoreContainer.style.display = 'none';
+                conversationCounter.textContent = searchQuery ? 'No conversations match your search' : '';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            // Counter
+            var showing = Math.min(visibleCount, total);
+            conversationCounter.textContent = 'Showing ' + showing + ' of ' + total + ' conversations';
+
+            // Build rows
+            visible.forEach(function(conv) {
+                var row = document.createElement('div');
+                row.className = 'conversation-row';
+                row.setAttribute('data-id', conv.id);
+
+                var isChecked = selectedIds.has(conv.id);
+                var isoDate = conv.updatedAt.toISOString();
+
+                row.innerHTML =
+                    '<input type="checkbox" class="form-check-input conv-checkbox" ' + (isChecked ? 'checked' : '') + ' data-id="' + conv.id + '">' +
+                    '<div class="conversation-body">' +
+                        '<a class="conversation-title" href="index.html?conversationId=' + conv.id + '" title="' + escapeHtml(conv.title) + '">' +
+                            highlightMatch(conv.title, searchQuery) +
+                        '</a>' +
+                        '<div class="conversation-snippet">' + highlightMatch(conv.snippet, searchQuery) + '</div>' +
+                    '</div>' +
+                    '<div class="conversation-meta">' +
+                        '<span class="conversation-time" data-bs-toggle="tooltip" data-bs-placement="top" title="' + isoDate + '">' + relativeTime(conv.updatedAt) + '</span>' +
+                        '<div class="dropdown">' +
+                            '<button class="conversation-menu-btn" data-bs-toggle="dropdown" aria-expanded="false">' +
+                                '<i class="bi bi-three-dots-vertical"></i>' +
+                            '</button>' +
+                            '<ul class="dropdown-menu dropdown-menu-end">' +
+                                '<li><a class="dropdown-item" href="index.html?conversationId=' + conv.id + '"><i class="bi bi-box-arrow-up-right"></i> Open</a></li>' +
+                                '<li><button class="dropdown-item rename-btn" data-id="' + conv.id + '"><i class="bi bi-pencil"></i> Rename</button></li>' +
+                                '<li><button class="dropdown-item text-danger delete-btn" data-id="' + conv.id + '"><i class="bi bi-trash3"></i> Delete</button></li>' +
+                            '</ul>' +
+                        '</div>' +
+                    '</div>';
+
+                conversationList.appendChild(row);
+            });
+
+            // Load more button
+            if (visibleCount < total) {
+                loadMoreContainer.style.display = 'flex';
+            } else {
+                loadMoreContainer.style.display = 'none';
+            }
+
+            // Init tooltips
+            conversationList.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+                new bootstrap.Tooltip(el);
+            });
+
+            // Bind row events
+            bindRowEvents();
+            updateSelectAllState();
+        }
+
+        function bindRowEvents() {
+            // Checkbox change
+            conversationList.querySelectorAll('.conv-checkbox').forEach(function(cb) {
+                cb.addEventListener('change', function() {
+                    var id = this.getAttribute('data-id');
+                    if (this.checked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
+                    updateBulkBar();
+                    updateSelectAllState();
+                });
+            });
+
+            // Rename via dropdown
+            conversationList.querySelectorAll('.rename-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = this.getAttribute('data-id');
+                    startInlineRename(id);
+                });
+            });
+
+            // Delete via dropdown
+            conversationList.querySelectorAll('.delete-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = this.getAttribute('data-id');
+                    deleteTargetId = id;
+                    var conv = conversations.find(function(c) { return c.id === id; });
+                    if (conv) {
+                        document.getElementById('deleteModalBody').innerHTML =
+                            'Are you sure you want to delete <strong>&ldquo;' + escapeHtml(conv.title) + '&rdquo;</strong>? This action cannot be undone.';
+                    }
+                    deleteModal.show();
+                });
+            });
+        }
+
+        // ===== Inline Rename =====
+        function startInlineRename(convId) {
+            var row = conversationList.querySelector('.conversation-row[data-id="' + convId + '"]');
+            if (!row) return;
+            var titleEl = row.querySelector('.conversation-title');
+            if (!titleEl) return;
+            var conv = conversations.find(function(c) { return c.id === convId; });
+            if (!conv) return;
+
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'conversation-title-edit';
+            input.value = conv.title;
+            titleEl.replaceWith(input);
+            input.focus();
+            input.select();
+
+            var committed = false;
+
+            function commit() {
+                if (committed) return;
+                committed = true;
+                var val = input.value.trim();
+                if (val && val !== conv.title) {
+                    conv.title = val;
+                    showToast('Conversation renamed');
+                }
+                renderAll();
+            }
+
+            input.addEventListener('blur', commit);
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    committed = true;
+                    renderAll();
+                }
+            });
+        }
+
+        // ===== Select All =====
+        function updateSelectAllState() {
+            var filtered = getFiltered();
+            var visible = filtered.slice(0, visibleCount);
+            if (visible.length === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+                return;
+            }
+            var allChecked = visible.every(function(c) { return selectedIds.has(c.id); });
+            var someChecked = visible.some(function(c) { return selectedIds.has(c.id); });
+
+            if (allChecked) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else if (someChecked) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            }
+        }
+
+        selectAllCheckbox.addEventListener('change', function() {
+            var filtered = getFiltered();
+            var visible = filtered.slice(0, visibleCount);
+            var self = this;
+            if (self.checked) {
+                visible.forEach(function(c) { selectedIds.add(c.id); });
+            } else {
+                visible.forEach(function(c) { selectedIds.delete(c.id); });
+            }
+            renderConversationList();
+            updateBulkBar();
+        });
+
+        // ===== Bulk Action Bar =====
+        function updateBulkBar() {
+            if (selectedIds.size > 0) {
+                bulkActionBar.classList.add('visible');
+                selectedCountEl.textContent = selectedIds.size + ' selected';
+            } else {
+                bulkActionBar.classList.remove('visible');
+            }
+        }
+
+        // ===== Single Delete =====
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (!deleteTargetId) return;
+            var conv = conversations.find(function(c) { return c.id === deleteTargetId; });
+            var title = conv ? conv.title : 'conversation';
+            conversations = conversations.filter(function(c) { return c.id !== deleteTargetId; });
+            selectedIds.delete(deleteTargetId);
+            deleteTargetId = null;
+            deleteModal.hide();
+            renderAll();
+            showToast('Deleted "' + title + '"');
+        });
+
+        // ===== Bulk Delete =====
+        bulkDeleteBtn.addEventListener('click', function() {
+            var count = selectedIds.size;
+            document.getElementById('bulkDeleteModalBody').innerHTML =
+                'Are you sure you want to delete <strong>' + count + ' conversation' + (count !== 1 ? 's' : '') + '</strong>? This action cannot be undone.';
+            bulkDeleteModal.show();
+        });
+
+        confirmBulkDeleteBtn.addEventListener('click', function() {
+            var count = selectedIds.size;
+            conversations = conversations.filter(function(c) { return !selectedIds.has(c.id); });
+            selectedIds.clear();
+            bulkDeleteModal.hide();
+            renderAll();
+            showToast('Deleted ' + count + ' conversation' + (count !== 1 ? 's' : ''));
+        });
+
+        // ===== Search =====
+        var searchTimer;
+        searchInput.addEventListener('input', function() {
+            var self = this;
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function() {
+                searchQuery = self.value.trim();
+                visibleCount = 15;
+                selectedIds.clear();
+                renderAll();
+            }, 80);
+        });
+
+        // ===== Load More =====
+        loadMoreBtn.addEventListener('click', function() {
+            visibleCount += 15;
+            renderAll();
+        });
+
+        // ===== Sidebar Events =====
+        sidebarCloseBtn.addEventListener('click', function() {
+            var isMobile = window.innerWidth < 1024;
+            if (isMobile) {
+                closeMobileSidebar();
+            } else {
+                toggleSidebar();
+            }
+        });
+
+        externalToggle.addEventListener('click', function() {
+            var isMobile = window.innerWidth < 1024;
+            if (isMobile) {
+                sidebar.classList.add('open');
+                sidebarOverlay.classList.add('active');
+            } else {
+                toggleSidebar();
+            }
+        });
+
+        sidebarOverlay.addEventListener('click', closeMobileSidebar);
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // ===== Window Resize =====
+        var resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(initSidebar, 150);
+        });
+
+        // ===== Initialize =====
+        initTheme();
+        initSidebar();
+        renderAll();
+    })();
+    </script>
+</body>
+</html>
