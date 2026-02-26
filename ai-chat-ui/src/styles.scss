@@ -61,6 +61,16 @@ app-home {
   overflow: hidden;
 }
 
+app-home,
+app-conversations,
+app-admin {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* Custom Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 6px;
