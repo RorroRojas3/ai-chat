@@ -53,7 +53,7 @@
                 <!-- Model Dropdown -->
                 <div class="dropdown">
                   <button
-                    class="btn btn-primary dropdown-toggle"
+                    class="btn btn-brand-primary dropdown-toggle"
                     type="button"
                     id="dropdownMenuButton"
                     data-bs-toggle="dropdown"
@@ -112,7 +112,7 @@
                 <!-- MCP Dropdown (Multi-select) -->
                 <div class="dropdown">
                   <button
-                    class="btn btn-primary dropdown-toggle"
+                    class="btn btn-brand-primary dropdown-toggle"
                     type="button"
                     id="mcpDropdownButton"
                     data-bs-toggle="dropdown"
@@ -168,7 +168,7 @@
                 @if (isFileAttachmentAllowed()) {
                   <button
                     type="button"
-                    class="btn btn-primary"
+                    class="btn btn-brand-primary"
                     (click)="fileInput.click()"
                     [attr.title]="
                       'Attach files - Allowed types: ' + getAcceptedFileTypes()
@@ -187,7 +187,7 @@
                 ) {
                   <div class="dropdown">
                     <button
-                      class="btn btn-primary dropdown-toggle"
+                      class="btn btn-brand-primary dropdown-toggle"
                       type="button"
                       id="downloadDropdown"
                       data-bs-toggle="dropdown"
@@ -226,7 +226,7 @@
                 @if (!storeService.isStreaming()) {
                   <button
                     type="submit"
-                    class="btn btn-lg btn-primary"
+                    class="btn btn-lg btn-brand-primary"
                     (click)="onClickCreateConversation()"
                     title="Send message"
                     [attr.aria-label]="'Send message'"
@@ -236,7 +236,7 @@
                 } @else {
                   <button
                     type="button"
-                    class="btn btn-lg btn-primary"
+                    class="btn btn-lg btn-brand-primary"
                     (click)="onClickStopConversation()"
                     title="Stop message"
                     [attr.aria-label]="'Stop message'"
