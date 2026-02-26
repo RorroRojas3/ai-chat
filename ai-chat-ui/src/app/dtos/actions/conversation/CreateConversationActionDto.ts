@@ -1,4 +1,4 @@
-export class CreateSessionActionDto {
+export class CreateConversationActionDto {
   projectId?: string;
 
   constructor(projectId?: string) {

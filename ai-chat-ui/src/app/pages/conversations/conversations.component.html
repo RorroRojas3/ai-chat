@@ -1,4 +1,4 @@
-<div class="container-fluid sessions-container">
+<div class="container-fluid conversations-container">
   <div class="row h-100">
     <div class="col-12 d-flex flex-column h-100 p-4">
       <div class="d-flex justify-content-between align-items-center mb-4">
@@ -6,7 +6,7 @@
         <button
           type="button"
           class="btn btn-primary"
-          (click)="onClickCreateNewSession()"
+          (click)="onClickCreateNewConversation()"
         >
           <i class="bi bi-plus-circle"></i>&nbsp;New Chat
         </button>
@@ -14,29 +14,29 @@
 
       <!-- Search functionality -->
       <div class="mb-4">
-        <label for="sessions-search" class="visually-hidden"
-          >Search chat sessions</label
+        <label for="conversations-search" class="visually-hidden"
+          >Search chat conversations</label
         >
         <div class="input-group">
           <span
-            class="input-group-text sessions-search__icon"
+            class="input-group-text conversations-search__icon"
             aria-hidden="true"
           >
             <i class="bi bi-search"></i>
           </span>
           <input
-            id="sessions-search"
+            id="conversations-search"
             type="text"
-            class="form-control sessions-search__input"
+            class="form-control conversations-search__input"
             placeholder="Search chats..."
-            [value]="storeService.pageSessionSearchFilter()"
+            [value]="storeService.pageConversationSearchFilter()"
             (input)="onSearchChange($event)"
-            aria-label="Search chat sessions"
-            aria-describedby="sessions-search-help"
+            aria-label="Search chat conversations"
+            aria-describedby="conversations-search-help"
           />
-          @if (storeService.pageSessionSearchFilter()) {
+          @if (storeService.pageConversationSearchFilter()) {
           <button
-            class="btn btn-outline-secondary sessions-search__clear"
+            class="btn btn-outline-secondary conversations-search__clear"
             type="button"
             (click)="clearSearch()"
             aria-label="Clear search"
@@ -45,29 +45,29 @@
           </button>
           }
         </div>
-        <span id="sessions-search-help" class="visually-hidden"
-          >Type to search your chat sessions by name or content</span
+        <span id="conversations-search-help" class="visually-hidden"
+          >Type to search your chat conversations by name or content</span
         >
       </div>
 
       <!-- Total count display -->
       <div class="mb-2 d-flex justify-content-between align-items-center">
         <p class="text-muted mb-0 d-flex align-items-center">
-          @if (storeService.pageSessionSearchFilter()) {
+          @if (storeService.pageConversationSearchFilter()) {
           <i class="bi bi-search me-2"></i
-          >{{ storeService.pageSessionTotalCount() }} chats matching "{{
-            storeService.pageSessionSearchFilter()
+          >{{ storeService.pageConversationTotalCount() }} chats matching "{{
+            storeService.pageConversationSearchFilter()
           }}" } @else { <i class="bi bi-chat-text me-2"></i
-          >{{ storeService.pageSessionTotalCount() }} chats with RR-GPT }
+          >{{ storeService.pageConversationTotalCount() }} chats with RR-GPT }
         </p>
 
-        <!-- Action buttons - shown when sessions are selected -->
-        @if (selectedSessionIds.length > 1) {
+        <!-- Action buttons - shown when conversations are selected -->
+        @if (selectedConversationIds.length > 1) {
         <div class="d-flex align-items-center gap-2">
           <button
             type="button"
             class="btn btn-primary d-flex align-items-center"
-            (click)="deselectAllSessions()"
+            (click)="deselectAllConversations()"
             title="Deselect all"
           >
             <i class="bi bi-x-circle me-2"></i>
@@ -76,8 +76,8 @@
           <button
             type="button"
             class="btn btn-primary d-flex align-items-center"
-            (click)="onDeleteSelectedSessions()"
-            title="Delete selected sessions"
+            (click)="onDeleteSelectedConversations()"
+            title="Delete selected conversations"
           >
             <i class="bi bi-trash"></i>
           </button>
@@ -85,49 +85,49 @@
         }
       </div>
 
-      <!-- Sessions list with scrollable container -->
-      <div class="sessions-list-container mb-5">
-        <div class="sessions-list pe-2" role="list" aria-label="Chat sessions">
-          @if (storeService.pageIsSessionSearching()) {
+      <!-- Conversations list with scrollable container -->
+      <div class="conversations-list-container mb-5">
+        <div class="conversations-list pe-2" role="list" aria-label="Chat conversations">
+          @if (storeService.pageIsConversationSearching()) {
           <div class="alert alert-info" role="status" aria-live="polite">
             <i class="bi bi-search me-2"></i>
             Searching...
           </div>
-          } @else { @if (storeService.pageSessions().length > 0) {
+          } @else { @if (storeService.pageConversations().length > 0) {
           <ul class="list-group">
-            @for (session of storeService.pageSessions(); track
-            trackBySessionId($index, session)) {
+            @for (conversation of storeService.pageConversations(); track
+            trackByConversationId($index, conversation)) {
             <li
-              class="mb-2 p-3 list-group-item list-group-item-action sessions-list__item rounded-3"
-              (mouseenter)="onSessionMouseEnter(session.id)"
-              (mouseleave)="onSessionMouseLeave()"
+              class="mb-2 p-3 list-group-item list-group-item-action conversations-list__item rounded-3"
+              (mouseenter)="onConversationMouseEnter(conversation.id)"
+              (mouseleave)="onConversationMouseLeave()"
               role="listitem"
             >
               <div
                 class="d-flex w-100 justify-content-between align-items-start"
               >
                 <!-- Checkbox - visible on hover or when selections exist -->
-                <div class="sessions-list__checkbox-container">
-                  @if (shouldShowCheckbox(session.id)) {
-                  <div class="form-check sessions-list__checkbox">
+                <div class="conversations-list__checkbox-container">
+                  @if (shouldShowCheckbox(conversation.id)) {
+                  <div class="form-check conversations-list__checkbox">
                     <input
                       class="form-check-input"
                       type="checkbox"
-                      [id]="'checkbox-' + session.id"
-                      [checked]="isSessionSelected(session.id)"
-                      (change)="toggleSessionSelection(session.id, $event)"
+                      [id]="'checkbox-' + conversation.id"
+                      [checked]="isConversationSelected(conversation.id)"
+                      (change)="toggleConversationSelection(conversation.id, $event)"
                       (click)="$event.stopPropagation()"
-                      [attr.aria-label]="'Select session: ' + session.name"
+                      [attr.aria-label]="'Select conversation: ' + conversation.name"
                     />
                   </div>
                   }
                 </div>
 
-                <div class="flex-grow-1 sessions-list__content">
-                  <h5 class="mb-2 sessions-list__title">
-                    {{ session.name }}
+                <div class="flex-grow-1 conversations-list__content">
+                  <h5 class="mb-2 conversations-list__title">
+                    {{ conversation.name }}
                   </h5>
-                  <div class="sessions-list__dates">
+                  <div class="conversations-list__dates">
                     <small
                       class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-1 gap-md-0"
                     >
@@ -137,8 +137,8 @@
                           aria-hidden="true"
                         ></i>
                         <strong>Modified:</strong>
-                        <time [attr.datetime]="session.dateModified">{{
-                          session.dateModified | date : "MMM d, y, h:mm a"
+                        <time [attr.datetime]="conversation.dateModified">{{
+                          conversation.dateModified | date : "MMM d, y, h:mm a"
                         }}</time>
                       </span>
                       <span class="ms-md-3">
@@ -147,20 +147,20 @@
                           aria-hidden="true"
                         ></i>
                         <strong>Created:</strong>
-                        <time [attr.datetime]="session.dateCreated">{{
-                          session.dateCreated | date : "MMM d, y, h:mm a"
+                        <time [attr.datetime]="conversation.dateCreated">{{
+                          conversation.dateCreated | date : "MMM d, y, h:mm a"
                         }}</time>
                       </span>
                     </small>
                   </div>
                 </div>
-                @if (selectedSessionIds.length <= 1) {
+                @if (selectedConversationIds.length <= 1) {
                 <div class="dropdown ms-2">
                   <button
                     class="btn btn-link p-1 text-white dropdown-toggle"
                     type="button"
-                    [attr.id]="'dropdownMenu-' + session.id"
-                    [attr.aria-label]="'Actions for ' + session.name"
+                    [attr.id]="'dropdownMenu-' + conversation.id"
+                    [attr.aria-label]="'Actions for ' + conversation.name"
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
                     (click)="$event.stopPropagation()"
@@ -169,14 +169,14 @@
                   </button>
                   <ul
                     class="dropdown-menu"
-                    [attr.aria-labelledby]="'dropdownMenu-' + session.id"
+                    [attr.aria-labelledby]="'dropdownMenu-' + conversation.id"
                   >
                     <li>
                       <button
                         type="button"
                         class="dropdown-item"
                         (click)="
-                          onRenameSession(session.id); $event.stopPropagation()
+                          onRenameConversation(conversation.id); $event.stopPropagation()
                         "
                       >
                         <i class="bi bi-pencil me-2"></i>Rename
@@ -187,7 +187,7 @@
                         type="button"
                         class="dropdown-item"
                         (click)="
-                          onClickSession(session.id); $event.stopPropagation()
+                          onClickConversation(conversation.id); $event.stopPropagation()
                         "
                       >
                         <i class="bi bi-chat-dots me-2"></i>Go to chat
@@ -198,7 +198,7 @@
                         type="button"
                         class="dropdown-item"
                         (click)="
-                          onDeleteSession(session.id); $event.stopPropagation()
+                          onDeleteConversation(conversation.id); $event.stopPropagation()
                         "
                       >
                         <i class="bi bi-trash me-2"></i>Delete
@@ -213,16 +213,16 @@
           </ul>
 
           <!-- Show More Button -->
-          @if (storeService.pageSessionHasMore() &&
-          !storeService.pageIsSessionSearching()) {
+          @if (storeService.pageConversationHasMore() &&
+          !storeService.pageIsConversationSearching()) {
           <div class="d-flex justify-content-center mt-1">
             <button
               type="button"
-              class="btn btn-primary sessions-load-more"
-              (click)="loadMoreSessions()"
+              class="btn btn-primary conversations-load-more"
+              (click)="loadMoreConversations()"
               [disabled]="isLoadingMore"
               [attr.aria-label]="
-                isLoadingMore ? 'Loading more sessions' : 'Show more sessions'
+                isLoadingMore ? 'Loading more conversations' : 'Show more conversations'
               "
             >
               @if (isLoadingMore) {
@@ -238,16 +238,16 @@
           </div>
           } } @else {
           <div
-            class="alert alert-secondary sessions-list__no-results"
+            class="alert alert-secondary conversations-list__no-results"
             role="status"
             aria-live="polite"
           >
-            @if (storeService.pageSessionSearchFilter()) {
+            @if (storeService.pageConversationSearchFilter()) {
             <i class="bi bi-search me-2"></i>
-            No chats found for "{{ storeService.pageSessionSearchFilter() }}" }
+            No chats found for "{{ storeService.pageConversationSearchFilter() }}" }
             @else {
             <i class="bi bi-chat-text me-2"></i>
-            No chat sessions available }
+            No conversations available }
           </div>
           } }
         </div>
@@ -256,16 +256,16 @@
   </div>
 </div>
 
-<app-session-delete-modal
+<app-delete-modal
   [show]="showDeleteModal"
-  [sessionCount]="selectedSessionIds.length"
-  (onDelete)="handleDeleteSession()"
+  [conversationCount]="selectedConversationIds.length"
+  (onDelete)="handleDeleteConversation()"
   (onClose)="closeDeleteModal()"
-></app-session-delete-modal>
+></app-delete-modal>
 
-<app-session-rename-modal
+<app-rename-modal
   [show]="showRenameModal"
-  [name]="sessionName"
-  (onRename)="handleRenameSession($event)"
+  [name]="conversationName"
+  (onRename)="handleRenameConversation($event)"
   (onClose)="closeRenameModal()"
-></app-session-rename-modal>
+></app-rename-modal>

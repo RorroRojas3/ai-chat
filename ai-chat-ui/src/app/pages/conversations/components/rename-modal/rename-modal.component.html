@@ -4,33 +4,33 @@
   [style.display]="show() ? 'block' : 'none'"
   tabindex="-1"
   role="dialog"
-  aria-labelledby="renameSessionModalLabel"
+  aria-labelledby="renameConversationModalLabel"
   [attr.aria-hidden]="!show()"
 >
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title fw-bold" id="renameSessionModalLabel">
+        <h5 class="modal-title fw-bold" id="renameConversationModalLabel">
           Rename Chat
         </h5>
       </div>
       <div class="modal-body">
         <div class="mb-3">
-          <label for="sessionNameInput" class="form-label">Chat name</label>
+          <label for="conversationNameInput" class="form-label">Chat name</label>
           <input
             type="text"
             class="form-control"
             [class.is-invalid]="showError()"
-            id="sessionNameInput"
-            [formControl]="sessionName"
+            id="conversationNameInput"
+            [formControl]="conversationName"
             placeholder="Enter chat name"
             [attr.maxlength]="MAX_NAME_LENGTH"
-            aria-describedby="sessionNameHelp sessionNameError"
+            aria-describedby="conversationNameHelp conversationNameError"
             autofocus
           />
-          @if (sessionName.hasError('required') && showError()) {
+          @if (conversationName.hasError('required') && showError()) {
           <div
-            id="sessionNameError"
+            id="conversationNameError"
             class="invalid-feedback"
             role="alert"
             aria-live="polite"
@@ -38,7 +38,7 @@
             Chat name is required.
           </div>
           }
-          <div id="sessionNameHelp" class="form-text">
+          <div id="conversationNameHelp" class="form-text">
             {{ characterCount() }} / {{ MAX_NAME_LENGTH }} characters
           </div>
         </div>
@@ -56,7 +56,7 @@
           type="button"
           class="btn btn-lg btn-primary"
           (click)="handleRename()"
-          [disabled]="sessionName.invalid"
+          [disabled]="conversationName.invalid"
           aria-label="Confirm rename chat"
         >
           Rename

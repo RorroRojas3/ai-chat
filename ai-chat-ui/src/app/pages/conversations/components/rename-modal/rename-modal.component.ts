@@ -3,12 +3,12 @@ import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 
 
 @Component({
-  selector: 'app-session-rename-modal',
+  selector: 'app-rename-modal',
   imports: [ReactiveFormsModule],
-  templateUrl: './session-rename-modal.component.html',
-  styleUrl: './session-rename-modal.component.scss',
+  templateUrl: './rename-modal.component.html',
+  styleUrl: './rename-modal.component.scss',
 })
-export class SessionRenameModalComponent {
+export class RenameModalComponent {
   // Constants
   readonly MAX_NAME_LENGTH = 256;
 
@@ -18,7 +18,7 @@ export class SessionRenameModalComponent {
   onClose = output<void>();
   shouldShow = signal<boolean>(false);
 
-  sessionName = new FormControl('', [
+  conversationName = new FormControl('', [
     Validators.required,
     Validators.minLength(1),
     Validators.maxLength(this.MAX_NAME_LENGTH),
@@ -28,9 +28,9 @@ export class SessionRenameModalComponent {
     // Use effect to respond to input changes
     effect(() => {
       if (this.show()) {
-        this.sessionName.setValue(this.name());
-        this.sessionName.markAsUntouched();
-        this.sessionName.markAsPristine();
+        this.conversationName.setValue(this.name());
+        this.conversationName.markAsUntouched();
+        this.conversationName.markAsPristine();
         setTimeout(() => {
           this.shouldShow.set(true);
         }, 10);
@@ -46,25 +46,25 @@ export class SessionRenameModalComponent {
    */
   showError(): boolean {
     return (
-      this.sessionName.invalid &&
-      (this.sessionName.dirty || this.sessionName.touched)
+      this.conversationName.invalid &&
+      (this.conversationName.dirty || this.conversationName.touched)
     );
   }
 
   /**
-   * Gets the current character count of the trimmed session name.
+   * Gets the current character count of the trimmed conversation name.
    * Returns 0 if the value is empty or null.
    */
   characterCount(): number {
-    return this.sessionName.value?.trim().length || 0;
+    return this.conversationName.value?.trim().length || 0;
   }
 
   /**
-   * Handles the rename action by emitting the trimmed session name value.
+   * Handles the rename action by emitting the trimmed conversation name value.
    */
   handleRename(): void {
-    if (this.sessionName.valid && this.sessionName.value) {
-      this.onRename.emit(this.sessionName.value.trim());
+    if (this.conversationName.valid && this.conversationName.value) {
+      this.onRename.emit(this.conversationName.value.trim());
     }
   }
 
