@@ -2,37 +2,37 @@ using System.Collections.Concurrent;
 
 namespace RR.AI_Chat.Service
 {
-    public interface ISessionLockService
+    public interface IConversationLockService
     {
         /// <summary>
-        /// Checks whether a session is currently locked and busy.
+        /// Checks whether a conversation is currently locked and busy.
         /// </summary>
-        /// <param name="sessionId">The unique identifier of the session to check.</param>
-        /// <returns><c>true</c> if the session is currently locked; otherwise, <c>false</c>.</returns>
-        bool IsSessionBusy(Guid sessionId);
+        /// <param name="conversationId">The unique identifier of the conversation to check.</param>
+        /// <returns><c>true</c> if the conversation is currently locked; otherwise, <c>false</c>.</returns>
+        bool IsConversationBusy(Guid conversationId);
 
         /// <summary>
-        /// Acquires an exclusive lock for the specified session, waiting indefinitely if necessary.
+        /// Acquires an exclusive lock for the specified conversation, waiting indefinitely if necessary.
         /// </summary>
-        /// <param name="sessionId">The unique identifier of the session to lock.</param>
+        /// <param name="conversationId">The unique identifier of the conversation to lock.</param>
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
         /// <returns>A task that represents the asynchronous operation. The task result is an <see cref="IDisposable"/> that releases the lock when disposed.</returns>
         /// <exception cref="OperationCanceledException">Thrown when the operation is cancelled via the <paramref name="cancellationToken"/>.</exception>
-        Task<IDisposable> AcquireLockAsync(Guid sessionId, CancellationToken cancellationToken = default);
+        Task<IDisposable> AcquireLockAsync(Guid conversationId, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Attempts to acquire an exclusive lock for the specified session without waiting.
+        /// Attempts to acquire an exclusive lock for the specified conversation without waiting.
         /// </summary>
-        /// <param name="sessionId">The unique identifier of the session to lock.</param>
+        /// <param name="conversationId">The unique identifier of the conversation to lock.</param>
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
         /// <returns>
         /// A task that represents the asynchronous operation. The task result is an <see cref="IDisposable"/> that releases the lock when disposed, 
         /// or <c>null</c> if the lock could not be acquired immediately.
         /// </returns>
-        Task<IDisposable?> TryAcquireLockAsync(Guid sessionId, CancellationToken cancellationToken = default);
+        Task<IDisposable?> TryAcquireLockAsync(Guid conversationId, CancellationToken cancellationToken = default);
     }
 
-    public class SessionLockService : ISessionLockService, IDisposable
+    public class ConversationLockService : IConversationLockService, IDisposable
     {
         private class LockInfo
         {
@@ -57,44 +57,44 @@ namespace RR.AI_Chat.Service
         }
 
         /// <summary>
-        /// Releases a session lock when disposed.
+        /// Releases a conversation lock when disposed.
         /// </summary>
-        private class LockReleaser(SessionLockService service, Guid sessionId, SemaphoreSlim semaphore) : IDisposable
+        private class LockReleaser(ConversationLockService service, Guid conversationId, SemaphoreSlim semaphore) : IDisposable
         {
             private bool _disposed;
 
             /// <summary>
-            /// Releases the semaphore and updates the last accessed time for the session.
+            /// Releases the semaphore and updates the last accessed time for the conversation.
             /// </summary>
             public void Dispose()
             {
                 if (_disposed) return;
                 _disposed = true;
                 semaphore.Release();
-                service.UpdateLastAccessed(sessionId);
+                service.UpdateLastAccessed(conversationId);
             }
         }
 
-        private readonly ConcurrentDictionary<Guid, LockInfo> _sessionLocks = new();
+        private readonly ConcurrentDictionary<Guid, LockInfo> _conversationLocks = new();
         private readonly Timer _cleanupTimer;
         private readonly TimeSpan _lockExpirationTime = TimeSpan.FromMinutes(10);
         private bool _disposed;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SessionLockService"/> class.
+        /// Initializes a new instance of the <see cref="ConversationLockService"/> class.
         /// </summary>
         /// <remarks>
         /// Starts a background timer that runs every 5 minutes to clean up stale locks.
         /// </remarks>
-        public SessionLockService()
+        public ConversationLockService()
         {
             _cleanupTimer = new Timer(CleanupStaleLocksCallback, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
         }
 
         /// <inheritdoc />
-        public bool IsSessionBusy(Guid sessionId)
+        public bool IsConversationBusy(Guid conversationId)
         {
-            if (_sessionLocks.TryGetValue(sessionId, out var lockInfo))
+            if (_conversationLocks.TryGetValue(conversationId, out var lockInfo))
             {
                 return lockInfo.Semaphore.CurrentCount == 0;
             }
@@ -102,40 +102,40 @@ namespace RR.AI_Chat.Service
         }
 
         /// <inheritdoc />
-        public async Task<IDisposable> AcquireLockAsync(Guid sessionId, CancellationToken cancellationToken = default)
+        public async Task<IDisposable> AcquireLockAsync(Guid conversationId, CancellationToken cancellationToken = default)
         {
-            var lockInfo = GetOrCreateLockInfo(sessionId);
+            var lockInfo = GetOrCreateLockInfo(conversationId);
             await lockInfo.Semaphore.WaitAsync(cancellationToken);
-            return new LockReleaser(this, sessionId, lockInfo.Semaphore);
+            return new LockReleaser(this, conversationId, lockInfo.Semaphore);
         }
 
         /// <inheritdoc />
-        public async Task<IDisposable?> TryAcquireLockAsync(Guid sessionId, CancellationToken cancellationToken = default)
+        public async Task<IDisposable?> TryAcquireLockAsync(Guid conversationId, CancellationToken cancellationToken = default)
         {
-            var lockInfo = GetOrCreateLockInfo(sessionId);
+            var lockInfo = GetOrCreateLockInfo(conversationId);
             var acquired = await lockInfo.Semaphore.WaitAsync(0, cancellationToken);
-            return acquired ? new LockReleaser(this, sessionId, lockInfo.Semaphore) : null;
+            return acquired ? new LockReleaser(this, conversationId, lockInfo.Semaphore) : null;
         }
 
         /// <summary>
-        /// Gets or creates lock information for the specified session.
+        /// Gets or creates lock information for the specified conversation.
         /// </summary>
-        /// <param name="sessionId">The unique identifier of the session.</param>
-        /// <returns>The <see cref="LockInfo"/> associated with the session.</returns>
-        private LockInfo GetOrCreateLockInfo(Guid sessionId)
+        /// <param name="conversationId">The unique identifier of the conversation.</param>
+        /// <returns>The <see cref="LockInfo"/> associated with the conversation.</returns>
+        private LockInfo GetOrCreateLockInfo(Guid conversationId)
         {
-            var lockInfo = _sessionLocks.GetOrAdd(sessionId, _ => new LockInfo());
+            var lockInfo = _conversationLocks.GetOrAdd(conversationId, _ => new LockInfo());
             lockInfo.LastAccessed = DateTime.UtcNow;
             return lockInfo;
         }
 
         /// <summary>
-        /// Updates the last accessed time for the specified session.
+        /// Updates the last accessed time for the specified conversation.
         /// </summary>
-        /// <param name="sessionId">The unique identifier of the session.</param>
-        private void UpdateLastAccessed(Guid sessionId)
+        /// <param name="conversationId">The unique identifier of the conversation.</param>
+        private void UpdateLastAccessed(Guid conversationId)
         {
-            if (_sessionLocks.TryGetValue(sessionId, out var lockInfo))
+            if (_conversationLocks.TryGetValue(conversationId, out var lockInfo))
             {
                 lockInfo.LastAccessed = DateTime.UtcNow;
             }
@@ -148,7 +148,7 @@ namespace RR.AI_Chat.Service
         private void CleanupStaleLocksCallback(object? state)
         {
             var now = DateTime.UtcNow;
-            var staleKeys = _sessionLocks
+            var staleKeys = _conversationLocks
                 .Where(kvp => kvp.Value.Semaphore.CurrentCount > 0 && // Not currently locked
                              now - kvp.Value.LastAccessed > _lockExpirationTime)
                 .Select(kvp => kvp.Key)
@@ -156,7 +156,7 @@ namespace RR.AI_Chat.Service
 
             foreach (var key in staleKeys)
             {
-                if (_sessionLocks.TryRemove(key, out var lockInfo))
+                if (_conversationLocks.TryRemove(key, out var lockInfo))
                 {
                     lockInfo.Semaphore.Dispose();
                 }
@@ -164,7 +164,7 @@ namespace RR.AI_Chat.Service
         }
 
         /// <summary>
-        /// Releases all resources used by the <see cref="SessionLockService"/>.
+        /// Releases all resources used by the <see cref="ConversationLockService"/>.
         /// </summary>
         /// <remarks>
         /// Disposes the cleanup timer and all semaphores, then clears the lock dictionary.
@@ -176,11 +176,11 @@ namespace RR.AI_Chat.Service
 
             _cleanupTimer?.Dispose();
 
-            foreach (var lockInfo in _sessionLocks.Values)
+            foreach (var lockInfo in _conversationLocks.Values)
             {
                 lockInfo.Semaphore.Dispose();
             }
-            _sessionLocks.Clear();
+            _conversationLocks.Clear();
 
             GC.SuppressFinalize(this);
         }

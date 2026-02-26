@@ -16,12 +16,6 @@ namespace RR.AI_Chat.Service
 
         Task DeactivateUserAsync(Guid oid, CancellationToken cancellationToken);
 
-        /// <summary>
-        /// Determines whether a user with the specified identifier exists in the database.
-        /// </summary>
-        /// <param name="userId">The unique identifier of the user.</param>
-        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-        /// <returns><c>true</c> if the user exists; otherwise, <c>false</c>.</returns>
         Task<bool> IsUserInDatabaseAsync(Guid userId, CancellationToken cancellationToken);
     }   
 

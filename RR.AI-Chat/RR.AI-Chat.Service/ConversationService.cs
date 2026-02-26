@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Conversation = RR.AI_Chat.Entity.Conversation;
 using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
+using RR.AI_Chat.Service.Exceptions;
 
 namespace RR.AI_Chat.Service
 {
@@ -43,7 +44,7 @@ namespace RR.AI_Chat.Service
         IModelService modelService,
         [FromKeyedServices("azureaifoundry")] IChatClient azureAIFoundry,
         IMcpServerService mcpServerService,
-        ISessionLockService sessionLockService,
+        IConversationLockService conversationLockService,
         ITokenService tokenService,
         IAzureCosmosService cosmosService,
         IValidator<CreateConversationActionDto> createChatValidator,
@@ -57,7 +58,7 @@ namespace RR.AI_Chat.Service
         private readonly IDocumentToolService _documentToolService = documentToolService;
         private readonly IModelService _modelService = modelService;
         private readonly IMcpServerService _mcpServerService = mcpServerService;
-        private readonly ISessionLockService _sessionLockService = sessionLockService;
+        private readonly IConversationLockService _conversationLockService = conversationLockService;
         private readonly ITokenService _tokenService = tokenService;
         private readonly IAzureCosmosService _cosmosService = cosmosService;
         private readonly IValidator<CreateConversationActionDto> _createChatValidator = createChatValidator;
@@ -157,8 +158,8 @@ namespace RR.AI_Chat.Service
                 .FirstOrDefaultAsync(cancellationToken);
             if (chat == null)
             {
-                _logger.LogError("Chat with id {Id} not found", id);
-                throw new InvalidOperationException($"Chat with id {id} not found");
+                _logger.LogError("Conversation with id {Id} not found", id);
+                throw new NotFoundException($"Conversation with id {id} not found");
             }
 
             return chat;
@@ -222,7 +223,7 @@ namespace RR.AI_Chat.Service
 
             if (!chatExists)
             {
-                _logger.LogWarning("Chat with id {Id} not found or already deactivated", id);
+                _logger.LogWarning("Conversation with id {Id} not found or already deactivated", id);
                 return;
             }
 
@@ -269,14 +270,14 @@ namespace RR.AI_Chat.Service
 
             if (chatIds.Count == 0)
             {
-                _logger.LogWarning("No valid chats found to deactivate.");
+                _logger.LogWarning("No valid conversations found to deactivate.");
                 return;
             }
 
-            // Deactivate all pages for documents in these chats
-            var chatIdsInClause = string.Join(", ", chatIds.Select(id => $"'{id}'"));
+            // Deactivate all pages for documents in these conversations
+            var conversationIdsInClause = string.Join(", ", chatIds.Select(id => $"'{id}'"));
             var cosmosQuery =
-                $"SELECT * FROM c WHERE c.id IN ({chatIdsInClause}) " +
+                $"SELECT * FROM c WHERE c.id IN ({conversationIdsInClause}) " +
                 $"AND c.UserId = '{userId}' AND IS_NULL(c.DateDeactivated)";
             var chats = await _cosmosService.GetItemsAsync<CosmosConversation>(cosmosQuery);
             foreach (var chat in chats)
@@ -314,15 +315,15 @@ namespace RR.AI_Chat.Service
             var chat = await _ctx.Conversations.FindAsync([id], cancellationToken);
             if (chat == null)
             {
-                _logger.LogError("Chat with id {Id} not found", id);
-                throw new KeyNotFoundException($"Chat with id {id} not found");
+                _logger.LogError("Conversation with id {Id} not found", id);
+                throw new KeyNotFoundException($"Conversation with id {id} not found");
             }
 
             var cosmosChat = await _cosmosService.GetItemAsync<CosmosConversation>(id.ToString(), chat.UserId.ToString(), cancellationToken);
             if (cosmosChat == null)
             {
-                _logger.LogError("Chat for id {Id} not found in Cosmos DB", id);
-                throw new KeyNotFoundException($"Chat for id {id} not found");
+                _logger.LogError("Conversation for id {Id} not found in Cosmos DB", id);
+                throw new KeyNotFoundException($"Conversation for id {id} not found");
             }
 
             var modelName = await _ctx.Models
@@ -332,13 +333,13 @@ namespace RR.AI_Chat.Service
                         .FirstOrDefaultAsync(cancellationToken);
             if (string.IsNullOrWhiteSpace(modelName))
             {
-                _logger.LogError("Model with id {id} not found", request.ModelId);
+                _logger.LogError("Model with id {Id} not found", request.ModelId);
                 throw new InvalidOperationException($"Model with id {request.ModelId} not found");
             }
 
             var response = await _azureAIFoundry.GetResponseAsync([
                                  new ChatMessage(ChatRole.System, _defaultSystemPrompt),
-                                 new ChatMessage(ChatRole.User, $"Create a chat name based on the following prompt, please make it 25 maximum and make it a string. Do not have the name on the chat nor the id. Just the name based on the prompt. The result must be a string, not markdown. Prompt: {request.Prompt}")
+                                 new ChatMessage(ChatRole.User, $"Create a conversation name based on the following prompt, please make it 25 maximum and make it a string. Do not have the name on the conversation nor the id. Just the name based on the prompt. The result must be a string, not markdown. Prompt: {request.Prompt}")
                              ], new() { ModelId = modelName }, cancellationToken);
             if (response == null)
             {
@@ -398,8 +399,8 @@ namespace RR.AI_Chat.Service
                 .AnyAsync(cancellationToken);
             if (!anyChat)
             {
-                _logger.LogWarning("Chat not found or already deactivated");
-                throw new InvalidOperationException($"Chat not found or already deactivated.");
+                _logger.LogWarning("Conversation not found or already deactivated");
+                throw new NotFoundException($"Conversation not found or already deactivated.");
             }
 
             var date = DateTimeOffset.UtcNow;
@@ -418,13 +419,11 @@ namespace RR.AI_Chat.Service
                 await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), userId.ToString(), cancellationToken);
             }
 
-            _logger.LogInformation("Session {Id} successfully updated.", request.Id);
-
             return await GetConversationAsync(request.Id, cancellationToken);
         }
 
         /// <inheritdoc />
-        public bool IsConversationBusy(Guid id) => _sessionLockService.IsSessionBusy(id);
+        public bool IsConversationBusy(Guid id) => _conversationLockService.IsConversationBusy(id);
 
         /// <inheritdoc />
         public async IAsyncEnumerable<string?> StreamConversationAsync(Guid id, CreateConversationStreamActionDto request, [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -433,7 +432,7 @@ namespace RR.AI_Chat.Service
 
             _createChatStreamActionValidator.ValidateAndThrow(request);
 
-            var lockReleaser = await _sessionLockService.TryAcquireLockAsync(id, cancellationToken);
+            var lockReleaser = await _conversationLockService.TryAcquireLockAsync(id, cancellationToken);
             if (lockReleaser == null)
             {
                 _logger.LogWarning("Conversation {ConversationId} is already being processed.", id);
@@ -471,7 +470,7 @@ namespace RR.AI_Chat.Service
                     new(ChatRole.User, request.Prompt)
                 };
 
-                var model = await _modelService.GetModelAsync(request.ModelId, request.ServiceId, cancellationToken);
+                var model = await _modelService.GetModelAsync(request.ModelId, cancellationToken);
                 var chatClient = _azureAIFoundry;
                 var chatOptions = await CreateChatOptions(id, model, request.McpServers, cancellationToken).ConfigureAwait(false);
                 StringBuilder sb = new();

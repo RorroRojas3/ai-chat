@@ -33,7 +33,7 @@ The enterprise palette (`#061E29`, `#1D546D`, `#5F9598`, `#F3F4F4`) should be us
 - **Custom styles:** Prefer Bootstrap utility classes. Custom CSS should focus on overriding Bootstrap defaults to achieve the modern neutral aesthetic described above — especially toning down Bootstrap's default blues and heavy borders.
 - **JavaScript:** Vanilla JS only — no frameworks
 - **Icons:** Bootstrap Icons only
-- **Deliverable:** Four self-contained files: `index.html`, `conversations.html`, `notifications.html`, `administrator.html`
+- **Deliverable:** Three self-contained files: `index.html`, `conversations.html`, `administrator.html`
 - **All interactions:** Purely client-side — no backend, no API calls
 
 ### UI Behavior Standards
@@ -41,7 +41,7 @@ The enterprise palette (`#061E29`, `#1D546D`, `#5F9598`, `#F3F4F4`) should be us
 - **Modals:** All modals use Bootstrap's native modal component — no `prompt()` or `confirm()` dialogs
 - **Rename actions:** Bootstrap modal with text input field, character counter, and Cancel/Rename buttons — consistent modal pattern for all rename actions (conversations, projects, etc.)
 - **Delete confirmations:** Bootstrap modal with clear destructive action styling (red delete button)
-- **Toast notifications:** Bootstrap Toasts on every CRUD action — positioned **bottom-center** (not bottom-right), minimal styling, auto-dismiss after 3 seconds. Toast should have a thin left accent border matching the action type (green for success, red for error).
+- **Toast notifications:** Custom toast alerts on every CRUD action — positioned **top-right** (below navbar, `top: 76px; right: 20px`), stacking vertically. Four types: success (green `--success`), error (red `--error`), warning (orange `--warning`), info (teal `--info`). Each toast has: left accent border (4px), type-specific icon, message text, close button. Auto-dismiss after **5 seconds**. Animation: slide in from right + fade in on appear; slide out to right + fade out on dismiss. Multiple toasts stack vertically with `8px` gap. No dedicated notifications page — toasts are the only notification mechanism.
 - **Persistence:** Dark/light mode toggle and sidebar collapse state persist via `localStorage`
 
 ---
@@ -120,9 +120,8 @@ The sidebar should feel like **Claude.ai's sidebar** — clean, understated, fun
 
 3. **Navigation links**
    - Simple text links with left-padding, small icon on left
-   - Links: Chat (`bi-chat-dots`), Conversations (`bi-clock-history`), Notifications (`bi-bell`), Admin (`bi-gear`)
-   - **Active page:** Text in `--brand-accent`, subtle left border or background tint
-   - **Notifications badge:** Small pill counter next to the bell icon, `--brand-accent` bg, white text, only visible when unread > 0
+   - Links: Chat (`bi-chat-text`), Conversations (`bi-clock-history`), Admin (`bi-gear`)
+   - **Active page:** Text in `--brand-accent`, font-weight 500
    - Vertical spacing: 4px between items, section separated from conversations list by a subtle divider
 
 4. **Recent Conversations list**
@@ -183,7 +182,20 @@ When no conversation is loaded, show a centered empty state:
 - **Thinking/streaming indicator:** Three animated dots (opacity pulse animation), shown beneath the avatar/label while response is loading. Uses `--text-tertiary` color.
 - **Streaming simulation:** `setInterval` appending tokens (words, not characters) to simulate realistic streaming speed. Typing cursor (blinking `|`) at the end of the stream, removed when complete.
 
+### Smart Auto-Scroll Behavior
+
+The chat area implements intelligent auto-scrolling during streaming:
+
+1. **On new user message sent:** Always scroll to bottom and begin auto-scrolling
+2. **During streaming:** Auto-scroll to bottom as new words appear — but **only if the user has not manually scrolled up**
+3. **User scrolls up during streaming:** Set `isUserScrolledUp = true`, stop auto-scrolling, and show a **scroll-to-bottom arrow button**
+4. **Scroll-to-bottom button:** Circular button (`bi-arrow-down` icon, 36px, `--bg-primary` bg, `--border-default` border, subtle box-shadow) positioned centered above the prompt box. On click: scroll to bottom, hide the button, resume auto-scrolling
+5. **On streaming completion:** Do **NOT** auto-scroll — the user stays where they are reading. The scroll-to-bottom button remains visible if the user is scrolled up
+6. **Scroll detection threshold:** User is considered "at bottom" if `scrollTop + clientHeight >= scrollHeight - 80px`
+
 ### Prompt Input Box
+
+**Important:** The prompt box container uses `overflow: visible` (not `overflow: hidden`) so that dropdown menus (model selector, MCP/tools) can extend beyond the prompt box boundaries when opening upward.
 
 Sticky to the bottom of the chat area (within the centered column, not full-width). Styled as a **single rounded container** (border-radius: 24px, `1px solid --border-default`, `--bg-primary` background) that holds all input elements — similar to ChatGPT's unified input bar.
 
@@ -261,69 +273,7 @@ Sidebar + main content area. Content area is centered (max-width: 900px).
 
 ---
 
-## File 3: notifications.html — Notifications Center Page
-
-### Layout
-
-Sidebar + main content area. Content area is centered (max-width: 900px).
-
-### Notification Severity Styles
-
-Notifications use **very subtle** color coding — matching the calm overall aesthetic. Color is applied minimally.
-
-| Type | Icon | Accent Color | Row Treatment (Light) | Row Treatment (Dark) |
-|---|---|---|---|---|
-| Success | `bi-check-circle-fill` | `#16A34A` | Left border 3px accent; icon in accent color; rest of row is default bg | Same pattern, dark bg |
-| Error | `bi-x-circle-fill` | `#DC2626` | Same pattern | Same pattern |
-| Warning | `bi-exclamation-triangle-fill` | `#D97706` | Same pattern | Same pattern |
-| Info | `bi-info-circle-fill` | `#5F9598` | Same pattern | Same pattern |
-
-**Color application rules:**
-- **Left border:** 3px solid accent color
-- **Icon:** Accent color
-- **Severity badge:** Small pill — accent color bg, white text
-- **Unread rows:** Bold title text + small colored dot indicator next to title. Background is **default page bg** (not tinted — keep it calm)
-- **Read rows:** Normal weight title, no dot, same default background
-
-### Notification List Features
-
-1. **Filter bar:**
-   - Row of small pill/toggle buttons: All, Success, Error, Warning, Info
-   - Active filter pill uses `--brand-primary` bg with white text; inactive pills are outlined
-   - Filters update list in real time
-
-2. **Notification rows, each showing:**
-   - Severity icon (left) with accent color
-   - Left border in accent color
-   - **Title** (bold if unread) — short summary, e.g., "File upload failed"
-   - **Message** — descriptive text, e.g., "The file report.pdf exceeded the 10MB size limit."
-   - **Source** — pill label: Chat, File Upload, Admin, System (small, `--bg-tertiary` bg)
-   - **Timestamp** — relative (e.g., "3 minutes ago"); full ISO datetime on hover
-   - **Mark as Read** button (`bi-envelope-open`) — icon-only, appears on hover
-   - **Dismiss** button (`bi-x-lg`) — icon-only, appears on hover; removes row with fade-out animation
-
-3. **Bulk actions:**
-   - Checkbox per row, Select All in header
-   - Floating bottom bar when selected: "X selected" + "Mark as Read" + "Dismiss Selected" buttons
-   - Counter updates dynamically
-
-4. **"Mark All as Read"** button in the header area (outlined, small)
-
-5. **Empty state:**
-   - Centered: Large `bi-bell-slash` icon in `--text-tertiary`, "No notifications" heading, "You're all caught up." subtext
-   - Clean and friendly
-
-6. **Sidebar badge:** Notifications nav link shows live unread count, updates when items are marked as read or dismissed
-
-7. **Pagination:** Show 15 initially; "Show More" centered button; counter: "Showing X of Y notifications"
-
-### Mock Data
-
-At least 25 hardcoded notifications covering all four types, mixed read/unread states, varied sources, timestamps spanning the last 30 days.
-
----
-
-## File 4: administrator.html — Admin Management Page
+## File 3: administrator.html — Admin Management Page
 
 ### Access Control
 
@@ -335,7 +285,7 @@ At least 25 hardcoded notifications covering all four types, mixed read/unread s
 
 Sidebar + main content area (max-width: 1100px for admin — wider than chat/conversations to accommodate tables).
 
-**Tabbed interface** with three tabs: Users, LLM Models, Permissions.
+**Tabbed interface** with two tabs: Users, LLM Models.
 
 Tab styling: Underline tabs (not pill tabs) — active tab has `--brand-primary` bottom border and text color; inactive tabs are `--text-secondary`.
 
@@ -353,21 +303,35 @@ Each tab follows:
 
 | Column | Details |
 |---|---|
+| Checkbox | For multi-select (subtle, `--border-default` border) |
 | Avatar | Initials circle badge (32px, same style as sidebar avatar) |
 | Full Name | First + Last, `--text-primary` |
 | Email | `--text-secondary` |
 | Role | Small badge: Admin (`--brand-secondary` bg, white text), User (`--brand-accent` bg, white text), Viewer (`--bg-tertiary` bg, `--text-secondary` text) |
 | Status | Small badge: Active (`--success` bg, white text), Inactive (`--bg-tertiary` bg, `--text-secondary` text), Suspended (`--error` bg, white text) |
 | Last Login | Relative timestamp; full datetime on hover |
-| Actions | Icon buttons: `bi-pencil` Edit, `bi-trash` Delete — both `--text-secondary`, appear emphasized on row hover |
+| Actions | Icon buttons: `bi-pencil` Edit, `bi-toggle-on`/`bi-toggle-off` Activate/Deactivate — both `--text-secondary`, appear emphasized on row hover |
 
 **Add/Edit User Modal:**
 Fields: First Name, Last Name, Email, Role (dropdown), Status (dropdown), Password (add only), Confirm Password (add only).
+
+**Permissions section** (inside the Add/Edit User Modal, below the form fields):
+A bordered section with the heading "Permissions" containing checkboxes organized by category:
+- **Chat:** Can Use Chat, Can Delete Own Conversations
+- **Files:** Can Upload Files, Can Download Files
+- **Admin:** Can Access Admin Panel, Can Manage Users
+- **Models:** Can Select Models, Can Configure MCP Tools
+- **System:** Can View Audit Logs, Can Export Data
+
+When Role is set to "Admin", all permission checkboxes are automatically checked and disabled (greyed out). When Role is "User" or "Viewer", checkboxes are individually editable. This updates dynamically when the role dropdown changes.
+
 Validation: All required, email format, passwords match. Bootstrap validation feedback.
 
 **Delete User Modal:** "Delete [Full Name]?" with clear warning text. Cancel (outlined) + Delete (red filled) buttons.
 
 **Search & Filters:** Real-time search by name/email; Role dropdown (All, Admin, User, Viewer); Status dropdown (All, Active, Inactive, Suspended).
+
+**Bulk actions:** Floating bulk action bar when users are selected: "X selected" + "Deactivate" + "Delete Selected" buttons.
 
 **Mock data:** At least 15 users.
 
@@ -383,29 +347,12 @@ Validation: All required, email format, passwords match. Bootstrap validation fe
 | Model ID / Slug | Monospace text, `--text-secondary` |
 | Max Tokens | Formatted integer |
 | Status | Badge: Enabled (`--success`), Disabled (`--bg-tertiary` + `--text-secondary`) |
-| Available To | Badge: All Users, Admins Only, Custom |
-| Actions | Edit, Delete |
+| Available To | Badge: All Users, Admins Only |
+| Actions | Edit (`bi-pencil`), Delete (`bi-trash3`) |
 
 **Add/Edit Modal:** Model Name, Provider (dropdown), Model ID, Max Tokens, API Endpoint (optional), Status toggle, Available To (dropdown), Description (textarea).
 
 **Mock data:** At least 8 models across providers.
-
-### Tab 3: Permissions
-
-**Table columns:**
-
-| Column | Details |
-|---|---|
-| Permission Name | e.g., "Can Upload Files" |
-| Category | Badge/pill: Chat, Files, Admin, Models, System |
-| Admin | Checkbox — always checked, disabled |
-| User | Checkbox — editable |
-| Viewer | Checkbox — editable |
-| Actions | Edit, Delete |
-
-**Add/Edit Modal:** Permission Name, Category (dropdown), Description, Role Access checkboxes (Admin always checked/disabled).
-
-**Mock data:** At least 12 permissions.
 
 ---
 
@@ -413,10 +360,9 @@ Validation: All required, email format, passwords match. Bootstrap validation fe
 
 | Page | Data |
 |---|---|
-| `index.html` | 30 conversations in sidebar; 1 pre-loaded chat thread (2–3 user, 2–3 assistant, 1 streaming) |
-| `conversations.html` | Same 30 conversations, displayed in full list |
-| `notifications.html` | 25 notifications across all types, mixed read/unread, varied sources, 30-day span |
-| `administrator.html` | 15 users, 8 LLM models, 12 permissions |
+| `index.html` | 10 conversations in sidebar; 1 pre-loaded chat thread (2–3 user, 2–3 assistant, 1 streaming) |
+| `conversations.html` | 63 conversations in full list (15 shown initially, load more for rest) |
+| `administrator.html` | 15 users, 8 LLM models |
 
 ---
 
@@ -425,8 +371,8 @@ Validation: All required, email format, passwords match. Bootstrap validation fe
 - **All transitions:** 150ms ease (hover states, color changes, opacity)
 - **Sidebar open/close:** 200ms ease-in-out, content area adjusts smoothly
 - **Message appear:** New messages fade in + slight upward slide (translateY 8px → 0, opacity 0 → 1, 200ms)
-- **Toast appear:** Slide up from bottom + fade in, 200ms
-- **Notification dismiss:** Fade out + collapse height, 300ms
+- **Toast appear:** Slide in from right + fade in, 300ms
+- **Toast dismiss:** Slide out to right + fade out, 300ms
 - **Streaming cursor:** Blink animation on the trailing `|` character (opacity toggle, 530ms)
 - **Thinking dots:** Three dots with staggered opacity pulse (scale 0.4 → 1 → 0.4, 1.4s infinite, 160ms stagger between dots)
 - **No jarring animations:** No bounce, no overshoot, no spring physics. Everything should feel calm and smooth.
@@ -481,3 +427,17 @@ All pages must be fully usable on desktop, tablet, and mobile. This is a **manda
 | **MCP/Tools dropdown** | Not specified | Multi-select dropdown (`bi-wrench`) in prompt toolbar — shows available MCP servers/tools with toggle selection |
 | **Responsive** | Bonus / optional | **Mandatory** — full desktop, tablet, and mobile support with specific breakpoint behaviors |
 | **Navbar** | Not explicitly defined as a shared component | New **Shared Navbar** section — brand text left, theme toggle right, hamburger on mobile |
+
+## What Changed from v3 → v4
+
+| Area | v3 (Old) | v4 (Current) |
+|---|---|---|
+| **Deliverables** | 4 files (`index.html`, `conversations.html`, `notifications.html`, `administrator.html`) | 3 files — `notifications.html` removed entirely |
+| **Notifications** | Dedicated `notifications.html` page with notification center, filters, bulk actions, 25+ mock items | No dedicated page. Notifications are **toast alerts only** — top-right, stacking, 4 types (success/error/warning/info), auto-dismiss after 5 seconds, slide-in/out animation |
+| **Sidebar nav links** | Chat, Conversations, Notifications (with badge), Admin | Chat, Conversations, Admin — Notifications link removed |
+| **Admin tabs** | 3 tabs: Users, LLM Models, Permissions | 2 tabs: Users, LLM Models — Permissions tab removed |
+| **Permissions management** | Separate Permissions tab with a table of permission names, categories, and role-based checkboxes | Permissions are **checkboxes inside the Add/Edit User modal**, organized by category (Chat, Files, Admin, Models, System). Admin role auto-checks and disables all permissions |
+| **Toast position & behavior** | Bottom-center, 3-second auto-dismiss, 2 types (success, error) | **Top-right** (`top: 76px; right: 20px`), **5-second** auto-dismiss, **4 types** (success, error, warning, info), stacking, close button, slide-in/out from right |
+| **Prompt box overflow** | `overflow: hidden` on `.prompt-box` — clipped dropdown menus | `overflow: visible` on `.prompt-box` — dropdowns extend beyond container |
+| **Auto-scroll** | Always scrolled to bottom during streaming, no user override | **Smart auto-scroll**: tracks user scroll position, stops auto-scrolling when user scrolls up, shows floating scroll-to-bottom arrow button, does NOT auto-scroll on stream completion |
+| **User message alignment** | Bubble had potential gap on right side | Bubble flush against right edge — `margin-right: 0`, wrapper div uses `flex-end` alignment |

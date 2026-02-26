@@ -65,13 +65,13 @@ namespace RR.AI_Chat.Api.Controllers
             });
         }
 
-        [HttpGet("sessions/{sessionId}/conversation-history")]
+        [HttpGet("conversations/{conversationId}/histories")]
         public async Task<IActionResult> GenerateConversationHistoryFileAsync(
-            Guid sessionId, 
+            Guid conversationId, 
             [FromQuery] DocumentFormats documentFormat, 
             CancellationToken cancellationToken)
         {
-            var dto = await _service.GenerateConversationHistoryAsync(sessionId, documentFormat, cancellationToken);
+            var dto = await _service.GenerateConversationHistoryAsync(conversationId, documentFormat, cancellationToken);
             if (dto == null)
             {
                 return NotFound();

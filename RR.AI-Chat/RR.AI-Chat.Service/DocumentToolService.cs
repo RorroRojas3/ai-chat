@@ -11,24 +11,25 @@ using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
 using System.ComponentModel;
 using System.Text.Json;
+using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
 
 namespace RR.AI_Chat.Service
 {
     public interface IDocumentToolService
     {
-        Task<string> GetSessionDocumentsAsync(string sessionId, CancellationToken cancellationToken = default);
+        Task<string> GetConversationDocumentsAsync(string conversationId, CancellationToken cancellationToken = default);
 
-        Task<string> GetDocumentOverviewAsync(string sessionId, string documentId, CancellationToken cancellationToken = default);
+        Task<string> GetDocumentOverviewAsync(string conversationId, string documentId, CancellationToken cancellationToken = default);
     
         IList<AITool> GetTools();
 
-        Task<List<ConversationDocument>> SearchDocumentsAsync(string sessionId, string prompt, CancellationToken cancellationToken = default);
+        Task<List<ConversationDocument>> SearchDocumentsAsync(string conversationId, string prompt, CancellationToken cancellationToken = default);
 
-        Task<string> CompareDocumentsAsync(string sessionId, string firstDocumentId, string secondDocumentId, CancellationToken cancellationToken = default);
+        Task<string> CompareDocumentsAsync(string conversationId, string firstDocumentId, string secondDocumentId, CancellationToken cancellationToken = default);
     }
 
     public class DocumentToolService(ILogger<DocumentToolService> logger,
-         [FromKeyedServices("azureaifoundry")] IChatClient openAiClient,
+         [FromKeyedServices("azureaifoundry")] IChatClient azureAIFoundryClient,
         IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
         IBlobStorageService blobStorageService,
         IConfiguration configuration,
@@ -37,34 +38,29 @@ namespace RR.AI_Chat.Service
     {
         private readonly ILogger _logger = logger;
         private readonly AIChatDbContext _ctx = ctx;
-        private readonly IChatClient _chatClient = openAiClient;
+        private readonly IChatClient _azureAIFoundryClient = azureAIFoundryClient;
         private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator = embeddingGenerator;
         private readonly IBlobStorageService _blobStorageService = blobStorageService;
         private readonly IConfiguration _configuration = configuration;
         private readonly IDocumentService _documentService = documentService;
-        private const double _cosineDistanceThreshold = 0.5;
+        private const double _cosineDistanceThreshold = 0.3;
 
-        [Description("Get all documents in the current chat.")]
-        public async Task<string> GetSessionDocumentsAsync([Description("chatId")] string chatId, 
+        [Description("Get all documents in the current conversation.")]
+        public async Task<string> GetConversationDocumentsAsync([Description("conversation id")] string conversationId,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(chatId))
+            if (Guid.TryParse(conversationId, out var conversationGuid) == false)
             {
-                return "No chat ID provided. Continue with your work without mentioning it.";
-            }
-
-            if (Guid.TryParse(chatId, out var chatGuid) == false)
-            {
-                return "The chat ID is not a valid GUID. Continue with your work without mentioning it.";
+                return "The conversation id is not a valid GUID. Continue with your work without mentioning it.";
             }
 
             var documents = await _ctx.ConversationDocuments.AsNoTracking()
-                .Where(x => x.ConversationId == chatGuid && 
+                .Where(x => x.ConversationId == conversationGuid && 
                         !   x.DateDeactivated.HasValue )
                 .Select(x => x.MapToChatDocumentDto()).ToListAsync(cancellationToken).ConfigureAwait(false);
             if (documents.Count == 0)
             {
-                return "No documents found in the current chat. Continue with your work without mentioning it.";
+                return "No documents found in the current conversation. Continue with your work without mentioning it.";
             }
 
             var result = JsonSerializer.Serialize(documents);
@@ -118,17 +114,17 @@ namespace RR.AI_Chat.Service
         }
 
         /// <summary>
-        /// Searches for information within documents in the specified session using vector similarity search.
+        /// Searches for information within documents in the specified conversation using vector similarity search.
         /// Performs semantic search by generating embeddings for the search prompt and comparing against 
         /// document page embeddings using cosine distance.
         /// </summary>
-        /// <param name="sessionId">The unique identifier of the session to search within. Must be a valid GUID.</param>
+        /// <param name="conversationId">The unique identifier of the conversation to search within. Must be a valid GUID.</param>
         /// <param name="prompt">The search query describing what the user is looking for in the documents.</param>
         /// <param name="cancellationToken">A cancellation token to cancel the operation if needed.</param>
         /// <returns>
         /// A list of documents containing pages that match the search criteria, ordered by relevance.
         /// Each document includes its most relevant pages (up to 10 total pages across all documents).
-        /// Returns an empty list if the session ID is invalid or no matching content is found.
+        /// Returns an empty list if the conversation ID is invalid or no matching content is found.
         /// </returns>
         /// <remarks>
         /// This method uses vector embeddings to perform semantic search rather than simple text matching.
@@ -136,14 +132,9 @@ namespace RR.AI_Chat.Service
         /// Pages within each document are ordered by their similarity score to the search prompt.
         /// </remarks>
         [Description("Searches for information in the document if no overiew or summary is asked.")]
-        public async Task<List<ConversationDocument>> SearchDocumentsAsync([Description("chatId")] string chatId, [Description("What the user is looking for in document")] string prompt, CancellationToken cancellationToken)
+        public async Task<List<ConversationDocument>> SearchDocumentsAsync([Description("The conversation id")] string conversationId, [Description("What the user is looking for in document")] string prompt, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(chatId))
-            {
-                return [];
-            }
-
-            if (Guid.TryParse(chatId, out var chatGuid) == false)
+            if (Guid.TryParse(conversationId, out var conversationGuid) == false)
             {
                 return [];
             }
@@ -155,7 +146,7 @@ namespace RR.AI_Chat.Service
 
             var anyDocuments = await _ctx.ConversationDocuments
                 .AsNoTracking()
-                .AnyAsync(d => d.ConversationId == chatGuid && !d.DateDeactivated.HasValue, cancellationToken);   
+                .AnyAsync(d => d.ConversationId == conversationGuid && !d.DateDeactivated.HasValue, cancellationToken);   
             if (!anyDocuments)
             {
                 return [];
@@ -167,7 +158,7 @@ namespace RR.AI_Chat.Service
             var docPages = await _ctx.ConversationDocumentPages
                 .AsNoTracking()
                 .Include(p => p.ConversationDocument)
-                .Where(p => p.ConversationDocument.ConversationId == chatGuid)
+                .Where(p => p.ConversationDocument.ConversationId == conversationGuid)
                 .Where(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector) <= _cosineDistanceThreshold)
                 .OrderBy(p => EF.Functions.VectorDistance("cosine", p.Embedding, vector))
                 .Take(10)
@@ -195,39 +186,36 @@ namespace RR.AI_Chat.Service
             "Use when user requests document comparison. " +
             "Return the output exactly as provided.")]
         public async Task<string> CompareDocumentsAsync(
-            [Description("The chat ID")] string chatId,
+            [Description("The conversation id")] string conversationId,
             [Description("The ID of the first document to compare")] string firstDocumentId,
             [Description("The ID of the second document to compare")] string secondDocumentId,
             CancellationToken cancellationToken = default)
         {
-            // Validate chat ID
-            if (string.IsNullOrWhiteSpace(chatId) || !Guid.TryParse(chatId, out var chatGuid))
+            if (!Guid.TryParse(conversationId, out var conversationGuid))
             {
-                return "The chat ID is not a valid.";
+                return "The conversation ID is not a valid.";
             }
 
-            // Validate first document ID
-            if (string.IsNullOrWhiteSpace(firstDocumentId) || !Guid.TryParse(firstDocumentId, out var firstDocGuid))
+            if (!Guid.TryParse(firstDocumentId, out var firstDocGuid))
             {
                 return "The first document ID is not a valid.";
             }
 
-            // Validate second document ID
-            if (string.IsNullOrEmpty(secondDocumentId) || !Guid.TryParse(secondDocumentId, out var secondDocGuid))
+            if (!Guid.TryParse(secondDocumentId, out var secondDocGuid))
             {
                 return "The second document ID is not a valid.";
             }
 
 
             // Retrieve first document content
-            var firstDocumentText = await GetDocumentContentAsync(chatGuid, firstDocGuid, cancellationToken);
+            var firstDocumentText = await GetDocumentContentAsync(conversationGuid, firstDocGuid, cancellationToken);
             if (string.IsNullOrEmpty(firstDocumentText))
             {
                 return "First document not found or has no content. Continue with your work without mentioning it.";
             }
 
             // Retrieve second document content
-            var secondDocumentText = await GetDocumentContentAsync(chatGuid, secondDocGuid, cancellationToken);
+            var secondDocumentText = await GetDocumentContentAsync(conversationGuid, secondDocGuid, cancellationToken);
             if (string.IsNullOrEmpty(secondDocumentText))
             {
                 return "Second document not found or has no content. Continue with your work without mentioning it.";
@@ -274,13 +262,13 @@ namespace RR.AI_Chat.Service
                     new(ChatRole.User, userPrompt)
                 };
 
-                var response = await _chatClient.GetResponseAsync(messages, null, cancellationToken).ConfigureAwait(false);
+                var response = await _azureAIFoundryClient.GetResponseAsync(messages, null, cancellationToken).ConfigureAwait(false);
                 return response.Messages.LastOrDefault()?.Text ?? "Failed to generate comparison analysis.";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while comparing documents {FirstDocId} and {SecondDocId} in chat {ChatId}",
-                    firstDocumentId, secondDocumentId, chatId);
+                _logger.LogError(ex, "Error occurred while comparing documents {FirstDocId} and {SecondDocId} in conversation {ConversationId}",
+                    firstDocumentId, secondDocumentId, conversationId);
                 return "An error occurred while comparing the documents. Please try again.";
             }
         }
@@ -305,7 +293,7 @@ namespace RR.AI_Chat.Service
  "and saving metadata to the database. Returns a downloadable SAS URL for the user. " +
     "ALWAYS call this function when the Document Generation MCP server provides a SAS URI - do not skip this step.")]
         public async Task<Uri> ProcessGeneratedFileAsync(
-        [Description("The unique identifier of the current chat session")] Guid chatId,
+        [Description("The unique identifier of the current conversation")] Guid conversationId,
         [Description("The unique identifier of the user who owns the generated file")] Guid userId,
         [Description("The temporary SAS URI from the MCP Document Generator pointing to the AI-generated file in Azure Blob Storage")] Uri sasUri)
         {
@@ -319,13 +307,13 @@ namespace RR.AI_Chat.Service
             var response = await blobClient.DownloadContentAsync();
 
             var container = _configuration["AzureStorage:DocumentsContainer"]!;
-            var path = $"{userId}/{chatId}/{filename}";
+            var path = $"{userId}/{conversationId}/{filename}";
             var bytes = response.Value.Content.ToArray();
 
             Dictionary<string, string> metadata = new()
             {
                 { "userId", userId.ToString() },
-                { "chatId", chatId.ToString() },
+                { "conversationId", conversationId.ToString() },
                 { "fileName", filename },
                 { "contentType", properties.Value.ContentType },
                 { "length", properties.Value.ContentLength.ToString() }
@@ -384,7 +372,7 @@ namespace RR.AI_Chat.Service
             var newDocument = new ConversationDocument
             {
                 UserId = userId,
-                ConversationId = chatId,
+                ConversationId = conversationId,
                 Name = filename,
                 Extension = Path.GetExtension(filename),
                 MimeType = properties.Value.ContentType,
@@ -408,7 +396,7 @@ namespace RR.AI_Chat.Service
         public IList<AITool> GetTools()
         {
             IList<AITool> functions = [
-                AIFunctionFactory.Create(GetSessionDocumentsAsync),
+                AIFunctionFactory.Create(GetConversationDocumentsAsync),
                 AIFunctionFactory.Create(GetDocumentOverviewAsync),
                 AIFunctionFactory.Create(SearchDocumentsAsync),
                 AIFunctionFactory.Create(CompareDocumentsAsync),

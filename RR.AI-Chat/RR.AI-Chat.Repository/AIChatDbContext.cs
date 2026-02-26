@@ -22,6 +22,7 @@ namespace RR.AI_Chat.Repository
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new AIServiceConfiguration());
             modelBuilder.ApplyConfiguration(new ModelConfiguration());
 

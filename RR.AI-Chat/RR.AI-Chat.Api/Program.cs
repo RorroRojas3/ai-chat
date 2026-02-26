@@ -180,7 +180,7 @@ builder.Services.AddScoped<IAzureCosmosService>(provider =>
 builder.Services.Configure<List<McpServerSettings>>(builder.Configuration.GetSection("McpServers"));
 
 // Singletons
-builder.Services.AddSingleton<ISessionLockService, SessionLockService>();
+builder.Services.AddSingleton<IConversationLockService, ConversationLockService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IGraphService, GraphService>();
 builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
