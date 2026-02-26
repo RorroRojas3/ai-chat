@@ -277,7 +277,7 @@
     transition: background-color 150ms ease;
 
     &:hover {
-      background-color: #B91C1C;
+      background-color: var(--error-hover);
     }
   }
 }
