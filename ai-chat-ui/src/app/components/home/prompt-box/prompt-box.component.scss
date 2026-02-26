@@ -1,18 +1,28 @@
 .prompt-box {
-  background-color: var(--color-accent);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 24px;
   position: relative;
-  transition: border 0.2s ease;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  width: 100%;
+  max-width: 768px;
+
+  &:focus-within {
+    border-color: var(--brand-accent);
+    box-shadow: 0 0 0 3px rgba(95, 149, 152, 0.12);
+  }
 
   &.drag-over {
-    border: 2px dashed #fff !important;
-    border-radius: 1.5rem !important;
+    border: 2px dashed var(--brand-accent) !important;
+    border-radius: 24px !important;
+    background-color: rgba(95, 149, 152, 0.04);
   }
 }
 
 .prompt-box-textarea {
   background-color: transparent;
   border: none !important;
-  color: white;
+  color: var(--text-primary);
   resize: none;
   outline: none !important;
   box-shadow: none !important;
@@ -24,8 +34,7 @@
   }
 
   &::placeholder {
-    color: #f5f5f5 !important;
-    opacity: 0.8;
+    color: var(--text-tertiary) !important;
   }
 }
 
@@ -36,18 +45,18 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(95, 149, 152, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 1.5rem;
+  border-radius: 24px;
   z-index: 10;
   pointer-events: none;
 }
 
 .drag-content {
   text-align: center;
-  color: white;
+  color: var(--brand-accent);
 }
 
 .drag-icon {
@@ -78,16 +87,16 @@
   }
 
   &::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
+    background: transparent;
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
+    background: var(--border-default);
     border-radius: 3px;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.5);
+      background: var(--border-strong);
     }
   }
 }
@@ -95,8 +104,8 @@
 .file-card {
   min-width: 140px;
   max-width: 160px;
-  background-color: var(--color-light-blue);
-  border: 1px solid rgba(28, 60, 98, 0.2);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
   border-radius: 0.5rem;
   position: relative;
   flex-shrink: 0;
@@ -104,7 +113,7 @@
 
 .file-card-body {
   padding: 1rem 0.75rem;
-  color: var(--color-accent);
+  color: var(--text-primary);
 }
 
 .file-card-remove {
@@ -133,7 +142,6 @@
 .file-card-icon {
   font-size: 2rem;
   margin-bottom: 0.5rem;
-  color: var(--color-danger); // Bootstrap red color for PDF icon
 }
 
 .file-card-name {
@@ -149,7 +157,7 @@
 .file-card-size {
   font-size: 0.75rem;
   opacity: 0.8;
-  color: var(--color-accent);
+  color: var(--text-secondary);
 }
 
 // Override global dropdown styles for prompt-box

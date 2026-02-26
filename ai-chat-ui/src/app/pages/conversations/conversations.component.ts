@@ -214,6 +214,29 @@ export class ConversationsComponent implements OnInit {
   }
 
   /**
+   * Checks if all visible conversations are selected
+   */
+  isAllSelected(): boolean {
+    const conversations = this.storeService.pageConversations();
+    return (
+      conversations.length > 0 &&
+      conversations.every((c) => this.selectedConversationIds.includes(c.id))
+    );
+  }
+
+  /**
+   * Toggles selection of all visible conversations
+   */
+  toggleSelectAll(): void {
+    const conversations = this.storeService.pageConversations();
+    if (this.isAllSelected()) {
+      this.selectedConversationIds = [];
+    } else {
+      this.selectedConversationIds = conversations.map((c) => c.id);
+    }
+  }
+
+  /**
    * Initiates deletion of selected conversations
    */
   onDeleteSelectedConversations(): void {

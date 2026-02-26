@@ -1,7 +1,49 @@
+/* Chat Area */
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 0;
+}
+
+.chat-messages {
+  width: 100%;
+  max-width: 768px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-bottom: 24px;
+}
+
+/* Prompt Input */
+.prompt-wrapper {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px 8px;
+  background-color: var(--bg-primary);
+}
+
+.footer-note {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  padding: 6px 16px 12px;
+}
+
 /* Streaming spinner styling */
 .streaming-spinner {
-  color: var(--color-accent);
+  color: var(--brand-accent);
   width: 1.5rem;
   height: 1.5rem;
   border-width: 0.15rem;
+}
+
+@media (max-width: 767px) {
+  .chat-messages {
+    max-width: 100%;
+  }
 }

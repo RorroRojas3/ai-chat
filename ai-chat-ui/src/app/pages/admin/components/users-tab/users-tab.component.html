@@ -1,0 +1,125 @@
+<!-- Toolbar -->
+<div class="admin-toolbar">
+  <div class="search-wrapper">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <label for="user-search" class="visually-hidden">Search users</label>
+    <input
+      id="user-search"
+      class="search-input"
+      type="text"
+      placeholder="Search users..."
+      [value]="searchTerm()"
+      (input)="onSearchChange($event)"
+      aria-label="Search users"
+    />
+  </div>
+  <label for="role-filter" class="visually-hidden">Filter by role</label>
+  <select
+    id="role-filter"
+    class="filter-select"
+    [value]="roleFilter()"
+    (change)="onRoleFilterChange($event)"
+    aria-label="Filter by role"
+  >
+    <option value="">All Roles</option>
+    <option value="Admin">Admin</option>
+    <option value="User">User</option>
+    <option value="Viewer">Viewer</option>
+  </select>
+  <label for="status-filter" class="visually-hidden">Filter by status</label>
+  <select
+    id="status-filter"
+    class="filter-select"
+    [value]="statusFilter()"
+    (change)="onStatusFilterChange($event)"
+    aria-label="Filter by status"
+  >
+    <option value="">All Status</option>
+    <option value="Active">Active</option>
+    <option value="Inactive">Inactive</option>
+  </select>
+  <button class="btn-add" type="button" aria-label="Add user">
+    <i class="bi bi-plus-lg" aria-hidden="true"></i> Add User
+  </button>
+</div>
+
+<!-- Bulk Action Bar -->
+@if (selectedUserIds().length > 0) {
+<div class="bulk-bar">
+  <span><span class="bulk-count">{{ selectedUserIds().length }}</span> user(s) selected</span>
+  <button class="bulk-btn" type="button">Activate</button>
+  <button class="bulk-btn" type="button">Deactivate</button>
+  <button class="bulk-btn danger" type="button">Delete</button>
+  <button class="bulk-clear" (click)="clearSelection()" title="Clear selection" aria-label="Clear selection">&times;</button>
+</div>
+}
+
+<!-- Users Table -->
+<div class="table-wrapper">
+  <table class="admin-table" aria-label="Users table">
+    <thead>
+      <tr>
+        <th class="cb-cell">
+          <input
+            type="checkbox"
+            [checked]="isAllSelected()"
+            (change)="toggleSelectAll()"
+            aria-label="Select all users"
+          />
+        </th>
+        <th>User</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Last Login</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (user of filteredUsers(); track trackByUserId($index, user)) {
+      <tr [class.selected]="isUserSelected(user.id)">
+        <td class="cb-cell">
+          <input
+            type="checkbox"
+            [checked]="isUserSelected(user.id)"
+            (change)="toggleUserSelection(user.id)"
+            [attr.aria-label]="'Select ' + user.firstName + ' ' + user.lastName"
+          />
+        </td>
+        <td>
+          <div class="user-cell">
+            <div class="user-avatar">{{ getUserInitials(user) }}</div>
+            <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
+          </div>
+        </td>
+        <td class="email-cell">{{ user.email }}</td>
+        <td>
+          <span class="role-badge" [class]="getRoleBadgeClass(user.role)">{{ user.role }}</span>
+        </td>
+        <td>
+          <span class="status-dot" [class]="getStatusClass(user.status)"></span>
+          {{ user.status }}
+        </td>
+        <td class="last-login-cell">{{ user.lastLogin }}</td>
+        <td>
+          <div class="action-btns">
+            <button class="action-btn" title="Edit user" aria-label="Edit user">
+              <i class="bi bi-pencil" aria-hidden="true"></i>
+            </button>
+            <button class="action-btn danger" title="Delete user" aria-label="Delete user">
+              <i class="bi bi-trash3" aria-hidden="true"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+      } @empty {
+      <tr>
+        <td colspan="7" class="empty-cell">
+          <i class="bi bi-people" aria-hidden="true"></i>
+          No users match your search criteria.
+        </td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</div>

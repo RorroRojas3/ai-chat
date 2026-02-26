@@ -1,0 +1,38 @@
+<div class="content-area">
+  <div class="content-wrapper">
+    <div class="admin-header">
+      <h1>Administration</h1>
+      <p>Manage users, permissions, and LLM model configurations.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="admin-tabs" role="tablist" aria-label="Admin sections">
+      <button
+        class="admin-tab"
+        [class.active]="activeTab() === 'users'"
+        (click)="switchTab('users')"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'users'"
+        aria-controls="tab-users"
+      >
+        <i class="bi bi-people" aria-hidden="true"></i> Users
+      </button>
+      <button
+        class="admin-tab"
+        [class.active]="activeTab() === 'models'"
+        (click)="switchTab('models')"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'models'"
+        aria-controls="tab-models"
+      >
+        <i class="bi bi-cpu" aria-hidden="true"></i> LLM Models
+      </button>
+    </div>
+
+    @if (activeTab() === 'users') {
+    <app-users-tab id="tab-users" role="tabpanel"></app-users-tab>
+    } @else {
+    <app-models-tab id="tab-models" role="tabpanel"></app-models-tab>
+    }
+  </div>
+</div>

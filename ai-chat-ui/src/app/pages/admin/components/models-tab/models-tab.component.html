@@ -1,0 +1,75 @@
+<!-- Toolbar -->
+<div class="admin-toolbar">
+  <div class="search-wrapper">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <label for="model-search" class="visually-hidden">Search models</label>
+    <input
+      id="model-search"
+      class="search-input"
+      type="text"
+      placeholder="Search models..."
+      [value]="searchTerm()"
+      (input)="onSearchChange($event)"
+      aria-label="Search models"
+    />
+  </div>
+  <button class="btn-add" type="button" aria-label="Add model">
+    <i class="bi bi-plus-lg" aria-hidden="true"></i> Add Model
+  </button>
+</div>
+
+<!-- Models Table -->
+<div class="table-wrapper">
+  <table class="admin-table" aria-label="LLM Models table">
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Provider</th>
+        <th>Model ID</th>
+        <th>Max Tokens</th>
+        <th>Status</th>
+        <th>Available To</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (model of filteredModels(); track trackByModelId($index, model)) {
+      <tr>
+        <td>
+          <div class="model-cell">
+            <i class="bi" [class]="model.icon" aria-hidden="true"></i>
+            <span class="model-name">{{ model.name }}</span>
+          </div>
+        </td>
+        <td>{{ model.provider }}</td>
+        <td><code class="model-id">{{ model.modelId }}</code></td>
+        <td>{{ formatTokenCount(model.maxTokens) }}</td>
+        <td>
+          <span class="status-dot" [class]="getStatusClass(model.status)"></span>
+          {{ model.status }}
+        </td>
+        <td>
+          <span class="availability-badge">{{ model.availableTo }}</span>
+        </td>
+        <td>
+          <div class="action-btns">
+            <button class="action-btn" title="Edit model" aria-label="Edit model">
+              <i class="bi bi-pencil" aria-hidden="true"></i>
+            </button>
+            <button class="action-btn danger" title="Delete model" aria-label="Delete model">
+              <i class="bi bi-trash3" aria-hidden="true"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+      } @empty {
+      <tr>
+        <td colspan="7" class="empty-cell">
+          <i class="bi bi-cpu" aria-hidden="true"></i>
+          No models match your search criteria.
+        </td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</div>

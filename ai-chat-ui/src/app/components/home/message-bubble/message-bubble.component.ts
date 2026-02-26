@@ -128,17 +128,17 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
     const mouseenterHandler = (): void => {
       if (!copyBtn.classList.contains('copied')) {
         copyBtn.style.opacity = '1';
-        copyBtn.style.backgroundColor = 'white';
-        copyBtn.style.borderColor = 'var(--color-accent)';
-        copyBtn.style.color = 'var(--color-navy)';
+        copyBtn.style.backgroundColor = 'var(--bg-hover)';
+        copyBtn.style.borderColor = 'var(--border-strong)';
+        copyBtn.style.color = 'var(--text-primary)';
       }
     };
     const mouseleaveHandler = (): void => {
       if (!copyBtn.classList.contains('copied')) {
         copyBtn.style.opacity = '0.7';
-        copyBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-        copyBtn.style.borderColor = 'rgba(28, 60, 98, 0.2)';
-        copyBtn.style.color = 'var(--color-accent)';
+        copyBtn.style.backgroundColor = 'var(--bg-primary)';
+        copyBtn.style.borderColor = 'var(--border-default)';
+        copyBtn.style.color = 'var(--text-secondary)';
       }
     };
 
@@ -175,9 +175,9 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
       right: '0.5rem',
       opacity: '0.7',
       transition: 'opacity 0.2s ease, background-color 0.2s ease',
-      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-      border: '1px solid rgba(28, 60, 98, 0.2)',
-      color: 'var(--color-accent)',
+      backgroundColor: 'var(--bg-primary)',
+      border: '1px solid var(--border-default)',
+      color: 'var(--text-secondary)',
       padding: '0.25rem 0.5rem',
       zIndex: '1',
       fontSize: '0.75rem',
@@ -229,9 +229,9 @@ export class MessageBubbleComponent implements AfterViewInit, OnDestroy {
 
       // Reset styles
       btn.style.opacity = '0.7';
-      btn.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-      btn.style.borderColor = 'rgba(28, 60, 98, 0.2)';
-      btn.style.color = 'var(--color-accent)';
+      btn.style.backgroundColor = 'var(--bg-primary)';
+      btn.style.borderColor = 'var(--border-default)';
+      btn.style.color = 'var(--text-secondary)';
 
       this.activeTimeouts.delete(timeoutId);
     }, COPY_FEEDBACK_DURATION_MS);

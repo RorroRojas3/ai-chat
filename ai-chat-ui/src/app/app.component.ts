@@ -1,8 +1,7 @@
-import { Component, inject, Inject, OnDestroy, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { NavbarComponent } from './shared/navbar/navbar.component';
+import { Component, inject, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
+import { SidebarComponent } from './shared/sidebar/sidebar.component';
 import { StoreService } from './store/store.service';
-import { MenuOffcanvasComponent } from './shared/menu-offcanvas/menu-offcanvas.component';
 import { NotificationComponent } from './shared/components/notification/notification.component';
 import {
   catchError,
@@ -41,14 +40,16 @@ import { NotificationService } from './services/notification.service';
   selector: 'app-root',
   imports: [
     RouterOutlet,
-    NavbarComponent,
-    MenuOffcanvasComponent,
+    RouterLink,
+    SidebarComponent,
     NotificationComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit, OnDestroy {
+  @ViewChild(SidebarComponent) sidebarComponent!: SidebarComponent;
+
   constructor(
     @Inject(MSAL_GUARD_CONFIG) private msalGuardConfig: MsalGuardConfiguration,
     private authService: MsalService,

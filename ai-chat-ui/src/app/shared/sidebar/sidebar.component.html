@@ -1,0 +1,135 @@
+<!-- Sidebar Backdrop (mobile) -->
+<div
+  class="sidebar-backdrop"
+  [class.show]="mobileOpen()"
+  (click)="closeMobileSidebar()"
+></div>
+
+<!-- Sidebar -->
+<aside
+  class="sidebar"
+  [class.collapsed]="collapsed()"
+  [class.mobile-open]="mobileOpen()"
+>
+  <div class="sidebar-header">
+    <i class="bi bi-chat-dots brand-icon" aria-hidden="true"></i>
+    <span class="brand-text">AI Assistant</span>
+    <button
+      class="collapse-btn"
+      (click)="toggleSidebar()"
+      title="Toggle sidebar"
+      aria-label="Toggle sidebar"
+    >
+      <i class="bi" [class.bi-chevron-left]="!collapsed()" [class.bi-chevron-right]="collapsed()"></i>
+    </button>
+  </div>
+
+  <div class="new-chat-section">
+    <button class="new-chat-btn" (click)="onClickCreateNewConversation()" title="New Chat">
+      <i class="bi bi-plus-lg" aria-hidden="true"></i>
+      <span class="btn-text">New Chat</span>
+    </button>
+  </div>
+
+  <nav class="sidebar-nav" aria-label="Main navigation">
+    <a
+      class="sidebar-nav-item"
+      routerLink="/chat"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{exact: false}"
+      title="Chat"
+      (click)="closeMobileSidebar()"
+    >
+      <i class="bi bi-chat-text" aria-hidden="true"></i>
+      <span class="nav-text">Chat</span>
+    </a>
+    <a
+      class="sidebar-nav-item"
+      routerLink="/conversations"
+      routerLinkActive="active"
+      title="Conversations"
+      (click)="closeMobileSidebar()"
+    >
+      <i class="bi bi-clock-history" aria-hidden="true"></i>
+      <span class="nav-text">Conversations</span>
+    </a>
+    <a
+      class="sidebar-nav-item"
+      routerLink="/admin"
+      routerLinkActive="active"
+      title="Admin"
+      (click)="closeMobileSidebar()"
+    >
+      <i class="bi bi-gear" aria-hidden="true"></i>
+      <span class="nav-text">Admin</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-recent">
+    <div class="sidebar-recent-label">Recent</div>
+    @for (conversation of storeService.menuConversations(); track trackByConversationId($index, conversation)) {
+    <div
+      class="conversation-item"
+      [class.active]="isCurrentConversation(conversation.id)"
+      (click)="onClickConversation(conversation.id)"
+    >
+      <span class="conv-text">{{ getTruncatedConversationName(conversation) }}</span>
+      <div class="dropdown">
+        <button
+          class="conv-menu-btn dropdown-toggle"
+          type="button"
+          [attr.id]="'sidebar-dropdown-' + conversation.id"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+          (click)="$event.stopPropagation()"
+          [attr.aria-label]="'Actions for ' + conversation.name"
+        >
+          <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+        </button>
+        <ul class="dropdown-menu" [attr.aria-labelledby]="'sidebar-dropdown-' + conversation.id">
+          <li>
+            <button
+              type="button"
+              class="dropdown-item"
+              (click)="onRenameConversation(conversation.id, $event)"
+            >
+              <i class="bi bi-pencil me-2" aria-hidden="true"></i>Rename
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              class="dropdown-item text-danger"
+              (click)="onDeleteConversation(conversation.id, $event)"
+            >
+              <i class="bi bi-trash3 me-2" aria-hidden="true"></i>Delete
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+    }
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar">{{ getUserInitials() }}</div>
+    <div class="user-info">
+      <div class="user-name">{{ getUserDisplayName() }}</div>
+      <div class="user-org">Enterprise AI</div>
+    </div>
+  </div>
+</aside>
+
+<app-rename-modal
+  [show]="showRenameModal"
+  [name]="storeService.conversation()?.name ?? ''"
+  (onClose)="onCloseRenameModal()"
+  (onRename)="handleRenameConversation($event)"
+></app-rename-modal>
+
+<app-delete-modal
+  [show]="showDeleteModal"
+  [conversationCount]="1"
+  (onClose)="onCloseDeleteModal()"
+  (onDelete)="handleDeleteConversation()"
+></app-delete-modal>
