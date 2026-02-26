@@ -1,4 +1,4 @@
-export interface SessionDto {
+export interface ConversationDto {
   id: string;
   name: string;
   projectId?: string;
@@ -6,7 +6,7 @@ export interface SessionDto {
   dateModified: string; // ISO date string from API
 }
 
-export interface SessionMessageDto {
+export interface ConversationMessageDto {
   id: string;
   name: string;
   dateCreated: string;
@@ -15,10 +15,10 @@ export interface SessionMessageDto {
   role: number;
 }
 
-export interface SessionConversationDto {
+export interface ChatConversationDto {
   id: string;
   name: string;
   dateCreated: string;
   dateModified: string;
-  messages: SessionMessageDto[];
+  messages: ConversationMessageDto[];
 }

@@ -19,7 +19,7 @@
     }
     <form
       id="promptForm"
-      (ngSubmit)="onClickCreateSession()"
+      (ngSubmit)="onClickCreateConversation()"
       (keydown)="onKeyDown($event)"
     >
       <div class="position-relative">
@@ -181,7 +181,7 @@
 
                 <!-- Download Conversation History Dropdown -->
                 @if (
-                  storeService.session() &&
+                  storeService.conversation() &&
                   storeService.messages().length > 2 &&
                   !storeService.isStreaming()
                 ) {
@@ -227,7 +227,7 @@
                   <button
                     type="submit"
                     class="btn btn-lg btn-primary"
-                    (click)="onClickCreateSession()"
+                    (click)="onClickCreateConversation()"
                     title="Send message"
                     [attr.aria-label]="'Send message'"
                   >
@@ -237,7 +237,7 @@
                   <button
                     type="button"
                     class="btn btn-lg btn-primary"
-                    (click)="onClickStopSession()"
+                    (click)="onClickStopConversation()"
                     title="Stop message"
                     [attr.aria-label]="'Stop message'"
                   >

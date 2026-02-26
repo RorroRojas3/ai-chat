@@ -2,14 +2,14 @@ import { Component, input, output, effect, signal } from '@angular/core';
 
 
 @Component({
-  selector: 'app-session-delete-modal',
+  selector: 'app-delete-modal',
   imports: [],
-  templateUrl: './session-delete-modal.component.html',
-  styleUrl: './session-delete-modal.component.scss',
+  templateUrl: './delete-modal.component.html',
+  styleUrl: './delete-modal.component.scss',
 })
-export class SessionDeleteModalComponent {
+export class DeleteModalComponent {
   show = input<boolean>(false);
-  sessionCount = input<number>(0);
+  conversationCount = input<number>(0);
   onDelete = output<void>();
   onClose = output<void>();
   shouldShow = signal<boolean>(false);

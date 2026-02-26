@@ -134,7 +134,7 @@ export class AppComponent implements OnInit, OnDestroy {
         .pipe(
           catchError(() => {
             this.notificationService.error(
-              'Failed to initialize user session.',
+              'Failed to initialize user account.',
             );
             return EMPTY;
           }),
@@ -147,10 +147,10 @@ export class AppComponent implements OnInit, OnDestroy {
             ]),
           ),
         )
-        .subscribe(([models, sessions, mcps, fileExtensions]) => {
+        .subscribe(([models, conversations, mcps, fileExtensions]) => {
           this.userStore.setInitialized();
           this.modelStore.setModels(models);
-          this.storeService.updateMenuSessions(sessions.items);
+          this.storeService.updateMenuConversations(conversations.items);
           this.mcpStore.setMcps(mcps);
           this.storeService.fileExtensions.set(fileExtensions);
         });

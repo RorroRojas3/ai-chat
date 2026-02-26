@@ -1,11 +1,11 @@
-.sessions-container {
+.conversations-container {
   background-color: var(--color-light-blue);
   min-height: 100vh;
   height: 100vh;
   overflow: hidden;
 }
 
-.sessions-list-container {
+.conversations-list-container {
   flex: 1 1 auto;
   overflow-y: auto;
   overflow-x: hidden;
@@ -32,7 +32,7 @@
   }
 }
 
-.sessions-search {
+.conversations-search {
   &__icon {
     background-color: var(--color-accent);
     border-color: var(--color-accent);
@@ -62,7 +62,7 @@
   }
 }
 
-.sessions-list {
+.conversations-list {
   &__item {
     background-color: var(--color-accent);
     border-color: var(--color-accent);
@@ -167,7 +167,7 @@
     align-items: center;
     transition: color 0.2s ease;
 
-    .sessions-list__item:hover & {
+    .conversations-list__item:hover & {
       color: rgba(255, 255, 255, 0.9);
     }
   }
@@ -179,7 +179,7 @@
   }
 }
 
-.sessions-load-more {
+.conversations-load-more {
   background-color: var(--color-accent);
   border-color: var(--color-accent);
   color: white;
@@ -226,7 +226,7 @@
 
 // Responsive adjustments for mobile
 @media (max-width: 768px) {
-  .sessions-list {
+  .conversations-list {
     &__checkbox-container {
       min-width: 32px; // Slightly larger touch target on mobile
       margin-right: 8px;

@@ -32,7 +32,7 @@
       <button
         type="button"
         class="list-group-item list-group-item-action menu-list__item"
-        (click)="onClickCreateNewSession()"
+        (click)="onClickCreateNewConversation()"
       >
         <i class="bi bi-plus-circle"></i>&nbsp;New Chat
       </button>
@@ -58,22 +58,22 @@
 
     <!-- Search functionality -->
     <div class="mb-3">
-      <label for="session-search" class="visually-hidden">Search chats</label>
+      <label for="conversation-search" class="visually-hidden">Search chats</label>
       <div class="input-group">
         <span class="input-group-text menu-search__icon" aria-hidden="true">
           <i class="bi bi-search"></i>
         </span>
         <input
-          id="session-search"
+          id="conversation-search"
           type="text"
           class="form-control menu-search__input"
           placeholder="Search chats..."
-          [value]="storeService.menuSessionSearchFilter()"
+          [value]="storeService.menuConversationSearchFilter()"
           (input)="onSearchChange($event)"
-          aria-label="Search chat sessions"
+          aria-label="Search chat conversations"
           aria-describedby="search-help"
         />
-        @if (storeService.menuSessionSearchFilter()) {
+        @if (storeService.menuConversationSearchFilter()) {
         <button
           class="btn btn-outline-secondary menu-search__clear"
           type="button"
@@ -85,13 +85,13 @@
         }
       </div>
       <span id="search-help" class="visually-hidden"
-        >Type to search your chat sessions</span
+        >Type to search your chat conversations</span
       >
     </div>
 
     <h6 class="offcanvas-title menu-section-title">Recent Chats</h6>
     <ul class="list-group menu-list" role="list">
-      @if (storeService.menuIsSessionSearching()) {
+      @if (storeService.menuIsConversationSearching()) {
       <li
         class="list-group-item menu-list__item menu-list__item--loading"
         role="status"
@@ -100,29 +100,29 @@
         <i class="bi bi-search me-2"></i>
         Searching...
       </li>
-      } @else { @for (session of storeService.menuSessions(); track
-      trackBySessionId($index, session)) {
+      } @else { @for (conversation of storeService.menuConversations(); track
+      trackByConversationId($index, conversation)) {
       <li
         class="list-group-item list-group-item-action menu-list__item d-flex justify-content-between align-items-center"
-        [class.menu-list__item--active]="isCurrentSession(session.id)"
+        [class.menu-list__item--active]="isCurrentConversation(conversation.id)"
         role="listitem"
       >
         <button
           type="button"
           class="flex-grow-1 text-white text-decoration-none bg-transparent border-0 text-start p-0"
-          (click)="onClickSession(session.id)"
-          [attr.aria-label]="'Open chat: ' + session.name"
-          [attr.aria-current]="isCurrentSession(session.id) ? 'page' : null"
+          (click)="onClickConversation(conversation.id)"
+          [attr.aria-label]="'Open chat: ' + conversation.name"
+          [attr.aria-current]="isCurrentConversation(conversation.id) ? 'page' : null"
         >
-          {{ getTruncatedSessionName(session) }}
+          {{ getTruncatedConversationName(conversation) }}
         </button>
-        @if (isCurrentSession(session.id)) {
+        @if (isCurrentConversation(conversation.id)) {
         <div class="dropdown ms-2">
           <button
             class="btn btn-link p-1 text-white dropdown-toggle"
             type="button"
-            [attr.id]="'dropdownMenu-' + session.id"
-            [attr.aria-label]="'Actions for ' + session.name"
+            [attr.id]="'dropdownMenu-' + conversation.id"
+            [attr.aria-label]="'Actions for ' + conversation.name"
             data-bs-toggle="dropdown"
             aria-expanded="false"
             (click)="$event.stopPropagation()"
@@ -131,13 +131,13 @@
           </button>
           <ul
             class="dropdown-menu"
-            [attr.aria-labelledby]="'dropdownMenu-' + session.id"
+            [attr.aria-labelledby]="'dropdownMenu-' + conversation.id"
           >
             <li>
               <button
                 type="button"
                 class="dropdown-item"
-                (click)="onRenameSession(session.id, $event)"
+                (click)="onRenameConversation(conversation.id, $event)"
               >
                 <i class="bi bi-pencil me-2"></i>Rename
               </button>
@@ -146,7 +146,7 @@
               <button
                 type="button"
                 class="dropdown-item"
-                (click)="onDeleteSession(session.id, $event)"
+                (click)="onDeleteConversation(conversation.id, $event)"
               >
                 <i class="bi bi-trash me-2"></i>Delete
               </button>
@@ -155,30 +155,30 @@
         </div>
         }
       </li>
-      } @empty { @if (storeService.menuSessionSearchFilter()) {
+      } @empty { @if (storeService.menuConversationSearchFilter()) {
       <li
         class="list-group-item menu-list__item menu-list__item--no-results"
         role="status"
         aria-live="polite"
       >
         <i class="bi bi-search me-2"></i>
-        No chats found for "{{ storeService.menuSessionSearchFilter() }}"
+        No chats found for "{{ storeService.menuConversationSearchFilter() }}"
       </li>
       } } }
     </ul>
   </div>
 </div>
 
-<app-session-rename-modal
+<app-rename-modal
   [show]="showRenameModal"
-  [name]="storeService.session()?.name ?? ''"
+  [name]="storeService.conversation()?.name ?? ''"
   (onClose)="onCloseRenameModal()"
-  (onRename)="handleRenameSession($event)"
-></app-session-rename-modal>
+  (onRename)="handleRenameConversation($event)"
+></app-rename-modal>
 
-<app-session-delete-modal
+<app-delete-modal
   [show]="showDeleteModal"
-  [sessionCount]="1"
+  [conversationCount]="1"
   (onClose)="onCloseDeleteModal()"
-  (onDelete)="handleDeleteSession()"
-></app-session-delete-modal>
+  (onDelete)="handleDeleteConversation()"
+></app-delete-modal>

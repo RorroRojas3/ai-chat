@@ -78,7 +78,7 @@ export class PromptBoxComponent implements OnDestroy {
     }).use(markdown_it_highlightjs, { hljs });
   }
 
-  async onClickCreateSession(): Promise<void> {
+  async onClickCreateConversation(): Promise<void> {
     if (!this.prompt.trim() || this.storeService.isStreaming()) {
       return;
     }
@@ -96,17 +96,17 @@ export class PromptBoxComponent implements OnDestroy {
       this.storeService.isStreaming.set(true);
       this.storeService.showStreamLoader.set(true);
 
-      if (!this.storeService.session()) {
-        const session = await firstValueFrom(
+      if (!this.storeService.conversation()) {
+        const conversation = await firstValueFrom(
           this.conversationService.createConversation({
             projectId: this.storeService.projectId(),
           }),
         );
-        this.storeService.session.set(session);
-        this.location.replaceState(`chat/session/${session.id}`);
+        this.storeService.conversation.set(conversation);
+        this.location.replaceState(`chat/conversation/${conversation.id}`);
       }
 
-      // Upload attached files to the session
+      // Upload attached files to the conversation
       if (this.attachedFiles.length > 0) {
         const jobs = await this.uploadAttachedFiles();
         // Start polling for job status
@@ -148,13 +148,13 @@ export class PromptBoxComponent implements OnDestroy {
         });
     } catch (error) {
       // Handle errors appropriately
-      console.error('Error in session creation:', error);
+      console.error('Error in conversation creation:', error);
       this.resetPromptState();
     }
   }
 
   /**
-   * Stops the current streaming session.
+   * Stops the current streaming conversation.
    *
    * Unsubscribes from the SSE (Server-Sent Events) subscription if active,
    * clears the subscription reference, resets streaming state, clears the
@@ -162,7 +162,7 @@ export class PromptBoxComponent implements OnDestroy {
    *
    * @returns {void}
    */
-  onClickStopSession(): void {
+  onClickStopConversation(): void {
     if (this.sseSubscription) {
       this.sseSubscription.unsubscribe();
       this.sseSubscription = undefined;
@@ -296,11 +296,11 @@ export class PromptBoxComponent implements OnDestroy {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  // Upload all attached files to the current session
+  // Upload all attached files to the current conversation
   async uploadAttachedFiles(): Promise<JobDto[]> {
-    const sessionId = this.storeService.session()!.id;
-    if (!sessionId) {
-      throw new Error('No session ID available for file upload');
+    const conversationId = this.storeService.conversation()!.id;
+    if (!conversationId) {
+      throw new Error('No conversation ID available for file upload');
     }
 
     // Update file status to uploading
@@ -312,7 +312,7 @@ export class PromptBoxComponent implements OnDestroy {
     const uploadPromises = this.attachedFiles.map((attachedFile) =>
       firstValueFrom(
         this.documentService.createSessionDocument(
-          sessionId,
+          conversationId,
           attachedFile.file,
         ),
       ),
@@ -424,7 +424,7 @@ export class PromptBoxComponent implements OnDestroy {
   onTextareaKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
-      this.onClickCreateSession();
+      this.onClickCreateConversation();
     }
   }
 
@@ -456,13 +456,13 @@ export class PromptBoxComponent implements OnDestroy {
    * Downloads conversation history in the specified format
    */
   onDownloadConversationHistory(format: DocumentFormats): void {
-    const sessionId = this.storeService.session()?.id;
-    if (!sessionId) {
+    const conversationId = this.storeService.conversation()?.id;
+    if (!conversationId) {
       return;
     }
 
     this.documentService
-      .getConversationHistory(sessionId, format)
+      .getConversationHistory(conversationId, format)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
         this.documentService.downloadFile(response.blob, response.fileName);

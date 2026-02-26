@@ -16,25 +16,25 @@ import {
 } from 'rxjs';
 
 import { Router } from '@angular/router';
-import { SessionDto } from '../../dtos/SessionDto';
-import { SessionRenameModalComponent } from '../../components/sessions/session-rename-modal/session-rename-modal.component';
-import { UpdateSessionActionDto } from '../../dtos/actions/session/UpdateSessionActionDto';
+import { ConversationDto } from '../../dtos/ConversationDto';
+import { RenameModalComponent } from '../../pages/conversations/components/rename-modal/rename-modal.component';
+import { UpdateConversationActionDto } from '../../dtos/actions/conversation/UpdateConversationActionDto';
 import { NotificationService } from '../../services/notification.service';
-import { SessionDeleteModalComponent } from '../../components/sessions/session-delete-modal/session-delete-modal.component';
+import { DeleteModalComponent } from '../../pages/conversations/components/delete-modal/delete-modal.component';
 
 @Component({
   selector: 'app-menu-offcanvas',
   imports: [
     FormsModule,
-    SessionRenameModalComponent,
-    SessionDeleteModalComponent,
+    RenameModalComponent,
+    DeleteModalComponent,
   ],
   templateUrl: './menu-offcanvas.component.html',
   styleUrl: './menu-offcanvas.component.scss',
 })
 export class MenuOffcanvasComponent implements OnInit {
   // Constants
-  readonly MAX_SESSION_NAME_LENGTH = 40;
+  readonly MAX_CONVERSATION_NAME_LENGTH = 40;
   readonly SEARCH_DEBOUNCE_MS = 600;
   readonly OFFCANVAS_TRANSITION_DELAY_MS = 300;
 
@@ -66,7 +66,7 @@ export class MenuOffcanvasComponent implements OnInit {
    * Performs search using the conversation service
    */
   private performSearch(filter: string): void {
-    this.storeService.setMenuSessionSearchFilter(filter);
+    this.storeService.setMenuConversationSearchFilter(filter);
     this.conversationService
       .loadMenuConversations()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -74,54 +74,54 @@ export class MenuOffcanvasComponent implements OnInit {
   }
 
   /**
-   * TrackBy function for session list to improve performance
+   * TrackBy function for conversation list to improve performance
    */
-  trackBySessionId(_index: number, session: SessionDto): string {
-    return session.id;
+  trackByConversationId(_index: number, conversation: ConversationDto): string {
+    return conversation.id;
   }
 
   /**
-   * Truncates session name if it exceeds max length
+   * Truncates conversation name if it exceeds max length
    */
-  getTruncatedSessionName(session: SessionDto): string {
-    return session.name.length > this.MAX_SESSION_NAME_LENGTH
-      ? session.name.slice(0, this.MAX_SESSION_NAME_LENGTH) + '...'
-      : session.name;
+  getTruncatedConversationName(conversation: ConversationDto): string {
+    return conversation.name.length > this.MAX_CONVERSATION_NAME_LENGTH
+      ? conversation.name.slice(0, this.MAX_CONVERSATION_NAME_LENGTH) + '...'
+      : conversation.name;
   }
 
   /**
-   * Checks if the given session ID matches the current active session
+   * Checks if the given conversation ID matches the current active conversation
    */
-  isCurrentSession(sessionId: string): boolean {
-    return this.storeService.session()?.id === sessionId;
+  isCurrentConversation(conversationId: string): boolean {
+    return this.storeService.conversation()?.id === conversationId;
   }
 
   /**
-   * Handles the click event for selecting a session from the menu.
-   * Finds the session in the menu sessions list, sets it as the active session,
-   * and navigates to the session's chat page.
+   * Handles the click event for selecting a conversation from the menu.
+   * Finds the conversation in the menu conversations list, sets it as the active conversation,
+   * and navigates to the conversation's chat page.
    *
-   * @param sessionId - The unique identifier of the session to navigate to
+   * @param conversationId - The unique identifier of the conversation to navigate to
    * @returns void
    */
-  onClickSession(sessionId: string): void {
-    const foundSession = this.storeService
-      .menuSessions()
-      .find((s) => s.id === sessionId);
-    if (foundSession) {
-      this.storeService.session.set(foundSession);
-      this.router.navigate(['chat', 'session', foundSession.id]);
+  onClickConversation(conversationId: string): void {
+    const foundConversation = this.storeService
+      .menuConversations()
+      .find((c) => c.id === conversationId);
+    if (foundConversation) {
+      this.storeService.conversation.set(foundConversation);
+      this.router.navigate(['chat', 'conversation', foundConversation.id]);
     }
   }
 
   /**
-   * Handles the click event for creating a new session.
-   * Clears the current session data using the store service.
+   * Handles the click event for creating a new conversation.
+   * Clears the current conversation data using the store service.
    *
    * @returns void
    */
-  onClickCreateNewSession(): void {
-    this.storeService.clearForNewSession();
+  onClickCreateNewConversation(): void {
+    this.storeService.clearForNewConversation();
     this.router.navigate(['chat']);
   }
 
@@ -137,7 +137,7 @@ export class MenuOffcanvasComponent implements OnInit {
    * Clears the search term
    */
   clearSearch(): void {
-    this.storeService.clearMenuSessionSearchFilter();
+    this.storeService.clearMenuConversationSearchFilter();
     this.conversationService
       .loadMenuConversations()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -145,13 +145,13 @@ export class MenuOffcanvasComponent implements OnInit {
   }
 
   /**
-   * Navigates to the chat sessions page.
+   * Navigates to the chat conversations page.
    *
    * @returns {void}
    */
   onClickGoToChats(): void {
-    this.storeService.clearForNewSession();
-    this.router.navigate(['sessions']);
+    this.storeService.clearForNewConversation();
+    this.router.navigate(['conversations']);
   }
 
   /**
@@ -163,28 +163,28 @@ export class MenuOffcanvasComponent implements OnInit {
    * @returns {void}
    */
   onClickGoToProjects(): void {
-    this.storeService.clearForNewSession();
+    this.storeService.clearForNewConversation();
     this.router.navigate(['projects']);
   }
 
   /**
-   * Initiates the rename process for a specific session.
+   * Initiates the rename process for a specific conversation.
    *
-   * Finds the session by ID, sets it as the active session in the store,
+   * Finds the conversation by ID, sets it as the active conversation in the store,
    * closes the offcanvas menu, and opens the rename modal.
    *
-   * @param sessionId - The unique identifier of the session to rename
+   * @param conversationId - The unique identifier of the conversation to rename
    * @param event - The click event to stop propagation
    * @returns void
    */
-  onRenameSession(sessionId: string, event: Event): void {
+  onRenameConversation(conversationId: string, event: Event): void {
     event.stopPropagation();
 
-    const session = this.storeService
-      .menuSessions()
-      .find((s) => s.id === sessionId);
-    if (session) {
-      this.storeService.session.set(session);
+    const conversation = this.storeService
+      .menuConversations()
+      .find((c) => c.id === conversationId);
+    if (conversation) {
+      this.storeService.conversation.set(conversation);
 
       // Close the offcanvas before opening the modal
       this.toggleOffcanvas(false);
@@ -197,11 +197,11 @@ export class MenuOffcanvasComponent implements OnInit {
   }
 
   /**
-   * Handles renaming the active session with proper error handling and cleanup.
-   * Updates the session name, refreshes menu sessions, and optionally
-   * reloads page sessions if the renamed session is present in the page view.
+   * Handles renaming the active conversation with proper error handling and cleanup.
+   * Updates the conversation name, refreshes menu conversations, and optionally
+   * reloads page conversations if the renamed conversation is present in the page view.
    *
-   * @param newName - The new name for the session
+   * @param newName - The new name for the conversation
    * @returns void
    *
    * @remarks
@@ -210,18 +210,18 @@ export class MenuOffcanvasComponent implements OnInit {
    * - Shows error notifications if the rename operation fails
    * - Ensures the modal is closed in the finalize block regardless of success/failure
    * - Reopens the offcanvas menu after the operation completes
-   * - Updates the active session in the store
-   * - Reloads menu sessions to reflect the change
-   * - Conditionally reloads page sessions if the session exists in that view
+   * - Updates the active conversation in the store
+   * - Reloads menu conversations to reflect the change
+   * - Conditionally reloads page conversations if the conversation exists in that view
    */
-  handleRenameSession(newName: string): void {
-    const currentSession = this.storeService.session();
-    if (!currentSession) {
+  handleRenameConversation(newName: string): void {
+    const currentConversation = this.storeService.conversation();
+    if (!currentConversation) {
       this.onCloseRenameModal();
       return;
     }
 
-    const request = new UpdateSessionActionDto(currentSession.id, newName);
+    const request = new UpdateConversationActionDto(currentConversation.id, newName);
 
     this.conversationService
       .updateConversation(request)
@@ -231,23 +231,23 @@ export class MenuOffcanvasComponent implements OnInit {
           return EMPTY;
         }),
         switchMap((response) => {
-          // Update the active session with the response
-          this.storeService.session.set(response);
+          // Update the active conversation with the response
+          this.storeService.conversation.set(response);
           this.notificationService.success('Chat renamed successfully.');
 
-          // Check if we need to reload page sessions
-          const shouldReloadPageSessions = this.storeService
-            .pageSessions()
-            .some((s) => s.id === response.id);
+          // Check if we need to reload page conversations
+          const shouldReloadPageConversations = this.storeService
+            .pageConversations()
+            .some((c) => c.id === response.id);
 
-          // Reload menu sessions and conditionally reload page sessions
+          // Reload menu conversations and conditionally reload page conversations
           return forkJoin({
-            menuSessions: this.conversationService.loadMenuConversations(),
-            pageSessions: shouldReloadPageSessions
+            menuConversations: this.conversationService.loadMenuConversations(),
+            pageConversations: shouldReloadPageConversations
               ? this.conversationService.loadPageConversations(
-                  this.storeService.pageSessionSearchFilter(),
+                  this.storeService.pageConversationSearchFilter(),
                   0,
-                  this.storeService.SESSION_PAGE_SIZE,
+                  this.storeService.CONVERSATION_PAGE_SIZE,
                 )
               : of(undefined),
           });
@@ -271,23 +271,23 @@ export class MenuOffcanvasComponent implements OnInit {
   }
 
   /**
-   * Initiates the delete process for a specific session.
+   * Initiates the delete process for a specific conversation.
    *
-   * Finds the session by ID, sets it as the active session in the store,
+   * Finds the conversation by ID, sets it as the active conversation in the store,
    * closes the offcanvas menu, and opens the delete confirmation modal.
    *
-   * @param sessionId - The unique identifier of the session to delete
+   * @param conversationId - The unique identifier of the conversation to delete
    * @param event - The click event to stop propagation
    * @returns void
    */
-  onDeleteSession(sessionId: string, event: Event): void {
+  onDeleteConversation(conversationId: string, event: Event): void {
     event.stopPropagation();
 
-    const session = this.storeService
-      .menuSessions()
-      .find((s) => s.id === sessionId);
-    if (session) {
-      this.storeService.session.set(session);
+    const conversation = this.storeService
+      .menuConversations()
+      .find((c) => c.id === conversationId);
+    if (conversation) {
+      this.storeService.conversation.set(conversation);
 
       this.toggleOffcanvas(false);
 
@@ -298,9 +298,9 @@ export class MenuOffcanvasComponent implements OnInit {
   }
 
   /**
-   * Handles deleting the active session with proper error handling and cleanup.
-   * Deactivates the session, clears it from the store, refreshes menu sessions,
-   * and optionally reloads page sessions if the deleted session was present in the page view.
+   * Handles deleting the active conversation with proper error handling and cleanup.
+   * Deactivates the conversation, clears it from the store, refreshes menu conversations,
+   * and optionally reloads page conversations if the deleted conversation was present in the page view.
    *
    * @returns void
    *
@@ -310,50 +310,50 @@ export class MenuOffcanvasComponent implements OnInit {
    * - Shows error notifications if the delete operation fails
    * - Ensures the modal is closed in the finalize block regardless of success/failure
    * - Reopens the offcanvas menu after the operation completes
-   * - Clears the active session from the store
-   * - Reloads menu sessions to reflect the change
-   * - Conditionally reloads page sessions if the session exists in that view
-   * - Navigates away from the deleted session if currently viewing it
+   * - Clears the active conversation from the store
+   * - Reloads menu conversations to reflect the change
+   * - Conditionally reloads page conversations if the conversation exists in that view
+   * - Navigates away from the deleted conversation if currently viewing it
    */
-  handleDeleteSession(): void {
-    const currentSession = this.storeService.session();
-    if (!currentSession) {
+  handleDeleteConversation(): void {
+    const currentConversation = this.storeService.conversation();
+    if (!currentConversation) {
       this.onCloseDeleteModal();
       return;
     }
 
-    const sessionId = currentSession.id;
+    const conversationId = currentConversation.id;
     this.conversationService
-      .deactivateConversation(sessionId)
+      .deactivateConversation(conversationId)
       .pipe(
         catchError(() => {
           this.notificationService.error('Error deleting chat.');
           return EMPTY;
         }),
         switchMap(() => {
-          this.storeService.session.set(null);
+          this.storeService.conversation.set(null);
           this.notificationService.success('Chat deleted successfully.');
 
-          // Check if we need to reload page sessions
-          const shouldReloadPageSessions = this.storeService
-            .pageSessions()
-            .some((s) => s.id === sessionId);
+          // Check if we need to reload page conversations
+          const shouldReloadPageConversations = this.storeService
+            .pageConversations()
+            .some((c) => c.id === conversationId);
 
-          // Reload menu sessions and conditionally reload page sessions
+          // Reload menu conversations and conditionally reload page conversations
           return forkJoin({
-            menuSessions: this.conversationService.loadMenuConversations(),
-            pageSessions: shouldReloadPageSessions
+            menuConversations: this.conversationService.loadMenuConversations(),
+            pageConversations: shouldReloadPageConversations
               ? this.conversationService.loadPageConversations(
-                  this.storeService.pageSessionSearchFilter(),
+                  this.storeService.pageConversationSearchFilter(),
                   0,
-                  this.storeService.SESSION_PAGE_SIZE,
+                  this.storeService.CONVERSATION_PAGE_SIZE,
                 )
               : of(undefined),
           });
         }),
         switchMap(() => {
-          // Navigate to chat page after sessions are reloaded
-          this.onClickCreateNewSession();
+          // Navigate to chat page after conversations are reloaded
+          this.onClickCreateNewConversation();
           return of(undefined);
         }),
         finalize(() => {
