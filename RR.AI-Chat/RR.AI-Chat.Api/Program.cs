@@ -225,7 +225,6 @@ catch (Exception ex)
 }
 
 // Apply cosmos DB migrations or setup if needed
-
 var cosmosClient = services.GetRequiredService<CosmosClient>();
 var database = await cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDatabaseId);
 await database.Database.CreateContainerIfNotExistsAsync(cosmosContainerId, "/userId");

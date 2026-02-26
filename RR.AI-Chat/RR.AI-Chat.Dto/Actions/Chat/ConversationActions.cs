@@ -19,8 +19,6 @@ namespace RR.AI_Chat.Dto.Actions.Chat
 
         public Guid ModelId { get; set; }
 
-        public Guid ServiceId { get; set; }
-
         public List<McpDto> McpServers { get; set; } = [];
     }
 
@@ -32,8 +30,6 @@ namespace RR.AI_Chat.Dto.Actions.Chat
                 .NotEmpty().WithMessage("Prompt is required.");
             RuleFor(x => x.ModelId)
                 .NotEmpty().WithMessage("ModelId is required.");
-            RuleFor(x => x.ServiceId)
-                .NotEmpty().WithMessage("ServiceId is required.");
             RuleForEach(x => x.McpServers)
                 .ChildRules(mcp =>
                 {

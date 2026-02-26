@@ -21,7 +21,7 @@ namespace RR.AI_Chat.Service
         {
             var user = await _graphClient.Users[oid.ToString()].GetAsync(requestConfig =>
             {
-                requestConfig.QueryParameters.Select = ["givenName", "surname", "mail"];
+                requestConfig.QueryParameters.Select = ["givenName", "surname", "mail", "userPrincipalName"];
             }, cancellationToken: cancellationToken);
 
             return user ?? throw new NotFoundException($"User {oid} not found");

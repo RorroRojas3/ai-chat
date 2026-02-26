@@ -47,7 +47,7 @@ namespace RR.AI_Chat.Service
                 Id = oid,
                 FirstName = graphUser.GivenName!,
                 LastName = graphUser.Surname!,
-                Email = graphUser.Mail!,
+                Email = (graphUser.Mail ?? graphUser.UserPrincipalName)!,
                 DateCreated = date,
                 DateModified = date
             };

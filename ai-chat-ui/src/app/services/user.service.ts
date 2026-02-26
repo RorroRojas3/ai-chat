@@ -14,6 +14,6 @@ export class UserService {
    * @returns {Observable<void>} An Observable that completes when the user is successfully created.
    */
   createUser(): Observable<void> {
-    return this.http.post<void>(`${environment.apiUrl}/api/users/me`, {});
+    return this.http.post<void>(`${environment.apiUrl}users/me`, {});
   }
 }

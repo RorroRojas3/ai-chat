@@ -12,7 +12,7 @@ import { CreateChatStreamActionDto } from '../dtos/actions/chats/CreateChatStrea
 @Injectable({
   providedIn: 'root',
 })
-export class ChatService {
+export class ConversationService {
   private readonly http = inject(HttpClient);
   private readonly storeService = inject(StoreService);
   private readonly modelStore = inject(ModelStore);
@@ -92,7 +92,7 @@ export class ChatService {
       acquireToken()
         .then((accessToken) => {
           return fetch(
-            `${environment.apiUrl}chats/sessions/${
+            `${environment.apiUrl}conversations/${
               this.storeService.session()?.id
             }/stream`,
             {
@@ -149,7 +149,7 @@ export class ChatService {
    */
   getSessionConversation(id: string): Observable<SessionConversationDto> {
     return this.http.get<SessionConversationDto>(
-      `${environment.apiUrl}chats/sessions/${id}/conversations`,
+      `${environment.apiUrl}conversations/${id}/messages`,
     );
   }
 }

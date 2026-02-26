@@ -10,7 +10,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import hljs from 'highlight.js';
 import { ActivatedRoute } from '@angular/router';
-import { ChatService } from '../../services/chat.service';
+import { ConversationService } from '../../services/conversation.service';
 import { SessionService } from '../../services/session.service';
 import { NotificationService } from '../../services/notification.service';
 import { catchError, EMPTY, switchMap, tap } from 'rxjs';
@@ -25,7 +25,7 @@ import { ChatRoles } from '../../dtos/const/ChatRoles';
 export class HomeComponent implements OnInit {
   public readonly storeService = inject(StoreService);
   private readonly sessionService = inject(SessionService);
-  private readonly chatService = inject(ChatService);
+  private readonly conversationService = inject(ConversationService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
@@ -82,7 +82,7 @@ export class HomeComponent implements OnInit {
         }),
         switchMap((session) => {
           // Step 3: Get the session conversation after successful session fetch
-          return this.chatService.getSessionConversation(session.id);
+          return this.conversationService.getSessionConversation(session.id);
         }),
         catchError(() => {
           // Step 6: Catch errors and display notification

@@ -9,7 +9,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StoreService } from '../../../store/store.service';
 import { ModelStore } from '../../../store/model.store';
 import { McpStore } from '../../../store/mcp.store';
-import { ChatService } from '../../../services/chat.service';
+import { ConversationService } from '../../../services/conversation.service';
 import { FormsModule } from '@angular/forms';
 import {
   firstValueFrom,
@@ -49,7 +49,7 @@ export class PromptBoxComponent implements OnDestroy {
   public readonly storeService = inject(StoreService);
   public readonly modelStore = inject(ModelStore);
   public readonly mcpStore = inject(McpStore);
-  private readonly chatService = inject(ChatService);
+  private readonly conversationService = inject(ConversationService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly sessionService = inject(SessionService);
   private readonly documentService = inject(DocumentService);
@@ -116,7 +116,7 @@ export class PromptBoxComponent implements OnDestroy {
       }
 
       let firstStream = true;
-      this.sseSubscription = this.chatService
+      this.sseSubscription = this.conversationService
         .getServerSentEvent(promptText)
         .subscribe({
           next: (message) => {

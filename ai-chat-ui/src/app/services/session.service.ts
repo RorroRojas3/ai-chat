@@ -26,7 +26,7 @@ export class SessionService {
    */
   getSession(sessionId: string): Observable<SessionDto> {
     return this.http.get<SessionDto>(
-      `${environment.apiUrl}sessions/${sessionId}`
+      `${environment.apiUrl}conversations/${sessionId}`,
     );
   }
 
@@ -37,7 +37,10 @@ export class SessionService {
    * @returns An Observable that emits the created SessionDto upon successful completion
    */
   createSession(request: CreateSessionActionDto): Observable<SessionDto> {
-    return this.http.post<SessionDto>(`${environment.apiUrl}sessions`, request);
+    return this.http.post<SessionDto>(
+      `${environment.apiUrl}conversations`,
+      request,
+    );
   }
 
   /**
@@ -51,13 +54,13 @@ export class SessionService {
   searchSessions(
     filter: string,
     skip: number = 0,
-    take: number = 10
+    take: number = 10,
   ): Observable<PaginatedResponseDto<SessionDto>> {
     return this.http.get<PaginatedResponseDto<SessionDto>>(
-      `${environment.apiUrl}sessions/search`,
+      `${environment.apiUrl}conversations/search`,
       {
         params: { filter, skip, take },
-      }
+      },
     );
   }
 
@@ -72,7 +75,9 @@ export class SessionService {
    * The operation completes without returning any data upon success.
    */
   deactivateSession(sessionId: string): Observable<void> {
-    return this.http.delete<void>(`${environment.apiUrl}sessions/${sessionId}`);
+    return this.http.delete<void>(
+      `${environment.apiUrl}conversations/${sessionId}`,
+    );
   }
 
   /**
@@ -86,9 +91,9 @@ export class SessionService {
    * criteria in the request body.
    */
   deactivateSessionBulk(
-    request: DeactivateSessionBulkActionDto
+    request: DeactivateSessionBulkActionDto,
   ): Observable<void> {
-    return this.http.delete<void>(`${environment.apiUrl}sessions/bulk`, {
+    return this.http.delete<void>(`${environment.apiUrl}conversations/bulk`, {
       body: request,
     });
   }
@@ -104,7 +109,10 @@ export class SessionService {
    * The updated session data is returned in the response.
    */
   updateSession(request: UpdateSessionActionDto): Observable<SessionDto> {
-    return this.http.put<SessionDto>(`${environment.apiUrl}sessions`, request);
+    return this.http.put<SessionDto>(
+      `${environment.apiUrl}conversations`,
+      request,
+    );
   }
 
   /**
@@ -119,7 +127,7 @@ export class SessionService {
     return this.searchSessions(
       this.storeService.menuSessionSearchFilter(),
       0,
-      this.storeService.SESSION_PAGE_SIZE
+      this.storeService.SESSION_PAGE_SIZE,
     ).pipe(
       tap((response) => {
         this.storeService.updateMenuSessions(response.items);
@@ -129,7 +137,7 @@ export class SessionService {
         return EMPTY;
       }),
       finalize(() => this.storeService.setMenuSessionSearching(false)),
-      map(() => void 0)
+      map(() => void 0),
     );
   }
 
@@ -147,7 +155,7 @@ export class SessionService {
   loadPageSessions(
     filter: string,
     skip: number = 0,
-    take: number = 10
+    take: number = 10,
   ): Observable<void> {
     this.storeService.setPageSessionSearching(true);
     this.storeService.setPageSessionSearchFilter(filter);
@@ -161,7 +169,7 @@ export class SessionService {
         return EMPTY;
       }),
       finalize(() => this.storeService.setPageSessionSearching(false)),
-      map(() => void 0)
+      map(() => void 0),
     );
   }
 
@@ -193,13 +201,13 @@ export class SessionService {
   handlePageSessionsResponse(
     items: SessionDto[],
     totalCount: number,
-    append = false
+    append = false,
   ): void {
     this.storeService.setPageSessionTotalCount(totalCount);
     this.storeService.setPageSessionHasMore(
       this.storeService.pageSessionSkip() +
         this.storeService.SESSION_PAGE_SIZE <
-        totalCount
+        totalCount,
     );
 
     // API already returns SessionDto-shaped objects

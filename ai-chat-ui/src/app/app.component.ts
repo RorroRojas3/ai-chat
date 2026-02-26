@@ -4,7 +4,15 @@ import { NavbarComponent } from './shared/navbar/navbar.component';
 import { StoreService } from './store/store.service';
 import { MenuOffcanvasComponent } from './shared/menu-offcanvas/menu-offcanvas.component';
 import { NotificationComponent } from './shared/components/notification/notification.component';
-import { filter, forkJoin, Subject, takeUntil } from 'rxjs';
+import {
+  catchError,
+  EMPTY,
+  filter,
+  forkJoin,
+  Subject,
+  switchMap,
+  takeUntil,
+} from 'rxjs';
 import { ModelService } from './services/model.service';
 import { ModelStore } from './store/model.store';
 import { McpStore } from './store/mcp.store';
@@ -25,6 +33,9 @@ import {
 } from '@azure/msal-browser';
 import { McpService } from './services/mcp.service';
 import { DocumentService } from './services/document.service';
+import { UserService } from './services/user.service';
+import { UserStore } from './store/user.store';
+import { NotificationService } from './services/notification.service';
 
 @Component({
   selector: 'app-root',
@@ -47,10 +58,13 @@ export class AppComponent implements OnInit, OnDestroy {
     private modelService: ModelService,
     private mcpService: McpService,
     private documentService: DocumentService,
+    private userService: UserService,
+    private notificationService: NotificationService,
   ) {}
 
   private readonly modelStore = inject(ModelStore);
   private readonly mcpStore = inject(McpStore);
+  private readonly userStore = inject(UserStore);
 
   isIframe = false;
   loginDisplay = false;
@@ -115,17 +129,31 @@ export class AppComponent implements OnInit, OnDestroy {
 
   loadDataIfAuthenticated() {
     if (this.loginDisplay) {
-      forkJoin([
-        this.modelService.getModels(),
-        this.sessionService.searchSessions(''),
-        this.mcpService.getMcpServers(),
-        this.documentService.getFileExtensions(),
-      ]).subscribe(([models, sessions, mcps, fileExtensions]) => {
-        this.modelStore.setModels(models);
-        this.storeService.updateMenuSessions(sessions.items);
-        this.mcpStore.setMcps(mcps);
-        this.storeService.fileExtensions.set(fileExtensions);
-      });
+      this.userService
+        .createUser()
+        .pipe(
+          catchError(() => {
+            this.notificationService.error(
+              'Failed to initialize user session.',
+            );
+            return EMPTY;
+          }),
+          switchMap(() =>
+            forkJoin([
+              this.modelService.getModels(),
+              this.sessionService.searchSessions(''),
+              this.mcpService.getMcpServers(),
+              this.documentService.getFileExtensions(),
+            ]),
+          ),
+        )
+        .subscribe(([models, sessions, mcps, fileExtensions]) => {
+          this.userStore.setInitialized();
+          this.modelStore.setModels(models);
+          this.storeService.updateMenuSessions(sessions.items);
+          this.mcpStore.setMcps(mcps);
+          this.storeService.fileExtensions.set(fileExtensions);
+        });
     }
   }
 
