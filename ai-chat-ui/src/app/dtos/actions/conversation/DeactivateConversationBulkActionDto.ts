@@ -1,3 +1,3 @@
 export class DeactivateConversationBulkActionDto {
-  sessionIds!: string[];
+  conversationIds!: string[];
 }

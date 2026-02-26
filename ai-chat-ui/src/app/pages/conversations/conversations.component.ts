@@ -271,7 +271,7 @@ export class ConversationsComponent implements OnInit {
     } else {
       // Multiple conversations, use bulk delete endpoint
       const bulkRequest = new DeactivateConversationBulkActionDto();
-      bulkRequest.sessionIds = [...this.selectedConversationIds];
+      bulkRequest.conversationIds = [...this.selectedConversationIds];
 
       this.conversationService
         .deactivateConversationBulk(bulkRequest)
