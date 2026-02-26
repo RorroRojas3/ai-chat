@@ -141,7 +141,7 @@ namespace RR.AI_Chat.Service
             ## RESPONSE PHILOSOPHY:
             Excellence means leveraging every available capability to provide the most comprehensive, insightful, and valuable response possible. Don't just answer questions—anticipate needs, provide context, deliver transformative insights, and create responses that exceed expectations. **All responses must be properly formatted in Markdown.**
 
-            Your session identifier is {0}. Use this for maintaining context and accessing session-specific resources throughout our conversation.
+            Your conversation identifier is {0}. Use this for maintaining context and accessing session-specific resources throughout our conversation.
             Your user identifier is {1}. Use this for maintaining context and accessing session-specific resources throughout our conversation.
 
             Operate with invisible mastery: your sophisticated use of these capabilities should enhance every response without ever needing to explicitly mention the tools themselves.
@@ -151,18 +151,18 @@ namespace RR.AI_Chat.Service
         {
             var userId = _tokenService.GetOid();
 
-            var chat = await _ctx.Conversations
+            var conversation = await _ctx.Conversations
                 .AsNoTracking()
                 .Where(s => s.Id == id && s.UserId == userId && !s.DateDeactivated.HasValue)
                 .Select(s => s.MapToChatDto())
                 .FirstOrDefaultAsync(cancellationToken);
-            if (chat == null)
+            if (conversation == null)
             {
                 _logger.LogError("Conversation with id {Id} not found", id);
                 throw new NotFoundException($"Conversation with id {id} not found");
             }
 
-            return chat;
+            return conversation;
         }
 
         public async Task<ConversationDto> CreateConversationAsync(CreateConversationActionDto request, CancellationToken cancellationToken = default)
@@ -217,21 +217,21 @@ namespace RR.AI_Chat.Service
             var userId = _tokenService.GetOid();
             var date = DateTimeOffset.UtcNow;
 
-            var chatExists = await _ctx.Conversations
+            var conversationExists = await _ctx.Conversations
                 .Where(x => x.Id == id && x.UserId == userId && !x.DateDeactivated.HasValue)
                 .AnyAsync(cancellationToken);
 
-            if (!chatExists)
+            if (!conversationExists)
             {
                 _logger.LogWarning("Conversation with id {Id} not found or already deactivated", id);
                 return;
             }
 
-            var chat = await _cosmosService.GetItemAsync<CosmosConversation>(id.ToString(), userId.ToString(), cancellationToken);
-            if (chat != null)
+            var cosmosConversation = await _cosmosService.GetItemAsync<CosmosConversation>(id.ToString(), userId.ToString(), cancellationToken);
+            if (cosmosConversation != null)
             {
-                chat.DateDeactivated = date;
-                await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), userId.ToString(), cancellationToken);
+                cosmosConversation.DateDeactivated = date;
+                await _cosmosService.UpdateItemAsync(cosmosConversation, cosmosConversation.Id.ToString(), userId.ToString(), cancellationToken);
             }
 
             await _ctx.ConversationDocumentPages
@@ -263,19 +263,19 @@ namespace RR.AI_Chat.Service
             var userId = _tokenService.GetOid();
             var date = DateTimeOffset.UtcNow;
 
-            var chatIds = await _ctx.Conversations
+            var conversationIds = await _ctx.Conversations
                 .Where(x => request.ChatIds.Contains(x.Id) && x.UserId == userId && !x.DateDeactivated.HasValue)
                 .Select(x => x.Id)
                 .ToListAsync(cancellationToken);
 
-            if (chatIds.Count == 0)
+            if (conversationIds.Count == 0)
             {
                 _logger.LogWarning("No valid conversations found to deactivate.");
                 return;
             }
 
             // Deactivate all pages for documents in these conversations
-            var conversationIdsInClause = string.Join(", ", chatIds.Select(id => $"'{id}'"));
+            var conversationIdsInClause = string.Join(", ", conversationIds.Select(id => $"'{id}'"));
             var cosmosQuery =
                 $"SELECT * FROM c WHERE c.id IN ({conversationIdsInClause}) " +
                 $"AND c.UserId = '{userId}' AND IS_NULL(c.DateDeactivated)";
@@ -287,19 +287,19 @@ namespace RR.AI_Chat.Service
             }
 
             await _ctx.ConversationDocumentPages
-                .Where(p => chatIds.Contains(p.ConversationDocument.ConversationId) && !p.DateDeactivated.HasValue)
+                .Where(p => conversationIds.Contains(p.ConversationDocument.ConversationId) && !p.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(p => p
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
             await _ctx.ConversationDocuments
-                .Where(d => chatIds.Contains(d.ConversationId) && !d.DateDeactivated.HasValue)
+                .Where(d => conversationIds.Contains(d.ConversationId) && !d.DateDeactivated.HasValue)
                 .ExecuteUpdateAsync(d => d
                     .SetProperty(x => x.DateDeactivated, date),
                     cancellationToken);
 
             await _ctx.Conversations
-                .Where(s => chatIds.Contains(s.Id))
+                .Where(s => conversationIds.Contains(s.Id))
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(x => x.DateDeactivated, date)
                     .SetProperty(x => x.DateModified, date),
@@ -312,18 +312,18 @@ namespace RR.AI_Chat.Service
 
             _createChatStreamActionValidator.ValidateAndThrow(request);
 
-            var chat = await _ctx.Conversations.FindAsync([id], cancellationToken);
-            if (chat == null)
+            var conversation = await _ctx.Conversations.FindAsync([id], cancellationToken);
+            if (conversation == null)
             {
                 _logger.LogError("Conversation with id {Id} not found", id);
-                throw new KeyNotFoundException($"Conversation with id {id} not found");
+                throw new NotFoundException($"Conversation with id {id} not found");
             }
 
-            var cosmosChat = await _cosmosService.GetItemAsync<CosmosConversation>(id.ToString(), chat.UserId.ToString(), cancellationToken);
-            if (cosmosChat == null)
+            var cosmosConversation = await _cosmosService.GetItemAsync<CosmosConversation>(id.ToString(), conversation.UserId.ToString(), cancellationToken);
+            if (cosmosConversation == null)
             {
                 _logger.LogError("Conversation for id {Id} not found in Cosmos DB", id);
-                throw new KeyNotFoundException($"Conversation for id {id} not found");
+                throw new NotFoundException($"Conversation for id {id} not found");
             }
 
             var modelName = await _ctx.Models
@@ -348,11 +348,11 @@ namespace RR.AI_Chat.Service
             }
 
             var name = response.Messages.Last().Text?.Trim() ?? string.Empty;
-            chat.Name = name;
-            chat.DateModified = DateTimeOffset.UtcNow;
+            conversation.Name = name;
+            conversation.DateModified = DateTimeOffset.UtcNow;
             await _ctx.SaveChangesAsync(cancellationToken);
 
-            await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), chat.UserId.ToString(), cancellationToken);
+            await _cosmosService.UpdateItemAsync(conversation, conversation.Id.ToString(), conversation.UserId.ToString(), cancellationToken);
         }
 
         public async Task<PaginatedResponseDto<ConversationDto>> SearchConversationsAsync(string? name, int skip = 0, int take = 20, CancellationToken cancellationToken = default)
@@ -394,10 +394,10 @@ namespace RR.AI_Chat.Service
 
             var userId = _tokenService.GetOid();
 
-            var anyChat = await _ctx.Conversations
+            var anyConversation = await _ctx.Conversations
                 .Where(x => x.Id == request.Id && x.UserId == userId && !x.DateDeactivated.HasValue)
                 .AnyAsync(cancellationToken);
-            if (!anyChat)
+            if (!anyConversation)
             {
                 _logger.LogWarning("Conversation not found or already deactivated");
                 throw new NotFoundException($"Conversation not found or already deactivated.");
@@ -411,12 +411,12 @@ namespace RR.AI_Chat.Service
                     .SetProperty(x => x.DateModified, date),
                     cancellationToken);
 
-            var chat = await _cosmosService.GetItemAsync<CosmosConversation>(request.Id.ToString(), userId.ToString(), cancellationToken);
-            if (chat != null)
+            var cosmosConversation = await _cosmosService.GetItemAsync<CosmosConversation>(request.Id.ToString(), userId.ToString(), cancellationToken);
+            if (cosmosConversation != null)
             {
-                chat.Name = request.Name;
-                chat.DateModified = date;
-                await _cosmosService.UpdateItemAsync(chat, chat.Id.ToString(), userId.ToString(), cancellationToken);
+                cosmosConversation.Name = request.Name;
+                cosmosConversation.DateModified = date;
+                await _cosmosService.UpdateItemAsync(cosmosConversation, cosmosConversation.Id.ToString(), userId.ToString(), cancellationToken);
             }
 
             return await GetConversationAsync(request.Id, cancellationToken);
@@ -450,22 +450,22 @@ namespace RR.AI_Chat.Service
                 if (conversation == null)
                 {
                     _logger.LogError("Conversation with id {Id} not found.", id);
-                    throw new KeyNotFoundException($"Conversation with id {id} not found.");
+                    throw new NotFoundException($"Conversation with id {id} not found.");
                 }
 
-                var chat = await _cosmosService.GetItemAsync<CosmosConversation>(id.ToString(), userId.ToString(), cancellationToken);
-                if (chat == null)
+                var cosmosConversation = await _cosmosService.GetItemAsync<CosmosConversation>(id.ToString(), userId.ToString(), cancellationToken);
+                if (cosmosConversation == null)
                 {
                     _logger.LogError("Conversation {Id} not found.", id);
-                    throw new KeyNotFoundException($"Conversation {id} not found.");
+                    throw new NotFoundException($"Conversation {id} not found.");
                 }
 
-                if (chat.Messages.Count == 1)
+                if (cosmosConversation.Messages.Count == 1)
                 {
                     await UpdateConversationNameAsync(id, request, cancellationToken);
                 }
 
-                var conversations = new List<ChatMessage>(chat.Messages.Select(x => new ChatMessage(MappingService.MapToChatRole(x.Role), x.Content)))
+                var conversations = new List<ChatMessage>(cosmosConversation.Messages.Select(x => new ChatMessage(MappingService.MapToChatRole(x.Role), x.Content)))
                 {
                     new(ChatRole.User, request.Prompt)
                 };
@@ -509,12 +509,12 @@ namespace RR.AI_Chat.Service
                         .SetProperty(x => x.DateModified, date),
                         cancellationToken);
 
-                chat = await _cosmosService.GetItemAsync<CosmosConversation>(id.ToString(), userId.ToString(), cancellationToken);
-                if (chat != null)
+                cosmosConversation = await _cosmosService.GetItemAsync<CosmosConversation>(id.ToString(), userId.ToString(), cancellationToken);
+                if (cosmosConversation != null)
                 {
-                    chat.DateModified = date;   
-                    chat.TotalTokens = chat.TotalTokens + totalInputTokens + totalOutputTokens;
-                    chat.Messages.Add(new()
+                    cosmosConversation.DateModified = date;   
+                    cosmosConversation.TotalTokens = cosmosConversation.TotalTokens + totalInputTokens + totalOutputTokens;
+                    cosmosConversation.Messages.Add(new()
                     {
                         Id = Guid.NewGuid(),
                         Content = request.Prompt,
@@ -523,7 +523,7 @@ namespace RR.AI_Chat.Service
                         Role = ChatRoles.User,
                         Tokens = 0,
                     });
-                    chat.Messages.Add(new()
+                    cosmosConversation.Messages.Add(new()
                     {
                         Id = Guid.NewGuid(),
                         Content = sb.ToString(),
@@ -539,7 +539,7 @@ namespace RR.AI_Chat.Service
                 }
                 
 
-                await _cosmosService.UpdateItemAsync(chat, id.ToString(), userId.ToString(), cancellationToken);
+                await _cosmosService.UpdateItemAsync(cosmosConversation, id.ToString(), userId.ToString(), cancellationToken);
             }
         }
 
@@ -547,14 +547,14 @@ namespace RR.AI_Chat.Service
         public async Task<ChatConversationDto> GetConversationMessagesAsync(Guid id, CancellationToken cancellationToken)
         {
             var userId = _tokenService.GetOid();
-            var chat = await _cosmosService.GetItemAsync<CosmosConversation>(id.ToString(), userId.ToString(), cancellationToken);
-            if (chat == null)
+            var cosmosConversation = await _cosmosService.GetItemAsync<CosmosConversation>(id.ToString(), userId.ToString(), cancellationToken);
+            if (cosmosConversation == null)
             {
                 _logger.LogError("Conversation {Id} not found.", id);
-                throw new KeyNotFoundException($"Conversation {id} not found.");
+                throw new NotFoundException($"Conversation {id} not found.");
             }
 
-            var messages = chat.Messages
+            var messages = cosmosConversation.Messages
                             .Where(x => x.Role != ChatRoles.System)
                             .Select(x => new ConversationMessageDto()
                             {
@@ -566,9 +566,9 @@ namespace RR.AI_Chat.Service
             return new() 
             { 
                 Id = id, 
-                Name = chat.Name, 
-                DateCreated = chat.DateCreated,
-                DateModified = chat.DateModified,
+                Name = cosmosConversation.Name, 
+                DateCreated = cosmosConversation.DateCreated,
+                DateModified = cosmosConversation.DateModified,
                 Messages = messages
             };
         }
