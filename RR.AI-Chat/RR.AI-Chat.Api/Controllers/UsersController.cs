@@ -12,11 +12,25 @@ namespace RR.AI_Chat.Api.Controllers
     {
         private readonly IUserService _userService = userService;
 
-        [HttpPost]
-        public async Task<IActionResult> CreateUser(CreateUserActionDto request, CancellationToken cancellationToken)
+        [HttpPost("me")]
+        public async Task<IActionResult> CreateUser(CancellationToken cancellationToken)
         {
-            await _userService.CreateUserAsync(request, cancellationToken);
+            await _userService.CreateUserAsync(cancellationToken);
             return Created();
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> UpdateUserAsync(UpdateUserActionDto request, CancellationToken cancellationToken)
+        {
+            var updatedUser = await _userService.UpdateUserAsync(request, cancellationToken);
+            return Ok(updatedUser);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeactivateUserAsync(Guid id, CancellationToken cancellationToken)
+        {
+            await _userService.DeactivateUserAsync(id, cancellationToken);
+            return NoContent();
         }
     }
 }

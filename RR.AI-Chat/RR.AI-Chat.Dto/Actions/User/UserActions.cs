@@ -1,19 +1,41 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using FluentValidation;
+using System.Text.Json.Serialization;
 
 namespace RR.AI_Chat.Dto.Actions.User
 {
-    public class CreateUserActionDto
+    public class UpdateUserActionDto
     {
-        [StringLength(256)]
+        [JsonPropertyName("firstName")]
         public string FirstName { get; set; } = null!;
-
-        [StringLength(256)]
+        
+        [JsonPropertyName("lastName")]
         public string LastName { get; set; } = null!;
 
-        [StringLength(512)]
-        [EmailAddress]
+        [JsonPropertyName("email")]
         public string Email { get; set; } = null!;
+    }
 
-        public bool IsSuperAdministrator { get; set; } = false;
+    public class UpdateUserActionDtoValidator : AbstractValidator<UpdateUserActionDto>
+    {
+        public UpdateUserActionDtoValidator()
+        {
+            RuleFor(x => x.FirstName)
+                .NotEmpty()
+                .WithMessage("First name is required.")
+                .MaximumLength(256)
+                .WithMessage("First name cannot exceed 256 characters.");
+            RuleFor(x => x.LastName)
+                .NotEmpty()
+                .WithMessage("Last name is required.")
+                .MaximumLength(256)
+                .WithMessage("Last name cannot exceed 256 characters.");
+            RuleFor(x => x.Email)
+                .NotEmpty()
+                .WithMessage("Email is required.")
+                .EmailAddress()
+                .WithMessage("Invalid email format.")
+                .MaximumLength(512)
+                .WithMessage("Email cannot exceed 512 characters.");
+        }
     }
 }

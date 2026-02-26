@@ -3,16 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Enterprise GPT — Chat</title>
+  <title>AI Assistant - Chat</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <style>
-    /* ========== CSS Custom Properties ========== */
     :root {
-      --brand-primary: #355872;
-      --brand-secondary: #7AAACE;
-      --brand-light: #9CD5FF;
-      --brand-surface: #F7F8F0;
+      --brand-primary: #061E29;
+      --brand-secondary: #1D546D;
+      --brand-accent: #5F9598;
+      --brand-surface: #F3F4F4;
       --bg-primary: #FFFFFF;
       --bg-secondary: #F9FAFB;
       --bg-tertiary: #F3F4F6;
@@ -25,10 +24,8 @@
       --success: #16A34A;
       --error: #DC2626;
       --warning: #D97706;
-      --info: #7AAACE;
-      --sidebar-width: 260px;
+      --info: #5F9598;
     }
-
     [data-theme="dark"] {
       --bg-primary: #1A1A1A;
       --bg-secondary: #212121;
@@ -41,320 +38,321 @@
       --text-tertiary: #6B7280;
     }
 
-    /* ========== Reset & Base ========== */
     *, *::before, *::after {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
     }
 
     body {
+      margin: 0;
+      padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      font-size: 14px;
-      line-height: 1.6;
-      color: var(--text-primary);
       background-color: var(--bg-primary);
+      color: var(--text-primary);
       overflow: hidden;
       height: 100vh;
-      transition: background-color 150ms ease, color 150ms ease;
     }
 
-    /* ========== Layout ========== */
+    /* ===== APP LAYOUT ===== */
     .app-layout {
       display: flex;
+      flex-direction: row;
       height: 100vh;
-      overflow: hidden;
+      width: 100%;
     }
 
-    /* ========== Sidebar ========== */
+    /* ===== SIDEBAR ===== */
     .sidebar {
-      width: var(--sidebar-width);
-      min-width: var(--sidebar-width);
-      max-width: var(--sidebar-width);
-      height: 100vh;
-      background: var(--bg-secondary);
+      width: 260px;
+      min-width: 260px;
+      background-color: var(--bg-secondary);
       border-right: 1px solid var(--border-default);
       display: flex;
       flex-direction: column;
-      transition: width 200ms ease-in-out, min-width 200ms ease-in-out, max-width 200ms ease-in-out, transform 200ms ease-in-out, opacity 200ms ease-in-out;
+      transition: width 200ms ease-in-out, min-width 200ms ease-in-out;
       overflow: hidden;
       position: relative;
       z-index: 100;
     }
 
     .sidebar.collapsed {
-      width: 0;
-      min-width: 0;
-      max-width: 0;
-      border-right: none;
-      opacity: 0;
-      pointer-events: none;
+      width: 60px;
+      min-width: 60px;
     }
 
     .sidebar-header {
-      padding: 12px 12px 8px 12px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      padding: 16px;
+      gap: 10px;
+      min-height: 56px;
+      border-bottom: 1px solid var(--border-default);
+    }
+
+    .sidebar-header .brand-icon {
+      font-size: 20px;
+      color: var(--brand-secondary);
       flex-shrink: 0;
     }
 
-    .sidebar-toggle-btn {
+    .sidebar-header .brand-text {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      opacity: 1;
+      transition: opacity 200ms ease-in-out;
+    }
+
+    .sidebar.collapsed .sidebar-header .brand-text {
+      opacity: 0;
+      width: 0;
+    }
+
+    .sidebar-header .collapse-btn {
+      margin-left: auto;
       background: none;
       border: none;
       color: var(--text-secondary);
       cursor: pointer;
-      padding: 6px;
+      padding: 4px;
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: background-color 150ms ease, color 150ms ease;
-      font-size: 18px;
+      flex-shrink: 0;
     }
 
-    .sidebar-toggle-btn:hover {
-      background: var(--bg-hover);
+    .sidebar-header .collapse-btn:hover {
+      background-color: var(--bg-hover);
       color: var(--text-primary);
     }
 
-    .sidebar-body {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      padding: 0 12px;
+    .sidebar.collapsed .sidebar-header {
+      justify-content: center;
+      padding: 16px 8px;
     }
 
-    /* New Conversation Button */
-    .btn-new-conversation {
+    .sidebar.collapsed .sidebar-header .brand-icon {
+      display: none;
+    }
+
+    /* New Chat button */
+    .new-chat-section {
+      padding: 12px 16px;
+    }
+
+    .new-chat-btn {
       width: 100%;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
-      padding: 10px 12px;
-      background: transparent;
+      padding: 8px 16px;
       border: 1px solid var(--border-default);
       border-radius: 8px;
+      background: transparent;
       color: var(--text-primary);
       font-size: 14px;
+      font-weight: 500;
       cursor: pointer;
-      transition: background-color 150ms ease;
-      flex-shrink: 0;
-      margin-bottom: 8px;
-      font-family: inherit;
+      transition: background-color 150ms ease, border-color 150ms ease;
+      white-space: nowrap;
+      overflow: hidden;
     }
 
-    .btn-new-conversation:hover {
-      background: var(--bg-hover);
+    .new-chat-btn:hover {
+      background-color: var(--bg-hover);
+      border-color: var(--border-strong);
     }
 
-    .btn-new-conversation i {
-      font-size: 16px;
+    .new-chat-btn .btn-text {
+      transition: opacity 200ms ease-in-out;
     }
 
-    /* Navigation Links */
+    .sidebar.collapsed .new-chat-section {
+      padding: 8px;
+    }
+
+    .sidebar.collapsed .new-chat-btn {
+      padding: 8px;
+      border: none;
+      width: 44px;
+      height: 44px;
+      margin: 0 auto;
+      border-radius: 10px;
+    }
+
+    .sidebar.collapsed .new-chat-btn .btn-text {
+      display: none;
+    }
+
+    .sidebar.collapsed .new-chat-btn i {
+      font-size: 18px;
+    }
+
+    /* Sidebar nav */
     .sidebar-nav {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex-shrink: 0;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border-default);
-      margin-bottom: 12px;
+      padding: 4px 12px;
     }
 
-    .nav-link-item {
+    .sidebar-nav-item {
       display: flex;
       align-items: center;
       gap: 10px;
       padding: 8px 12px;
       border-radius: 8px;
-      color: var(--text-primary);
-      text-decoration: none;
       font-size: 14px;
-      cursor: pointer;
-      transition: background-color 150ms ease;
-      position: relative;
-      border: none;
-      background: none;
-      width: 100%;
-      text-align: left;
-    }
-
-    .nav-link-item:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
+      color: var(--text-secondary);
       text-decoration: none;
+      cursor: pointer;
+      transition: background-color 150ms ease, color 150ms ease;
+      white-space: nowrap;
+      overflow: hidden;
+      position: relative;
     }
 
-    .nav-link-item.active {
-      color: var(--brand-primary);
-      background: rgba(53, 88, 114, 0.08);
-      border-left: 3px solid var(--brand-primary);
-      padding-left: 9px;
+    .sidebar-nav-item:hover {
+      background-color: var(--bg-hover);
+      color: var(--text-primary);
     }
 
-    .nav-link-item i {
+    .sidebar-nav-item.active {
+      color: var(--brand-accent);
+      font-weight: 500;
+    }
+
+    .sidebar-nav-item i {
       font-size: 16px;
+      flex-shrink: 0;
       width: 20px;
       text-align: center;
     }
 
-    .nav-badge {
-      margin-left: auto;
-      background: var(--error);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 1px 6px;
-      border-radius: 10px;
-      line-height: 1.4;
+    .sidebar-nav-item .nav-text {
+      transition: opacity 200ms ease-in-out;
     }
 
-    /* Recent Conversations */
-    .recent-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      min-height: 0;
+    .sidebar.collapsed .sidebar-nav {
+      padding: 4px 8px;
     }
 
-    .recent-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 0 4px 8px 4px;
-      flex-shrink: 0;
+    .sidebar.collapsed .sidebar-nav-item {
+      justify-content: center;
+      padding: 10px;
+      width: 44px;
+      height: 44px;
+      margin: 2px auto;
     }
 
-    .recent-list {
+    .sidebar.collapsed .sidebar-nav-item .nav-text {
+      display: none;
+    }
+
+    .sidebar.collapsed .sidebar-nav-item[data-bs-toggle="tooltip"] {
+      overflow: visible;
+    }
+
+    /* Recent conversations */
+    .sidebar-recent {
       flex: 1;
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      padding-bottom: 8px;
+      padding: 0 12px;
+      margin-top: 8px;
     }
 
-    .recent-list::-webkit-scrollbar {
-      width: 4px;
+    .sidebar-recent-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-tertiary);
+      padding: 8px 12px 4px;
     }
 
-    .recent-list::-webkit-scrollbar-track {
-      background: transparent;
+    .sidebar.collapsed .sidebar-recent {
+      display: none;
     }
 
-    .recent-list::-webkit-scrollbar-thumb {
-      background: var(--border-default);
-      border-radius: 2px;
-    }
-
-    .recent-item {
+    .conversation-item {
       display: flex;
       align-items: center;
-      padding: 8px 8px 8px 12px;
+      padding: 8px 12px;
       border-radius: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
       cursor: pointer;
       transition: background-color 150ms ease;
       position: relative;
-      flex-shrink: 0;
-      min-height: 36px;
       gap: 4px;
     }
 
-    .recent-item:hover {
-      background: var(--bg-hover);
+    .conversation-item:hover {
+      background-color: var(--bg-hover);
     }
 
-    .recent-item.selected {
-      background: rgba(53, 88, 114, 0.08);
-    }
-
-    .recent-item-text {
+    .conversation-item .conv-text {
       flex: 1;
-      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      font-size: 13px;
-      color: var(--text-primary);
-      line-height: 1.4;
+      white-space: nowrap;
     }
 
-    .recent-item-input {
-      flex: 1;
-      background: var(--bg-primary);
-      border: 1px solid var(--brand-primary);
-      border-radius: 4px;
-      color: var(--text-primary);
-      font-size: 13px;
-      padding: 2px 6px;
-      outline: none;
-      font-family: inherit;
-    }
-
-    .recent-item-menu-btn {
+    .conversation-item .conv-menu-btn {
       opacity: 0;
       background: none;
       border: none;
-      color: var(--text-secondary);
+      color: var(--text-tertiary);
       cursor: pointer;
       padding: 2px 4px;
       border-radius: 4px;
-      font-size: 16px;
-      flex-shrink: 0;
+      font-size: 14px;
       transition: opacity 150ms ease, background-color 150ms ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-shrink: 0;
     }
 
-    .recent-item:hover .recent-item-menu-btn,
-    .recent-item .recent-item-menu-btn.show {
+    .conversation-item:hover .conv-menu-btn {
       opacity: 1;
     }
 
-    .recent-item-menu-btn:hover {
-      background: var(--bg-hover);
+    .conversation-item .conv-menu-btn:hover {
+      background-color: var(--bg-hover);
+      color: var(--text-primary);
     }
 
-    /* ========== Sidebar User Section ========== */
+    /* Sidebar user section */
     .sidebar-user {
       border-top: 1px solid var(--border-default);
-      padding: 12px;
+      padding: 12px 16px;
       display: flex;
       align-items: center;
       gap: 10px;
-      flex-shrink: 0;
     }
 
     .user-avatar {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      background: var(--bg-tertiary);
+      background-color: var(--brand-secondary);
+      color: white;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
-      color: var(--text-secondary);
       flex-shrink: 0;
     }
 
     .user-info {
-      flex: 1;
-      min-width: 0;
+      overflow: hidden;
+      transition: opacity 200ms ease-in-out;
     }
 
     .user-name {
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--text-primary);
-      line-height: 1.3;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -362,227 +360,157 @@
 
     .user-org {
       font-size: 11px;
-      color: var(--text-secondary);
-      line-height: 1.3;
+      color: var(--text-tertiary);
+      white-space: nowrap;
+    }
+
+    .sidebar.collapsed .sidebar-user {
+      justify-content: center;
+      padding: 12px 8px;
+    }
+
+    .sidebar.collapsed .user-info {
+      display: none;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      height: 100vh;
+      background-color: var(--bg-primary);
+    }
+
+    /* ===== NAVBAR ===== */
+    .top-navbar {
+      background-color: var(--bg-primary);
+      border-bottom: 1px solid var(--border-default);
+      padding: 0 20px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .navbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .navbar-brand i {
+      color: var(--brand-secondary);
+      font-size: 20px;
+    }
+
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hamburger-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background-color 150ms ease;
+    }
+
+    .hamburger-btn:hover {
+      background-color: var(--bg-hover);
     }
 
     .theme-toggle-btn {
       background: none;
       border: none;
       color: var(--text-secondary);
+      font-size: 18px;
       cursor: pointer;
-      padding: 6px;
-      border-radius: 6px;
-      font-size: 16px;
+      padding: 6px 8px;
+      border-radius: 8px;
       transition: background-color 150ms ease, color 150ms ease;
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
     }
 
     .theme-toggle-btn:hover {
-      background: var(--bg-hover);
+      background-color: var(--bg-hover);
       color: var(--text-primary);
     }
 
-    /* ========== Main Content Area ========== */
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      min-width: 0;
-      position: relative;
-      background: var(--bg-primary);
-    }
-
-    .sidebar-open-btn {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      z-index: 50;
-      background: var(--bg-primary);
-      border: 1px solid var(--border-default);
-      color: var(--text-secondary);
-      cursor: pointer;
-      padding: 6px;
-      border-radius: 6px;
-      font-size: 18px;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 150ms ease, color 150ms ease;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-
-    .sidebar-open-btn:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
-    }
-
-    .sidebar.collapsed ~ .main-content .sidebar-open-btn {
-      display: flex;
-    }
-
-    /* ========== Chat Messages Area ========== */
+    /* ===== CHAT AREA ===== */
     .chat-area {
       flex: 1;
       overflow-y: auto;
-      padding: 24px 16px 0 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 0;
     }
 
-    .chat-area::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .chat-area::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .chat-area::-webkit-scrollbar-thumb {
-      background: var(--border-default);
-      border-radius: 3px;
-    }
-
-    .chat-container {
+    .chat-messages {
+      width: 100%;
       max-width: 768px;
-      margin: 0 auto;
       display: flex;
       flex-direction: column;
       gap: 24px;
       padding-bottom: 24px;
     }
 
-    /* ========== Empty State ========== */
-    .empty-state {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 80px 20px;
-      gap: 16px;
-    }
-
-    .empty-state.visible {
+    /* User message */
+    .message-row.user-message {
       display: flex;
-    }
-
-    .empty-state h1 {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .empty-state p {
-      font-size: 16px;
-      color: var(--text-secondary);
-      margin-bottom: 8px;
-    }
-
-    .suggestion-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-    }
-
-    .suggestion-chip {
-      padding: 8px 16px;
-      border: 1px solid var(--border-default);
-      border-radius: 20px;
-      background: transparent;
-      color: var(--text-primary);
-      font-size: 13px;
-      cursor: pointer;
-      transition: background-color 150ms ease, border-color 150ms ease;
-      font-family: inherit;
-    }
-
-    .suggestion-chip:hover {
-      background: var(--bg-hover);
-      border-color: var(--border-strong);
-    }
-
-    /* ========== Message Styles ========== */
-    .message {
-      display: flex;
-      gap: 12px;
-      animation: messageIn 200ms ease forwards;
-      opacity: 0;
-    }
-
-    @keyframes messageIn {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .message.loaded {
-      animation: none;
-      opacity: 1;
-    }
-
-    /* User Message */
-    .message-user {
       justify-content: flex-end;
     }
 
-    .message-user .message-bubble {
-      max-width: 75%;
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
+    .message-row.user-message .message-bubble {
+      background-color: var(--bg-tertiary);
       border-radius: 18px;
-      padding: 10px 16px;
+      padding: 12px 18px;
+      max-width: 75%;
       font-size: 14px;
       line-height: 1.6;
+      color: var(--text-primary);
       position: relative;
-      word-wrap: break-word;
     }
 
-    .message-user .message-actions {
+    /* Assistant message */
+    .message-row.assistant-message {
       display: flex;
-      justify-content: flex-end;
-      gap: 4px;
-      margin-top: 4px;
-      opacity: 0;
-      transition: opacity 150ms ease;
-    }
-
-    .message-user:hover .message-actions {
-      opacity: 1;
-    }
-
-    .message-user-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      max-width: 75%;
-    }
-
-    /* Assistant Message */
-    .message-assistant {
-      justify-content: flex-start;
       align-items: flex-start;
+      gap: 12px;
     }
 
     .assistant-avatar {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      background: var(--brand-primary);
-      color: #fff;
+      background-color: var(--brand-secondary);
+      color: white;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 600;
       flex-shrink: 0;
       margin-top: 2px;
     }
@@ -594,20 +522,19 @@
 
     .assistant-label {
       font-size: 12px;
+      font-weight: 600;
       color: var(--text-secondary);
       margin-bottom: 4px;
-      font-weight: 500;
     }
 
     .assistant-text {
       font-size: 14px;
       line-height: 1.7;
       color: var(--text-primary);
-      word-wrap: break-word;
     }
 
     .assistant-text p {
-      margin-bottom: 12px;
+      margin: 0 0 12px;
     }
 
     .assistant-text p:last-child {
@@ -618,1715 +545,1494 @@
       font-weight: 600;
     }
 
-    .assistant-text ul, .assistant-text ol {
-      margin: 8px 0 12px 20px;
-    }
-
-    .assistant-text li {
-      margin-bottom: 4px;
-    }
-
-    .assistant-actions {
-      display: flex;
-      gap: 4px;
-      margin-top: 8px;
-      opacity: 0;
-      transition: opacity 150ms ease;
-    }
-
-    .message-assistant:hover .assistant-actions {
-      opacity: 1;
-    }
-
-    /* Action Buttons */
-    .action-btn {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      padding: 4px 8px;
+    .assistant-text code:not(pre code) {
+      background-color: var(--bg-tertiary);
+      padding: 2px 6px;
       border-radius: 4px;
-      font-size: 14px;
-      transition: background-color 150ms ease, color 150ms ease;
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      font-size: 13px;
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
     }
 
-    .action-btn:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
-    }
-
-    .action-btn.active {
-      color: var(--brand-primary);
-    }
-
-    /* ========== Code Block ========== */
-    .code-block {
+    /* Code block */
+    .code-block-wrapper {
+      background-color: var(--bg-tertiary);
+      border-radius: 10px;
       margin: 12px 0;
-      border-radius: 8px;
-      background: var(--bg-tertiary);
       overflow: hidden;
-      border: 1px solid var(--border-default);
     }
 
     .code-block-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 12px;
-      background: var(--bg-tertiary);
-      border-bottom: 1px solid var(--border-default);
+      padding: 8px 14px;
       font-size: 12px;
-      color: var(--text-secondary);
-    }
-
-    .code-block-header span {
-      font-weight: 500;
-      text-transform: lowercase;
+      color: var(--text-tertiary);
+      border-bottom: 1px solid var(--border-default);
     }
 
     .code-copy-btn {
       background: none;
       border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      padding: 2px 6px;
-      border-radius: 4px;
+      color: var(--text-tertiary);
       font-size: 13px;
+      cursor: pointer;
+      padding: 2px 8px;
+      border-radius: 4px;
       display: flex;
       align-items: center;
       gap: 4px;
       transition: background-color 150ms ease, color 150ms ease;
-      font-family: inherit;
     }
 
     .code-copy-btn:hover {
-      background: var(--bg-hover);
+      background-color: var(--bg-hover);
       color: var(--text-primary);
     }
 
-    .code-block pre {
+    .code-block-wrapper pre {
       margin: 0;
-      padding: 12px 16px;
+      padding: 14px;
       overflow-x: auto;
-      background: transparent;
-    }
-
-    .code-block code {
-      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
       font-size: 13px;
-      line-height: 1.5;
+      line-height: 1.6;
       color: var(--text-primary);
-      white-space: pre;
     }
 
-    /* ========== Thinking Dots ========== */
-    .thinking-dots {
+    /* Message actions */
+    .message-actions {
       display: flex;
-      gap: 4px;
-      align-items: center;
-      padding: 8px 0;
+      gap: 2px;
+      margin-top: 6px;
+      opacity: 0;
+      transition: opacity 150ms ease;
     }
 
-    .thinking-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--text-tertiary);
-      animation: dotPulse 1.4s infinite ease-in-out;
+    .message-row:hover .message-actions {
+      opacity: 1;
     }
 
-    .thinking-dot:nth-child(2) {
-      animation-delay: 160ms;
+    .message-row.user-message .message-actions {
+      justify-content: flex-end;
     }
 
-    .thinking-dot:nth-child(3) {
-      animation-delay: 320ms;
+    .msg-action-btn {
+      background: none;
+      border: none;
+      color: var(--text-tertiary);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background-color 150ms ease, color 150ms ease;
     }
 
-    @keyframes dotPulse {
-      0%, 100% {
-        transform: scale(0.4);
-        opacity: 0.4;
-      }
-      50% {
-        transform: scale(1);
-        opacity: 1;
-      }
+    .msg-action-btn:hover {
+      background-color: var(--bg-hover);
+      color: var(--text-primary);
     }
 
-    /* Streaming Cursor */
+    /* Streaming cursor */
     .streaming-cursor {
-      display: inline-block;
-      width: 2px;
-      height: 1em;
-      background: var(--text-primary);
-      margin-left: 2px;
-      vertical-align: text-bottom;
-      animation: cursorBlink 530ms infinite;
+      display: inline;
+      font-weight: 400;
+      color: var(--brand-accent);
+      animation: blink-cursor 530ms step-end infinite;
     }
 
-    @keyframes cursorBlink {
-      0%, 49% {
-        opacity: 1;
-      }
-      50%, 100% {
-        opacity: 0;
-      }
+    @keyframes blink-cursor {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
     }
 
-    /* ========== Input Area ========== */
-    .input-area-wrapper {
+    /* ===== PROMPT INPUT ===== */
+    .prompt-wrapper {
       flex-shrink: 0;
-      padding: 0 16px 12px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 16px 8px;
+      background-color: var(--bg-primary);
     }
 
-    .input-area-container {
+    .prompt-box {
+      width: 100%;
       max-width: 768px;
-      margin: 0 auto;
-    }
-
-    .input-box {
       border: 1px solid var(--border-default);
       border-radius: 24px;
-      background: var(--bg-primary);
+      background-color: var(--bg-primary);
       overflow: hidden;
       transition: border-color 150ms ease, box-shadow 150ms ease;
+      position: relative;
     }
 
-    .input-box:focus-within {
-      border-color: var(--brand-secondary);
-      box-shadow: 0 0 0 2px rgba(122, 170, 206, 0.2);
+    .prompt-box:focus-within {
+      border-color: var(--brand-accent);
+      box-shadow: 0 0 0 3px rgba(95, 149, 152, 0.12);
     }
 
-    /* File Attachments Area */
-    .file-attachments {
+    .prompt-box.drag-over {
+      border: 2px dashed var(--brand-accent);
+      background-color: rgba(95, 149, 152, 0.04);
+    }
+
+    .drag-overlay {
       display: none;
-      flex-wrap: wrap;
+      position: absolute;
+      inset: 0;
+      background-color: rgba(95, 149, 152, 0.06);
+      z-index: 10;
+      border-radius: 24px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       gap: 8px;
-      padding: 10px 16px 0 16px;
+      color: var(--brand-accent);
+      pointer-events: none;
     }
 
-    .file-attachments.has-files {
+    .prompt-box.drag-over .drag-overlay {
       display: flex;
+    }
+
+    .drag-overlay i {
+      font-size: 32px;
+    }
+
+    .drag-overlay span {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* File attachments */
+    .file-attachments {
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px 0;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .file-attachments:empty {
+      display: none;
     }
 
     .file-chip {
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 4px 10px;
-      background: var(--bg-tertiary);
-      border-radius: 8px;
+      background-color: var(--bg-tertiary);
+      border-radius: 20px;
+      padding: 6px 10px 6px 8px;
       font-size: 12px;
-      color: var(--text-primary);
+      color: var(--text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background-color 150ms ease;
     }
 
     .file-chip i {
-      color: var(--text-secondary);
-      font-size: 14px;
+      font-size: 16px;
     }
 
-    .file-chip-size {
-      color: var(--text-secondary);
-    }
-
-    .file-chip-remove {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      padding: 0 2px;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      transition: color 150ms ease;
-    }
-
-    .file-chip-remove:hover {
+    .file-chip i.bi-file-earmark-pdf {
       color: var(--error);
     }
 
-    /* Textarea */
-    .input-textarea-wrapper {
-      padding: 12px 16px 4px 16px;
+    .file-chip i.bi-file-earmark-excel {
+      color: var(--success);
     }
 
-    .input-textarea {
+    .file-chip .file-name {
+      font-weight: 500;
+      color: var(--text-primary);
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-chip .file-size {
+      color: var(--text-tertiary);
+    }
+
+    .file-chip .file-remove-btn {
+      background: none;
+      border: none;
+      color: var(--text-tertiary);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0 0 0 2px;
+      line-height: 1;
+      transition: color 150ms ease;
+    }
+
+    .file-chip .file-remove-btn:hover {
+      color: var(--text-primary);
+    }
+
+    /* Textarea */
+    .prompt-textarea-wrap {
+      padding: 10px 16px;
+    }
+
+    .prompt-textarea {
       width: 100%;
       border: none;
       outline: none;
       resize: none;
-      background: transparent;
-      color: var(--text-primary);
       font-family: inherit;
       font-size: 14px;
-      line-height: 1.6;
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: transparent;
       max-height: 160px;
       overflow-y: auto;
       min-height: 24px;
     }
 
-    .input-textarea::placeholder {
+    .prompt-textarea::placeholder {
       color: var(--text-tertiary);
     }
 
-    .input-textarea::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    .input-textarea::-webkit-scrollbar-thumb {
-      background: var(--border-default);
-      border-radius: 2px;
-    }
-
-    /* Toolbar */
-    .input-toolbar {
+    /* Prompt toolbar */
+    .prompt-toolbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 4px 8px 8px 8px;
+      padding: 4px 8px 10px 12px;
     }
 
     .toolbar-left {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 2px;
     }
 
-    .toolbar-right {
-      display: flex;
-      align-items: center;
-    }
-
-    .attach-btn {
+    .toolbar-btn {
       background: none;
       border: none;
       color: var(--text-secondary);
+      font-size: 16px;
       cursor: pointer;
       padding: 6px 8px;
-      border-radius: 6px;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
+      border-radius: 8px;
       transition: background-color 150ms ease, color 150ms ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .attach-btn:hover {
-      background: var(--bg-hover);
+    .toolbar-btn:hover {
+      background-color: var(--bg-hover);
       color: var(--text-primary);
     }
 
-    /* Model Selector */
-    .model-selector {
-      position: relative;
-    }
-
-    .model-selector-btn {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-default);
-      border-radius: 14px;
-      color: var(--text-primary);
-      font-size: 12px;
-      cursor: pointer;
-      transition: background-color 150ms ease, border-color 150ms ease;
-      white-space: nowrap;
-      font-family: inherit;
-    }
-
-    .model-selector-btn:hover {
-      background: var(--bg-hover);
-      border-color: var(--border-strong);
-    }
-
-    .model-selector-btn i {
-      font-size: 10px;
-      color: var(--text-secondary);
-    }
-
-    .model-dropdown {
-      position: absolute;
-      bottom: calc(100% + 6px);
-      left: 0;
-      background: var(--bg-primary);
-      border: 1px solid var(--border-default);
-      border-radius: 10px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-      min-width: 200px;
-      z-index: 200;
-      display: none;
-      overflow: hidden;
-      padding: 4px;
-    }
-
-    .model-dropdown.show {
-      display: block;
-    }
-
-    .model-option {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-      cursor: pointer;
-      border-radius: 6px;
+    .toolbar-btn .btn-label {
       font-size: 13px;
-      color: var(--text-primary);
-      transition: background-color 150ms ease;
-    }
-
-    .model-option:hover {
-      background: var(--bg-hover);
-    }
-
-    .model-option.selected {
-      color: var(--brand-primary);
       font-weight: 500;
     }
 
-    .model-option.selected::after {
-      content: '\F26E';
-      font-family: 'bootstrap-icons';
-      font-size: 14px;
+    .toolbar-btn .badge-count {
+      background-color: var(--brand-accent);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 10px;
+      margin-left: 2px;
     }
 
-    /* Send / Stop Button */
     .send-btn {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       border: none;
+      background-color: var(--brand-secondary);
+      color: white;
+      font-size: 16px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
-      transition: background-color 150ms ease, color 150ms ease;
+      transition: background-color 150ms ease, transform 150ms ease;
     }
 
-    .send-btn.enabled {
-      background: var(--brand-primary);
-      color: #fff;
+    .send-btn:hover {
+      background-color: var(--brand-primary);
+      transform: scale(1.05);
     }
 
-    .send-btn.disabled {
-      background: var(--bg-tertiary);
-      color: var(--text-tertiary);
-      cursor: default;
-      pointer-events: none;
-    }
-
-    .send-btn.stop {
-      background: var(--brand-primary);
-      color: #fff;
-    }
-
-    .send-btn.enabled:hover,
-    .send-btn.stop:hover {
-      opacity: 0.9;
-    }
-
-    /* ========== Footer ========== */
-    .chat-footer {
-      text-align: center;
-      padding: 4px 16px 10px 16px;
-      font-size: 12px;
-      color: var(--text-tertiary);
-      flex-shrink: 0;
-    }
-
-    /* ========== Toast Notifications ========== */
-    .toast-container-custom {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      align-items: center;
-      pointer-events: none;
-    }
-
-    .custom-toast {
-      background: var(--bg-primary);
-      border: 1px solid var(--border-default);
-      border-radius: 8px;
-      padding: 12px 20px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-      font-size: 13px;
-      color: var(--text-primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      pointer-events: auto;
-      animation: toastIn 200ms ease forwards;
+    /* Dropdowns */
+    .custom-dropdown {
       position: relative;
-      overflow: hidden;
+      display: inline-block;
     }
 
-    .custom-toast::before {
-      content: '';
+    .dropdown-menu-custom {
       position: absolute;
+      bottom: 100%;
       left: 0;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-    }
-
-    .custom-toast.toast-success::before {
-      background: var(--success);
-    }
-
-    .custom-toast.toast-error::before {
-      background: var(--error);
-    }
-
-    .custom-toast.toast-success i {
-      color: var(--success);
-    }
-
-    .custom-toast.toast-error i {
-      color: var(--error);
-    }
-
-    @keyframes toastIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes toastOut {
-      from { opacity: 1; transform: translateY(0); }
-      to { opacity: 0; transform: translateY(12px); }
-    }
-
-    /* ========== Delete Confirmation Modal ========== */
-    .modal-backdrop-custom {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      z-index: 1050;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      animation: fadeIn 150ms ease forwards;
-    }
-
-    .modal-backdrop-custom.show {
-      display: flex;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .modal-dialog-custom {
-      background: var(--bg-primary);
+      margin-bottom: 6px;
+      background-color: var(--bg-primary);
       border: 1px solid var(--border-default);
       border-radius: 12px;
-      padding: 24px;
-      max-width: 400px;
-      width: 90%;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.16);
-    }
-
-    .modal-dialog-custom h5 {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 8px;
-    }
-
-    .modal-dialog-custom p {
-      font-size: 14px;
-      color: var(--text-secondary);
-      margin-bottom: 20px;
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-
-    .modal-btn {
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 150ms ease;
-      border: none;
-      font-family: inherit;
-    }
-
-    .modal-btn-cancel {
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-    }
-
-    .modal-btn-cancel:hover {
-      background: var(--bg-hover);
-    }
-
-    .modal-btn-delete {
-      background: var(--error);
-      color: #fff;
-    }
-
-    .modal-btn-delete:hover {
-      opacity: 0.9;
-    }
-
-    /* ========== Context Menu Dropdown ========== */
-    .context-dropdown {
-      position: absolute;
-      right: 4px;
-      top: 100%;
-      background: var(--bg-primary);
-      border: 1px solid var(--border-default);
-      border-radius: 8px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-      z-index: 300;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+      min-width: 200px;
+      padding: 6px;
+      z-index: 1000;
       display: none;
-      overflow: hidden;
-      min-width: 140px;
-      padding: 4px;
     }
 
-    .context-dropdown.show {
+    .dropdown-menu-custom.show {
       display: block;
     }
 
-    .context-option {
+    .dropdown-menu-custom .dropdown-item-custom {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       padding: 8px 12px;
+      border-radius: 8px;
       font-size: 13px;
       color: var(--text-primary);
       cursor: pointer;
-      border-radius: 6px;
       transition: background-color 150ms ease;
       border: none;
       background: none;
       width: 100%;
       text-align: left;
-      font-family: inherit;
     }
 
-    .context-option:hover {
-      background: var(--bg-hover);
+    .dropdown-menu-custom .dropdown-item-custom:hover {
+      background-color: var(--bg-hover);
     }
 
-    .context-option.danger {
+    .dropdown-item-custom .check-icon {
+      width: 16px;
+      color: var(--brand-accent);
+      font-size: 14px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .dropdown-item-custom .item-label {
+      flex: 1;
+    }
+
+    .dropdown-label {
+      padding: 6px 12px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-tertiary);
+    }
+
+    /* Conversation context menu dropdown */
+    .conv-context-menu {
+      position: fixed;
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-default);
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      min-width: 160px;
+      padding: 4px;
+      z-index: 1050;
+      display: none;
+    }
+
+    .conv-context-menu.show {
+      display: block;
+    }
+
+    .conv-context-menu button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-primary);
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      transition: background-color 150ms ease;
+    }
+
+    .conv-context-menu button:hover {
+      background-color: var(--bg-hover);
+    }
+
+    .conv-context-menu button.text-danger {
       color: var(--error);
     }
 
-    .context-option.danger:hover {
-      background: rgba(220, 38, 38, 0.08);
+    /* Footer */
+    .footer-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-tertiary);
+      padding: 6px 16px 12px;
     }
 
-    /* ========== Sidebar Overlay (Mobile) ========== */
-    .sidebar-overlay {
+    /* ===== MODAL OVERRIDES ===== */
+    .modal-content {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-default);
+      border-radius: 16px;
+      color: var(--text-primary);
+    }
+
+    .modal-header {
+      border-bottom: 1px solid var(--border-default);
+      padding: 16px 20px;
+    }
+
+    .modal-header .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .modal-header .btn-close {
+      filter: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      border-top: 1px solid var(--border-default);
+      padding: 12px 20px;
+    }
+
+    .modal-body .form-control {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      color: var(--text-primary);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .modal-body .form-control:focus {
+      border-color: var(--brand-accent);
+      box-shadow: 0 0 0 3px rgba(95, 149, 152, 0.12);
+    }
+
+    .char-counter {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    /* ===== TOAST ===== */
+    .toast-container-custom {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1090;
+    }
+
+    .toast-custom {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-default);
+      border-left: 4px solid var(--success);
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      padding: 12px 20px;
+      font-size: 14px;
+      color: var(--text-primary);
+      display: none;
+      align-items: center;
+      gap: 8px;
+      min-width: 280px;
+    }
+
+    .toast-custom.show {
+      display: flex;
+      animation: toast-in 300ms ease forwards;
+    }
+
+    .toast-custom.hiding {
+      animation: toast-out 300ms ease forwards;
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(12px); }
+    }
+
+    .toast-custom.error {
+      border-left-color: var(--error);
+    }
+
+    /* ===== BACKDROP (mobile sidebar) ===== */
+    .sidebar-backdrop {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.3);
+      background-color: rgba(0,0,0,0.4);
       z-index: 99;
     }
 
-    .hidden-file-input {
-      display: none;
+    .sidebar-backdrop.show {
+      display: block;
     }
 
-    /* ========== Responsive ========== */
-    @media (max-width: 1023px) {
+    /* ===== SCROLLBAR ===== */
+    .chat-area::-webkit-scrollbar,
+    .sidebar-recent::-webkit-scrollbar,
+    .file-attachments::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .chat-area::-webkit-scrollbar-track,
+    .sidebar-recent::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-area::-webkit-scrollbar-thumb,
+    .sidebar-recent::-webkit-scrollbar-thumb {
+      background-color: var(--border-default);
+      border-radius: 3px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1023px) and (min-width: 768px) {
       .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        z-index: 100;
-        transform: translateX(0);
+        width: 60px;
+        min-width: 60px;
       }
-
-      .sidebar.collapsed {
-        transform: translateX(-100%);
-        width: var(--sidebar-width);
-        min-width: var(--sidebar-width);
-        max-width: var(--sidebar-width);
-        opacity: 1;
+      .sidebar .sidebar-header .brand-text {
+        opacity: 0;
+        width: 0;
       }
-
-      .sidebar.collapsed ~ .sidebar-overlay {
+      .sidebar .sidebar-header {
+        justify-content: center;
+        padding: 16px 8px;
+      }
+      .sidebar .sidebar-header .brand-icon {
         display: none;
       }
-
-      .sidebar:not(.collapsed) ~ .sidebar-overlay {
-        display: block;
+      .sidebar .new-chat-section {
+        padding: 8px;
       }
-
-      .sidebar.collapsed ~ .main-content .sidebar-open-btn {
-        display: flex;
+      .sidebar .new-chat-btn {
+        padding: 8px;
+        border: none;
+        width: 44px;
+        height: 44px;
+        margin: 0 auto;
+        border-radius: 10px;
+      }
+      .sidebar .new-chat-btn .btn-text {
+        display: none;
+      }
+      .sidebar .new-chat-btn i {
+        font-size: 18px;
+      }
+      .sidebar .sidebar-nav {
+        padding: 4px 8px;
+      }
+      .sidebar .sidebar-nav-item {
+        justify-content: center;
+        padding: 10px;
+        width: 44px;
+        height: 44px;
+        margin: 2px auto;
+      }
+      .sidebar .sidebar-nav-item .nav-text {
+        display: none;
+      }
+      .sidebar .sidebar-recent {
+        display: none;
+      }
+      .sidebar .sidebar-user {
+        justify-content: center;
+        padding: 12px 8px;
+      }
+      .sidebar .user-info {
+        display: none;
       }
     }
 
     @media (max-width: 767px) {
-      .input-area-wrapper {
-        padding: 0 8px 8px 8px;
+      .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        bottom: 0;
+        width: 280px !important;
+        min-width: 280px !important;
+        z-index: 200;
+        transition: left 200ms ease-in-out;
       }
+      .sidebar.mobile-open {
+        left: 0;
+      }
+      .sidebar.mobile-open .sidebar-header .brand-text {
+        opacity: 1;
+        width: auto;
+      }
+      .sidebar.mobile-open .sidebar-header .brand-icon {
+        display: inline;
+      }
+      .sidebar.mobile-open .new-chat-section {
+        padding: 12px 16px;
+      }
+      .sidebar.mobile-open .new-chat-btn {
+        width: 100%;
+        padding: 8px 16px;
+        border: 1px solid var(--border-default);
+        border-radius: 8px;
+      }
+      .sidebar.mobile-open .new-chat-btn .btn-text {
+        display: inline;
+      }
+      .sidebar.mobile-open .sidebar-nav {
+        padding: 4px 12px;
+      }
+      .sidebar.mobile-open .sidebar-nav-item {
+        justify-content: flex-start;
+        padding: 8px 12px;
+        width: auto;
+        height: auto;
+        margin: 0;
+      }
+      .sidebar.mobile-open .sidebar-nav-item .nav-text {
+        display: inline;
+      }
+      .sidebar.mobile-open .sidebar-recent {
+        display: block;
+      }
+      .sidebar.mobile-open .sidebar-user {
+        justify-content: flex-start;
+        padding: 12px 16px;
+      }
+      .sidebar.mobile-open .user-info {
+        display: block;
+      }
+      .hamburger-btn {
+        display: flex;
+      }
+      .chat-messages {
+        max-width: 100%;
+      }
+      .prompt-box {
+        max-width: 100%;
+      }
+    }
 
-      .chat-area {
-        padding: 16px 8px 0 8px;
-      }
-
-      .message-user .message-bubble {
-        max-width: 85%;
-      }
-
-      .message-user-wrapper {
-        max-width: 85%;
-      }
+    /* Dark mode btn-close adjustment */
+    [data-theme="dark"] .btn-close {
+      filter: invert(1) grayscale(100%) brightness(200%);
     }
   </style>
 </head>
 <body>
-  <div class="app-layout">
-    <!-- Sidebar Overlay (mobile) -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <!-- Sidebar Backdrop (mobile) -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-    <!-- Sidebar -->
+  <div class="app-layout">
+    <!-- ===== SIDEBAR ===== -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <span style="font-weight: 700; font-size: 15px; color: var(--text-primary);">Enterprise GPT</span>
-        <button class="sidebar-toggle-btn" id="sidebarCloseBtn" title="Close sidebar">
-          <i class="bi bi-layout-sidebar"></i>
+        <i class="bi bi-chat-dots brand-icon"></i>
+        <span class="brand-text">AI Assistant</span>
+        <button class="collapse-btn" id="sidebarToggleBtn" title="Toggle sidebar">
+          <i class="bi bi-chevron-left" id="sidebarToggleIcon"></i>
         </button>
       </div>
 
-      <div class="sidebar-body">
-        <!-- New Conversation -->
-        <button class="btn-new-conversation" id="newConversationBtn">
+      <div class="new-chat-section">
+        <button class="new-chat-btn" title="New Chat">
           <i class="bi bi-plus-lg"></i>
-          New Conversation
+          <span class="btn-text">New Chat</span>
         </button>
+      </div>
 
-        <!-- Navigation -->
-        <nav class="sidebar-nav">
-          <a href="#" class="nav-link-item active">
-            <i class="bi bi-chat-dots"></i>
-            Chat
-          </a>
-          <a href="#" class="nav-link-item">
-            <i class="bi bi-clock-history"></i>
-            Conversations
-          </a>
-          <a href="#" class="nav-link-item">
-            <i class="bi bi-bell"></i>
-            Notifications
-            <span class="nav-badge">3</span>
-          </a>
-          <a href="#" class="nav-link-item">
-            <i class="bi bi-gear"></i>
-            Admin
-          </a>
-        </nav>
+      <nav class="sidebar-nav">
+        <a class="sidebar-nav-item active" data-bs-toggle="tooltip" data-bs-placement="right" title="Chat">
+          <i class="bi bi-chat-text"></i>
+          <span class="nav-text">Chat</span>
+        </a>
+        <a class="sidebar-nav-item" data-bs-toggle="tooltip" data-bs-placement="right" title="Conversations">
+          <i class="bi bi-clock-history"></i>
+          <span class="nav-text">Conversations</span>
+        </a>
+        <a class="sidebar-nav-item" data-bs-toggle="tooltip" data-bs-placement="right" title="Admin">
+          <i class="bi bi-gear"></i>
+          <span class="nav-text">Admin</span>
+        </a>
+      </nav>
 
-        <!-- Recent Conversations -->
-        <div class="recent-section">
-          <div class="recent-label">Recent</div>
-          <div class="recent-list" id="recentList"></div>
+      <div class="sidebar-recent" id="sidebarRecent">
+        <div class="sidebar-recent-label">Recent</div>
+        <div class="conversation-item" data-conv="1">
+          <span class="conv-text">Binary search implementation in Python</span>
+          <button class="conv-menu-btn" onclick="openConvMenu(event, 1)"><i class="bi bi-three-dots-vertical"></i></button>
+        </div>
+        <div class="conversation-item" data-conv="2">
+          <span class="conv-text">React hooks best practices guide</span>
+          <button class="conv-menu-btn" onclick="openConvMenu(event, 2)"><i class="bi bi-three-dots-vertical"></i></button>
+        </div>
+        <div class="conversation-item" data-conv="3">
+          <span class="conv-text">SQL query optimization techniques</span>
+          <button class="conv-menu-btn" onclick="openConvMenu(event, 3)"><i class="bi bi-three-dots-vertical"></i></button>
+        </div>
+        <div class="conversation-item" data-conv="4">
+          <span class="conv-text">Docker container deployment strategy</span>
+          <button class="conv-menu-btn" onclick="openConvMenu(event, 4)"><i class="bi bi-three-dots-vertical"></i></button>
+        </div>
+        <div class="conversation-item" data-conv="5">
+          <span class="conv-text">TypeScript generics deep dive</span>
+          <button class="conv-menu-btn" onclick="openConvMenu(event, 5)"><i class="bi bi-three-dots-vertical"></i></button>
+        </div>
+        <div class="conversation-item" data-conv="6">
+          <span class="conv-text">CI/CD pipeline with GitHub Actions</span>
+          <button class="conv-menu-btn" onclick="openConvMenu(event, 6)"><i class="bi bi-three-dots-vertical"></i></button>
+        </div>
+        <div class="conversation-item" data-conv="7">
+          <span class="conv-text">Kubernetes scaling configuration</span>
+          <button class="conv-menu-btn" onclick="openConvMenu(event, 7)"><i class="bi bi-three-dots-vertical"></i></button>
+        </div>
+        <div class="conversation-item" data-conv="8">
+          <span class="conv-text">REST API design patterns overview</span>
+          <button class="conv-menu-btn" onclick="openConvMenu(event, 8)"><i class="bi bi-three-dots-vertical"></i></button>
+        </div>
+        <div class="conversation-item" data-conv="9">
+          <span class="conv-text">Machine learning model evaluation</span>
+          <button class="conv-menu-btn" onclick="openConvMenu(event, 9)"><i class="bi bi-three-dots-vertical"></i></button>
+        </div>
+        <div class="conversation-item" data-conv="10">
+          <span class="conv-text">Authentication with JWT tokens</span>
+          <button class="conv-menu-btn" onclick="openConvMenu(event, 10)"><i class="bi bi-three-dots-vertical"></i></button>
         </div>
       </div>
 
-      <!-- User Section -->
       <div class="sidebar-user">
         <div class="user-avatar">RR</div>
         <div class="user-info">
           <div class="user-name">Rodrigo Rojas</div>
           <div class="user-org">Enterprise AI</div>
         </div>
-        <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle dark mode">
-          <i class="bi bi-moon"></i>
-        </button>
       </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <button class="sidebar-open-btn" id="sidebarOpenBtn" title="Open sidebar">
-        <i class="bi bi-layout-sidebar"></i>
-      </button>
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="main-content">
+      <!-- Navbar -->
+      <header class="top-navbar">
+        <div class="navbar-left">
+          <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open sidebar">
+            <i class="bi bi-list"></i>
+          </button>
+          <a class="navbar-brand" href="#">
+            <i class="bi bi-chat-dots"></i>
+            <span>AI Assistant</span>
+          </a>
+        </div>
+        <div class="navbar-right">
+          <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle theme">
+            <i class="bi bi-sun-fill" id="themeIcon"></i>
+          </button>
+        </div>
+      </header>
 
-      <!-- Chat Messages -->
+      <!-- Chat Area -->
       <div class="chat-area" id="chatArea">
-        <div class="chat-container" id="chatContainer">
-          <!-- Empty State -->
-          <div class="empty-state" id="emptyState">
-            <h1>Enterprise GPT</h1>
-            <p>How can I help you today?</p>
-            <div class="suggestion-chips">
-              <button class="suggestion-chip">Summarize a document for me</button>
-              <button class="suggestion-chip">Write a Python script to parse CSV files</button>
-              <button class="suggestion-chip">Explain microservices architecture</button>
+        <div class="chat-messages" id="chatMessages">
+
+          <!-- Message 1: User -->
+          <div class="message-row user-message">
+            <div>
+              <div class="message-bubble">Can you explain how to implement a binary search algorithm in Python?</div>
+              <div class="message-actions">
+                <button class="msg-action-btn" title="Copy" onclick="copyText(this, 'Can you explain how to implement a binary search algorithm in Python?')"><i class="bi bi-copy"></i></button>
+              </div>
             </div>
           </div>
+
+          <!-- Message 2: Assistant with code -->
+          <div class="message-row assistant-message">
+            <div class="assistant-avatar">A</div>
+            <div class="assistant-content">
+              <div class="assistant-label">AI Assistant</div>
+              <div class="assistant-text">
+                <p>Of course! Binary search is an efficient algorithm for finding a target value within a <strong>sorted array</strong>. It works by repeatedly dividing the search interval in half. Here's a clean implementation in Python:</p>
+                <div class="code-block-wrapper">
+                  <div class="code-block-header">
+                    <span>python</span>
+                    <button class="code-copy-btn" onclick="copyCode(this)"><i class="bi bi-copy"></i> Copy</button>
+                  </div>
+                  <pre><code>def binary_search(arr, target):
+    left, right = 0, len(arr) - 1
+    while left &lt;= right:
+        mid = (left + right) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] &lt; target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1</code></pre>
+                </div>
+                <p>Here's how it works step by step:</p>
+                <p>1. We initialize two pointers, <code>left</code> and <code>right</code>, to the start and end of the array.<br>
+                2. We calculate the middle index <code>mid</code> and compare the element at that index with the target.<br>
+                3. If the middle element equals the target, we've found it and return the index.<br>
+                4. If the middle element is less than the target, we search the right half.<br>
+                5. If the middle element is greater, we search the left half.<br>
+                6. If the loop ends without finding the target, we return <code>-1</code>.</p>
+              </div>
+              <div class="message-actions">
+                <button class="msg-action-btn" title="Copy" onclick="copyAssistantMsg(this)"><i class="bi bi-copy"></i></button>
+                <button class="msg-action-btn" title="Good response"><i class="bi bi-hand-thumbs-up"></i></button>
+                <button class="msg-action-btn" title="Bad response"><i class="bi bi-hand-thumbs-down"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message 3: User -->
+          <div class="message-row user-message">
+            <div>
+              <div class="message-bubble">What's the time complexity of this algorithm?</div>
+              <div class="message-actions">
+                <button class="msg-action-btn" title="Copy" onclick="copyText(this, 'What\'s the time complexity of this algorithm?')"><i class="bi bi-copy"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message 4: Assistant -->
+          <div class="message-row assistant-message">
+            <div class="assistant-avatar">A</div>
+            <div class="assistant-content">
+              <div class="assistant-label">AI Assistant</div>
+              <div class="assistant-text">
+                <p>The time complexity of binary search is <strong>O(log n)</strong>, where <strong>n</strong> is the number of elements in the array. This makes it significantly more efficient than a linear search, which has a time complexity of O(n).</p>
+                <p>The logarithmic time complexity comes from the fact that the algorithm divides the search space in half with each iteration. For example, if you have an array of 1,000,000 elements, binary search would need at most about 20 comparisons (since log<sub>2</sub>(1,000,000) &asymp; 20) to find the target or determine it doesn't exist. In contrast, a linear search might need up to 1,000,000 comparisons in the worst case.</p>
+                <p>Here's a summary of the complexities:</p>
+                <p>&bull; <strong>Best case:</strong> O(1) &mdash; the target is at the middle of the array on the first check.<br>
+                &bull; <strong>Worst case:</strong> O(log n) &mdash; the target is at the very end of the search or not present.<br>
+                &bull; <strong>Average case:</strong> O(log n) &mdash; on average, you'll still need logarithmic comparisons.</p>
+              </div>
+              <div class="message-actions">
+                <button class="msg-action-btn" title="Copy" onclick="copyAssistantMsg(this)"><i class="bi bi-copy"></i></button>
+                <button class="msg-action-btn" title="Good response"><i class="bi bi-hand-thumbs-up"></i></button>
+                <button class="msg-action-btn" title="Bad response"><i class="bi bi-hand-thumbs-down"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message 5: Streaming assistant -->
+          <div class="message-row assistant-message" id="streamingMessage">
+            <div class="assistant-avatar">A</div>
+            <div class="assistant-content">
+              <div class="assistant-label">AI Assistant</div>
+              <div class="assistant-text">
+                <p id="streamingText"></p>
+              </div>
+              <div class="message-actions">
+                <button class="msg-action-btn" title="Copy" onclick="copyAssistantMsg(this)"><i class="bi bi-copy"></i></button>
+                <button class="msg-action-btn" title="Good response"><i class="bi bi-hand-thumbs-up"></i></button>
+                <button class="msg-action-btn" title="Bad response"><i class="bi bi-hand-thumbs-down"></i></button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <!-- Input Area -->
-      <div class="input-area-wrapper">
-        <div class="input-area-container">
-          <div class="input-box" id="inputBox">
-            <div class="file-attachments" id="fileAttachments"></div>
-            <div class="input-textarea-wrapper">
-              <textarea class="input-textarea" id="messageInput" rows="1" placeholder="Message Enterprise GPT..."></textarea>
+      <!-- Prompt Input -->
+      <div class="prompt-wrapper">
+        <div class="prompt-box" id="promptBox">
+          <div class="drag-overlay" id="dragOverlay">
+            <i class="bi bi-files"></i>
+            <span>Drop file(s)</span>
+          </div>
+
+          <div class="file-attachments" id="fileAttachments">
+            <div class="file-chip">
+              <i class="bi bi-file-earmark-pdf"></i>
+              <span class="file-name">quarterly-report.pdf</span>
+              <span class="file-size">2.4 MB</span>
+              <button class="file-remove-btn" onclick="removeFile(this)" title="Remove file">&times;</button>
             </div>
-            <div class="input-toolbar">
-              <div class="toolbar-left">
-                <button class="attach-btn" id="attachBtn" title="Attach file">
-                  <i class="bi bi-paperclip"></i>
+            <div class="file-chip">
+              <i class="bi bi-file-earmark-excel"></i>
+              <span class="file-name">dataset.xlsx</span>
+              <span class="file-size">890 KB</span>
+              <button class="file-remove-btn" onclick="removeFile(this)" title="Remove file">&times;</button>
+            </div>
+          </div>
+
+          <div class="prompt-textarea-wrap">
+            <textarea class="prompt-textarea" id="promptTextarea" rows="1" placeholder="Message AI Assistant..."></textarea>
+          </div>
+
+          <div class="prompt-toolbar">
+            <div class="toolbar-left">
+              <button class="toolbar-btn" title="Attach file">
+                <i class="bi bi-paperclip"></i>
+              </button>
+
+              <!-- Model dropdown -->
+              <div class="custom-dropdown" id="modelDropdown">
+                <button class="toolbar-btn" onclick="toggleDropdown('modelDropdownMenu')">
+                  <i class="bi bi-cpu"></i>
+                  <span class="btn-label" id="selectedModelLabel">GPT-4o</span>
+                  <i class="bi bi-chevron-down" style="font-size: 10px;"></i>
                 </button>
-                <input type="file" class="hidden-file-input" id="fileInput" multiple>
-                <div class="model-selector" id="modelSelector">
-                  <button class="model-selector-btn" id="modelSelectorBtn">
-                    <span id="selectedModelLabel">GPT-4o</span>
-                    <i class="bi bi-chevron-down"></i>
+                <div class="dropdown-menu-custom" id="modelDropdownMenu">
+                  <div class="dropdown-label">Select Model</div>
+                  <button class="dropdown-item-custom" onclick="selectModel(this, 'GPT-4o')">
+                    <span class="check-icon"><i class="bi bi-check-lg"></i></span>
+                    <span class="item-label">GPT-4o</span>
                   </button>
-                  <div class="model-dropdown" id="modelDropdown">
-                    <div class="model-option selected" data-model="GPT-4o">GPT-4o</div>
-                    <div class="model-option" data-model="GPT-4o Mini">GPT-4o Mini</div>
-                    <div class="model-option" data-model="Claude 3.5 Sonnet">Claude 3.5 Sonnet</div>
-                    <div class="model-option" data-model="Gemini 1.5 Pro">Gemini 1.5 Pro</div>
-                  </div>
+                  <button class="dropdown-item-custom" onclick="selectModel(this, 'GPT-4o Mini')">
+                    <span class="check-icon"></span>
+                    <span class="item-label">GPT-4o Mini</span>
+                  </button>
+                  <button class="dropdown-item-custom" onclick="selectModel(this, 'Claude 3.5 Sonnet')">
+                    <span class="check-icon"></span>
+                    <span class="item-label">Claude 3.5 Sonnet</span>
+                  </button>
+                  <button class="dropdown-item-custom" onclick="selectModel(this, 'Gemini 1.5 Pro')">
+                    <span class="check-icon"></span>
+                    <span class="item-label">Gemini 1.5 Pro</span>
+                  </button>
                 </div>
               </div>
-              <div class="toolbar-right">
-                <button class="send-btn disabled" id="sendBtn" title="Send message">
-                  <i class="bi bi-arrow-up"></i>
+
+              <!-- Tools dropdown -->
+              <div class="custom-dropdown" id="toolsDropdown">
+                <button class="toolbar-btn" onclick="toggleDropdown('toolsDropdownMenu')">
+                  <i class="bi bi-wrench"></i>
+                  <span class="btn-label">Tools</span>
+                  <span class="badge-count" id="toolsCount">2</span>
+                  <i class="bi bi-chevron-down" style="font-size: 10px;"></i>
                 </button>
+                <div class="dropdown-menu-custom" id="toolsDropdownMenu">
+                  <div class="dropdown-label">MCP Tools</div>
+                  <button class="dropdown-item-custom" onclick="toggleTool(this)">
+                    <span class="check-icon"><i class="bi bi-check-lg"></i></span>
+                    <span class="item-label">Web Search</span>
+                  </button>
+                  <button class="dropdown-item-custom" onclick="toggleTool(this)">
+                    <span class="check-icon"><i class="bi bi-check-lg"></i></span>
+                    <span class="item-label">Code Interpreter</span>
+                  </button>
+                  <button class="dropdown-item-custom" onclick="toggleTool(this)">
+                    <span class="check-icon"></span>
+                    <span class="item-label">File Reader</span>
+                  </button>
+                  <button class="dropdown-item-custom" onclick="toggleTool(this)">
+                    <span class="check-icon"></span>
+                    <span class="item-label">Database Query</span>
+                  </button>
+                </div>
               </div>
             </div>
+
+            <button class="send-btn" title="Send message" onclick="sendMessage()">
+              <i class="bi bi-arrow-up"></i>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Footer -->
-      <div class="chat-footer">
-        Enterprise GPT can make mistakes. Verify important information.
-      </div>
-    </main>
+      <div class="footer-note">AI Assistant can make mistakes. Verify important information.</div>
+    </div>
   </div>
 
-  <!-- Delete Confirmation Modal -->
-  <div class="modal-backdrop-custom" id="deleteModal">
-    <div class="modal-dialog-custom">
-      <h5>Delete conversation</h5>
-      <p id="deleteModalText">Are you sure you want to delete this conversation? This action cannot be undone.</p>
-      <div class="modal-actions">
-        <button class="modal-btn modal-btn-cancel" id="deleteCancelBtn">Cancel</button>
-        <button class="modal-btn modal-btn-delete" id="deleteConfirmBtn">Delete</button>
+  <!-- Conversation Context Menu -->
+  <div class="conv-context-menu" id="convContextMenu">
+    <button onclick="openRenameModal()"><i class="bi bi-pencil"></i> Rename</button>
+    <button class="text-danger" onclick="openDeleteModal()"><i class="bi bi-trash3"></i> Delete</button>
+  </div>
+
+  <!-- Rename Modal -->
+  <div class="modal fade" id="renameModal" tabindex="-1" aria-labelledby="renameModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="renameModalLabel">Rename Conversation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control" id="renameInput" maxlength="256" placeholder="Conversation name">
+          <div class="char-counter"><span id="charCount">0</span> / 256 characters</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm" style="color: var(--text-secondary); border: 1px solid var(--border-default); border-radius: 8px; padding: 6px 16px;" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-sm" style="background-color: var(--brand-secondary); color: white; border-radius: 8px; padding: 6px 16px;" onclick="renameConversation()">Rename</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Toast Container -->
-  <div class="toast-container-custom" id="toastContainer"></div>
+  <!-- Delete Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalLabel">Delete this conversation?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">This action cannot be undone. The conversation and all its messages will be permanently deleted.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm" style="color: var(--text-secondary); border: 1px solid var(--border-default); border-radius: 8px; padding: 6px 16px;" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-sm" style="background-color: var(--error); color: white; border-radius: 8px; padding: 6px 16px;" onclick="deleteConversation()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <!-- Toast -->
+  <div class="toast-container-custom">
+    <div class="toast-custom" id="appToast">
+      <i class="bi bi-check-circle-fill" style="color: var(--success);" id="toastIcon"></i>
+      <span id="toastMessage">Action completed successfully.</span>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    (function() {
-      'use strict';
+    // ===== STATE =====
+    let currentConvId = null;
+    let sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    let currentTheme = localStorage.getItem('theme') || 'light';
 
-      /* ===================================================
-         DATA
-         =================================================== */
-      var conversations = [
-        { id: 1, title: 'Python CSV parsing script' },
-        { id: 2, title: 'Kubernetes deployment strategies' },
-        { id: 3, title: 'React vs Angular comparison for enterprise', selected: true },
-        { id: 4, title: 'Database optimization techniques' },
-        { id: 5, title: 'API rate limiting best practices' },
-        { id: 6, title: 'CI/CD pipeline with GitHub Actions' },
-        { id: 7, title: 'OAuth 2.0 implementation guide' },
-        { id: 8, title: 'Microservices vs monolith architecture' },
-        { id: 9, title: 'Docker containerization tutorial' },
-        { id: 10, title: 'TypeScript generics explained' },
-        { id: 11, title: 'AWS Lambda function optimization' },
-        { id: 12, title: 'GraphQL vs REST API design' },
-        { id: 13, title: 'Redis caching strategies' },
-        { id: 14, title: 'Unit testing with Jest and React' },
-        { id: 15, title: 'PostgreSQL query performance tuning' },
-        { id: 16, title: 'Nginx reverse proxy configuration' },
-        { id: 17, title: 'WebSocket real-time communication' },
-        { id: 18, title: 'Terraform infrastructure as code' },
-        { id: 19, title: 'Machine learning model deployment' },
-        { id: 20, title: 'Elasticsearch full-text search setup' },
-        { id: 21, title: 'Git branching strategy for teams' },
-        { id: 22, title: 'Security headers and CORS policies' },
-        { id: 23, title: 'Monitoring with Prometheus and Grafana' },
-        { id: 24, title: 'Event-driven architecture patterns' },
-        { id: 25, title: 'CSS Grid layout best practices' },
-        { id: 26, title: 'Node.js memory leak debugging' },
-        { id: 27, title: 'Azure DevOps pipeline setup' },
-        { id: 28, title: 'RabbitMQ message queue implementation' },
-        { id: 29, title: 'Design patterns in JavaScript' },
-        { id: 30, title: 'SSL certificate management' }
-      ];
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', function() {
+      applyTheme(currentTheme);
+      applySidebarState();
+      initTextarea();
+      initDragDrop();
+      startStreaming();
+      scrollToBottom();
 
-      var selectedModel = 'GPT-4o';
-      var isStreaming = false;
-      var streamingInterval = null;
-      var thinkingTimeout = null;
-      var deleteTargetId = null;
-      var attachedFiles = [];
+      // Init tooltips
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+      tooltipTriggerList.forEach(function(el) {
+        new bootstrap.Tooltip(el);
+      });
 
-      /* ===================================================
-         DOM REFERENCES
-         =================================================== */
+      // Close dropdowns on outside click
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('#modelDropdown')) {
+          document.getElementById('modelDropdownMenu').classList.remove('show');
+        }
+        if (!e.target.closest('#toolsDropdown')) {
+          document.getElementById('toolsDropdownMenu').classList.remove('show');
+        }
+        if (!e.target.closest('.conv-menu-btn') && !e.target.closest('.conv-context-menu')) {
+          document.getElementById('convContextMenu').classList.remove('show');
+        }
+      });
+
+      // Rename input char counter
+      document.getElementById('renameInput').addEventListener('input', function() {
+        document.getElementById('charCount').textContent = this.value.length;
+      });
+    });
+
+    // ===== THEME =====
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      currentTheme = theme;
+      localStorage.setItem('theme', theme);
+      var icon = document.getElementById('themeIcon');
+      if (theme === 'dark') {
+        icon.className = 'bi bi-moon-fill';
+      } else {
+        icon.className = 'bi bi-sun-fill';
+      }
+    }
+
+    document.getElementById('themeToggleBtn').addEventListener('click', function() {
+      applyTheme(currentTheme === 'light' ? 'dark' : 'light');
+    });
+
+    // ===== SIDEBAR =====
+    function applySidebarState() {
       var sidebar = document.getElementById('sidebar');
-      var sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
-      var sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
-      var sidebarOverlay = document.getElementById('sidebarOverlay');
-      var themeToggleBtn = document.getElementById('themeToggleBtn');
-      var recentList = document.getElementById('recentList');
-      var chatArea = document.getElementById('chatArea');
-      var chatContainer = document.getElementById('chatContainer');
-      var emptyState = document.getElementById('emptyState');
-      var messageInput = document.getElementById('messageInput');
-      var sendBtn = document.getElementById('sendBtn');
-      var attachBtn = document.getElementById('attachBtn');
-      var fileInput = document.getElementById('fileInput');
-      var fileAttachments = document.getElementById('fileAttachments');
-      var modelSelectorBtn = document.getElementById('modelSelectorBtn');
-      var modelDropdown = document.getElementById('modelDropdown');
-      var selectedModelLabel = document.getElementById('selectedModelLabel');
-      var deleteModal = document.getElementById('deleteModal');
-      var deleteCancelBtn = document.getElementById('deleteCancelBtn');
-      var deleteConfirmBtn = document.getElementById('deleteConfirmBtn');
-      var deleteModalText = document.getElementById('deleteModalText');
-      var toastContainer = document.getElementById('toastContainer');
-      var newConversationBtn = document.getElementById('newConversationBtn');
-
-      /* ===================================================
-         THEME
-         =================================================== */
-      function initTheme() {
-        var saved = localStorage.getItem('egpt-theme');
-        if (saved === 'dark') {
-          document.documentElement.setAttribute('data-theme', 'dark');
-          themeToggleBtn.querySelector('i').className = 'bi bi-sun';
-        } else {
-          document.documentElement.setAttribute('data-theme', 'light');
-          themeToggleBtn.querySelector('i').className = 'bi bi-moon';
-        }
-      }
-
-      function toggleTheme() {
-        var current = document.documentElement.getAttribute('data-theme');
-        if (current === 'dark') {
-          document.documentElement.setAttribute('data-theme', 'light');
-          themeToggleBtn.querySelector('i').className = 'bi bi-moon';
-          localStorage.setItem('egpt-theme', 'light');
-        } else {
-          document.documentElement.setAttribute('data-theme', 'dark');
-          themeToggleBtn.querySelector('i').className = 'bi bi-sun';
-          localStorage.setItem('egpt-theme', 'dark');
-        }
-      }
-
-      themeToggleBtn.addEventListener('click', toggleTheme);
-      initTheme();
-
-      /* ===================================================
-         SIDEBAR COLLAPSE
-         =================================================== */
-      function initSidebar() {
-        var saved = localStorage.getItem('egpt-sidebar');
-        if (saved === 'collapsed') {
+      var icon = document.getElementById('sidebarToggleIcon');
+      // Only apply on desktop
+      if (window.innerWidth >= 1024) {
+        if (sidebarCollapsed) {
           sidebar.classList.add('collapsed');
+          icon.className = 'bi bi-chevron-right';
+        } else {
+          sidebar.classList.remove('collapsed');
+          icon.className = 'bi bi-chevron-left';
         }
       }
+    }
 
-      function toggleSidebar() {
-        sidebar.classList.toggle('collapsed');
-        localStorage.setItem('egpt-sidebar', sidebar.classList.contains('collapsed') ? 'collapsed' : 'open');
+    document.getElementById('sidebarToggleBtn').addEventListener('click', function() {
+      var sidebar = document.getElementById('sidebar');
+      var icon = document.getElementById('sidebarToggleIcon');
+
+      if (window.innerWidth < 768) {
+        // Mobile: close overlay
+        sidebar.classList.remove('mobile-open');
+        document.getElementById('sidebarBackdrop').classList.remove('show');
+        return;
       }
 
-      sidebarCloseBtn.addEventListener('click', toggleSidebar);
-      sidebarOpenBtn.addEventListener('click', toggleSidebar);
-      sidebarOverlay.addEventListener('click', function() {
+      if (window.innerWidth < 1024) {
+        // Tablet: always collapsed, no toggle
+        return;
+      }
+
+      sidebarCollapsed = !sidebarCollapsed;
+      localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+      if (sidebarCollapsed) {
         sidebar.classList.add('collapsed');
-        localStorage.setItem('egpt-sidebar', 'collapsed');
-      });
-
-      initSidebar();
-
-      /* ===================================================
-         RECENT CONVERSATIONS LIST
-         =================================================== */
-      function renderRecentList() {
-        recentList.innerHTML = '';
-        conversations.forEach(function(conv) {
-          var item = document.createElement('div');
-          item.className = 'recent-item' + (conv.selected ? ' selected' : '');
-          item.dataset.id = conv.id;
-
-          var textSpan = document.createElement('span');
-          textSpan.className = 'recent-item-text';
-          textSpan.textContent = conv.title;
-          item.appendChild(textSpan);
-
-          var menuBtn = document.createElement('button');
-          menuBtn.className = 'recent-item-menu-btn';
-          menuBtn.innerHTML = '<i class="bi bi-three-dots-vertical"></i>';
-          menuBtn.title = 'More options';
-          item.appendChild(menuBtn);
-
-          var dropdown = document.createElement('div');
-          dropdown.className = 'context-dropdown';
-
-          var renameOpt = document.createElement('button');
-          renameOpt.className = 'context-option';
-          renameOpt.innerHTML = '<i class="bi bi-pencil"></i> Rename';
-          dropdown.appendChild(renameOpt);
-
-          var deleteOpt = document.createElement('button');
-          deleteOpt.className = 'context-option danger';
-          deleteOpt.innerHTML = '<i class="bi bi-trash3"></i> Delete';
-          dropdown.appendChild(deleteOpt);
-
-          item.appendChild(dropdown);
-
-          textSpan.addEventListener('click', function() {
-            conversations.forEach(function(c) { c.selected = false; });
-            conv.selected = true;
-            renderRecentList();
-          });
-
-          menuBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            closeAllDropdowns();
-            dropdown.classList.add('show');
-            menuBtn.classList.add('show');
-          });
-
-          renameOpt.addEventListener('click', function(e) {
-            e.stopPropagation();
-            dropdown.classList.remove('show');
-            menuBtn.classList.remove('show');
-            startInlineRename(item, conv);
-          });
-
-          deleteOpt.addEventListener('click', function(e) {
-            e.stopPropagation();
-            dropdown.classList.remove('show');
-            menuBtn.classList.remove('show');
-            showDeleteModal(conv.id, conv.title);
-          });
-
-          recentList.appendChild(item);
-        });
+        icon.className = 'bi bi-chevron-right';
+      } else {
+        sidebar.classList.remove('collapsed');
+        icon.className = 'bi bi-chevron-left';
       }
+    });
 
-      function closeAllDropdowns() {
-        document.querySelectorAll('.context-dropdown.show').forEach(function(d) {
-          d.classList.remove('show');
-        });
-        document.querySelectorAll('.recent-item-menu-btn.show').forEach(function(b) {
-          b.classList.remove('show');
-        });
-      }
+    // Hamburger for mobile
+    document.getElementById('hamburgerBtn').addEventListener('click', function() {
+      var sidebar = document.getElementById('sidebar');
+      sidebar.classList.add('mobile-open');
+      document.getElementById('sidebarBackdrop').classList.add('show');
+    });
 
-      function startInlineRename(item, conv) {
-        var textSpan = item.querySelector('.recent-item-text');
-        var menuBtn = item.querySelector('.recent-item-menu-btn');
-        menuBtn.style.display = 'none';
+    document.getElementById('sidebarBackdrop').addEventListener('click', function() {
+      var sidebar = document.getElementById('sidebar');
+      sidebar.classList.remove('mobile-open');
+      this.classList.remove('show');
+    });
 
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'recent-item-input';
-        input.value = conv.title;
-        textSpan.style.display = 'none';
-        item.insertBefore(input, menuBtn);
-        input.focus();
-        input.select();
-
-        function finishRename() {
-          var newTitle = input.value.trim();
-          if (newTitle && newTitle !== conv.title) {
-            conv.title = newTitle;
-            showToast('Conversation renamed', 'success');
-          }
-          textSpan.style.display = '';
-          menuBtn.style.display = '';
-          if (input.parentNode) input.parentNode.removeChild(input);
-          renderRecentList();
-        }
-
-        input.addEventListener('blur', finishRename);
-        input.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-          if (e.key === 'Escape') { input.value = conv.title; input.blur(); }
-        });
-      }
-
-      /* ===================================================
-         DELETE MODAL
-         =================================================== */
-      function showDeleteModal(id, title) {
-        deleteTargetId = id;
-        deleteModalText.textContent = 'Are you sure you want to delete \u201C' + title + '\u201D? This action cannot be undone.';
-        deleteModal.classList.add('show');
-      }
-
-      function hideDeleteModal() {
-        deleteModal.classList.remove('show');
-        deleteTargetId = null;
-      }
-
-      deleteCancelBtn.addEventListener('click', hideDeleteModal);
-      deleteModal.addEventListener('click', function(e) {
-        if (e.target === deleteModal) hideDeleteModal();
+    // ===== TEXTAREA AUTO-EXPAND =====
+    function initTextarea() {
+      var textarea = document.getElementById('promptTextarea');
+      textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 160) + 'px';
       });
-
-      deleteConfirmBtn.addEventListener('click', function() {
-        if (deleteTargetId !== null) {
-          var idx = conversations.findIndex(function(c) { return c.id === deleteTargetId; });
-          if (idx !== -1) {
-            conversations.splice(idx, 1);
-            renderRecentList();
-            showToast('Conversation deleted', 'success');
-          }
-        }
-        hideDeleteModal();
-      });
-
-      /* ===================================================
-         TOAST NOTIFICATIONS
-         =================================================== */
-      function showToast(message, type) {
-        type = type || 'success';
-        var toast = document.createElement('div');
-        toast.className = 'custom-toast toast-' + type;
-        var iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill';
-        toast.innerHTML = '<i class="bi ' + iconClass + '"></i> ' + escapeHTML(message);
-        toastContainer.appendChild(toast);
-
-        setTimeout(function() {
-          toast.style.animation = 'toastOut 200ms ease forwards';
-          setTimeout(function() {
-            if (toast.parentNode) toast.parentNode.removeChild(toast);
-          }, 200);
-        }, 3000);
-      }
-
-      /* ===================================================
-         MODEL SELECTOR
-         =================================================== */
-      modelSelectorBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        modelDropdown.classList.toggle('show');
-      });
-
-      document.querySelectorAll('.model-option').forEach(function(opt) {
-        opt.addEventListener('click', function(e) {
-          e.stopPropagation();
-          selectedModel = opt.dataset.model;
-          selectedModelLabel.textContent = selectedModel;
-          document.querySelectorAll('.model-option').forEach(function(o) { o.classList.remove('selected'); });
-          opt.classList.add('selected');
-          modelDropdown.classList.remove('show');
-        });
-      });
-
-      /* ===================================================
-         FILE ATTACHMENT
-         =================================================== */
-      attachBtn.addEventListener('click', function() { fileInput.click(); });
-
-      fileInput.addEventListener('change', function() {
-        Array.from(fileInput.files).forEach(function(f) {
-          attachedFiles.push({ name: f.name, size: f.size });
-        });
-        renderFileChips();
-        fileInput.value = '';
-      });
-
-      function renderFileChips() {
-        fileAttachments.innerHTML = '';
-        if (attachedFiles.length === 0) {
-          fileAttachments.classList.remove('has-files');
-          return;
-        }
-        fileAttachments.classList.add('has-files');
-        attachedFiles.forEach(function(f, index) {
-          var chip = document.createElement('div');
-          chip.className = 'file-chip';
-          var sizeStr = f.size < 1024 ? f.size + ' B'
-            : f.size < 1048576 ? (f.size / 1024).toFixed(1) + ' KB'
-            : (f.size / 1048576).toFixed(1) + ' MB';
-          chip.innerHTML = '<i class="bi bi-file-earmark"></i>'
-            + '<span>' + escapeHTML(f.name) + '</span>'
-            + '<span class="file-chip-size">' + sizeStr + '</span>'
-            + '<button class="file-chip-remove" data-index="' + index + '" title="Remove"><i class="bi bi-x"></i></button>';
-          fileAttachments.appendChild(chip);
-        });
-
-        fileAttachments.querySelectorAll('.file-chip-remove').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            attachedFiles.splice(parseInt(btn.dataset.index, 10), 1);
-            renderFileChips();
-          });
-        });
-      }
-
-      /* ===================================================
-         TEXTAREA AUTO-EXPAND & SEND BUTTON STATE
-         =================================================== */
-      messageInput.addEventListener('input', function() {
-        autoExpandTextarea();
-        updateSendButton();
-      });
-
-      messageInput.addEventListener('keydown', function(e) {
+      textarea.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
-          if (!isStreaming) sendMessage();
+          sendMessage();
+        }
+      });
+    }
+
+    // ===== DRAG AND DROP =====
+    function initDragDrop() {
+      var box = document.getElementById('promptBox');
+      var dragCounter = 0;
+
+      box.addEventListener('dragenter', function(e) {
+        e.preventDefault();
+        dragCounter++;
+        box.classList.add('drag-over');
+      });
+
+      box.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter <= 0) {
+          dragCounter = 0;
+          box.classList.remove('drag-over');
         }
       });
 
-      function autoExpandTextarea() {
-        messageInput.style.height = 'auto';
-        messageInput.style.height = Math.min(messageInput.scrollHeight, 160) + 'px';
-      }
-
-      function updateSendButton() {
-        if (isStreaming) {
-          sendBtn.className = 'send-btn stop';
-          sendBtn.innerHTML = '<i class="bi bi-stop-fill"></i>';
-          sendBtn.title = 'Stop generating';
-          return;
-        }
-        var hasText = messageInput.value.trim().length > 0;
-        sendBtn.className = hasText ? 'send-btn enabled' : 'send-btn disabled';
-        sendBtn.innerHTML = '<i class="bi bi-arrow-up"></i>';
-        sendBtn.title = 'Send message';
-      }
-
-      sendBtn.addEventListener('click', function() {
-        if (isStreaming) stopStreaming(); else sendMessage();
+      box.addEventListener('dragover', function(e) {
+        e.preventDefault();
       });
 
-      /* ===================================================
-         MESSAGE RENDERING HELPERS
-         =================================================== */
-      function escapeHTML(str) {
-        var div = document.createElement('div');
-        div.appendChild(document.createTextNode(str));
-        return div.innerHTML;
-      }
+      box.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dragCounter = 0;
+        box.classList.remove('drag-over');
 
-      function createUserMessage(text, animate) {
-        var wrapper = document.createElement('div');
-        wrapper.className = 'message message-user' + (animate ? '' : ' loaded');
+        var files = e.dataTransfer.files;
+        if (files.length > 0) {
+          var container = document.getElementById('fileAttachments');
+          for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            var sizeStr = file.size > 1048576
+              ? (file.size / 1048576).toFixed(1) + ' MB'
+              : (file.size / 1024).toFixed(0) + ' KB';
+            var iconClass = 'bi-file-earmark';
+            if (file.name.endsWith('.pdf')) iconClass = 'bi-file-earmark-pdf';
+            else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) iconClass = 'bi-file-earmark-excel';
+            else if (file.name.endsWith('.doc') || file.name.endsWith('.docx')) iconClass = 'bi-file-earmark-word';
+            else if (file.name.endsWith('.png') || file.name.endsWith('.jpg') || file.name.endsWith('.jpeg')) iconClass = 'bi-file-earmark-image';
 
-        var innerWrapper = document.createElement('div');
-        innerWrapper.className = 'message-user-wrapper';
-
-        var bubble = document.createElement('div');
-        bubble.className = 'message-bubble';
-        bubble.textContent = text;
-        innerWrapper.appendChild(bubble);
-
-        var actions = document.createElement('div');
-        actions.className = 'message-actions';
-        actions.innerHTML = '<button class="action-btn" title="Copy"><i class="bi bi-clipboard"></i></button>';
-        actions.querySelector('.action-btn').addEventListener('click', function() {
-          copyToClipboard(text);
-          showToast('Copied to clipboard', 'success');
-        });
-        innerWrapper.appendChild(actions);
-
-        wrapper.appendChild(innerWrapper);
-        return wrapper;
-      }
-
-      function createAssistantMessage(htmlContent, animate) {
-        var wrapper = document.createElement('div');
-        wrapper.className = 'message message-assistant' + (animate ? '' : ' loaded');
-
-        var avatar = document.createElement('div');
-        avatar.className = 'assistant-avatar';
-        avatar.textContent = 'E';
-
-        var content = document.createElement('div');
-        content.className = 'assistant-content';
-
-        var label = document.createElement('div');
-        label.className = 'assistant-label';
-        label.textContent = 'Enterprise GPT';
-
-        var text = document.createElement('div');
-        text.className = 'assistant-text';
-        text.innerHTML = htmlContent;
-
-        var actions = document.createElement('div');
-        actions.className = 'assistant-actions';
-        actions.innerHTML = '<button class="action-btn copy-response-btn" title="Copy"><i class="bi bi-clipboard"></i></button>'
-          + '<button class="action-btn thumbs-up-btn" title="Helpful"><i class="bi bi-hand-thumbs-up"></i></button>'
-          + '<button class="action-btn thumbs-down-btn" title="Not helpful"><i class="bi bi-hand-thumbs-down"></i></button>';
-
-        bindActionButtons(actions, text);
-
-        content.appendChild(label);
-        content.appendChild(text);
-        content.appendChild(actions);
-        wrapper.appendChild(avatar);
-        wrapper.appendChild(content);
-
-        setTimeout(function() { bindCodeCopyButtons(text); }, 0);
-
-        return wrapper;
-      }
-
-      function createThinkingDots() {
-        var wrapper = document.createElement('div');
-        wrapper.className = 'message message-assistant';
-        wrapper.id = 'thinkingMessage';
-
-        var avatar = document.createElement('div');
-        avatar.className = 'assistant-avatar';
-        avatar.textContent = 'E';
-
-        var content = document.createElement('div');
-        content.className = 'assistant-content';
-
-        var label = document.createElement('div');
-        label.className = 'assistant-label';
-        label.textContent = 'Enterprise GPT';
-
-        var dots = document.createElement('div');
-        dots.className = 'thinking-dots';
-        dots.innerHTML = '<div class="thinking-dot"></div><div class="thinking-dot"></div><div class="thinking-dot"></div>';
-
-        content.appendChild(label);
-        content.appendChild(dots);
-        wrapper.appendChild(avatar);
-        wrapper.appendChild(content);
-        return wrapper;
-      }
-
-      function copyToClipboard(text) {
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(text).catch(function() {});
-        } else {
-          var ta = document.createElement('textarea');
-          ta.value = text;
-          ta.style.position = 'fixed';
-          ta.style.left = '-9999px';
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          document.body.removeChild(ta);
+            var chip = document.createElement('div');
+            chip.className = 'file-chip';
+            chip.innerHTML = '<i class="bi ' + iconClass + '"></i>' +
+              '<span class="file-name">' + file.name + '</span>' +
+              '<span class="file-size">' + sizeStr + '</span>' +
+              '<button class="file-remove-btn" onclick="removeFile(this)" title="Remove file">&times;</button>';
+            container.appendChild(chip);
+          }
+          showToast('File(s) attached successfully.');
         }
+      });
+    }
+
+    function removeFile(btn) {
+      btn.closest('.file-chip').remove();
+    }
+
+    // ===== DROPDOWNS =====
+    function toggleDropdown(id) {
+      var menu = document.getElementById(id);
+      // Close all other dropdowns
+      document.querySelectorAll('.dropdown-menu-custom').forEach(function(m) {
+        if (m.id !== id) m.classList.remove('show');
+      });
+      menu.classList.toggle('show');
+    }
+
+    function selectModel(el, modelName) {
+      // Clear all checks in model dropdown
+      var items = el.closest('.dropdown-menu-custom').querySelectorAll('.dropdown-item-custom');
+      items.forEach(function(item) {
+        item.querySelector('.check-icon').innerHTML = '';
+      });
+      el.querySelector('.check-icon').innerHTML = '<i class="bi bi-check-lg"></i>';
+      document.getElementById('selectedModelLabel').textContent = modelName;
+      document.getElementById('modelDropdownMenu').classList.remove('show');
+      showToast('Model changed to ' + modelName);
+    }
+
+    function toggleTool(el) {
+      var checkIcon = el.querySelector('.check-icon');
+      if (checkIcon.innerHTML.trim() === '') {
+        checkIcon.innerHTML = '<i class="bi bi-check-lg"></i>';
+      } else {
+        checkIcon.innerHTML = '';
+      }
+      updateToolsCount();
+      // Keep dropdown open (do not close)
+    }
+
+    function updateToolsCount() {
+      var menu = document.getElementById('toolsDropdownMenu');
+      var count = menu.querySelectorAll('.check-icon i').length;
+      var badge = document.getElementById('toolsCount');
+      badge.textContent = count;
+      badge.style.display = count > 0 ? 'inline' : 'none';
+    }
+
+    // ===== CONVERSATION CONTEXT MENU =====
+    function openConvMenu(e, convId) {
+      e.stopPropagation();
+      currentConvId = convId;
+      var menu = document.getElementById('convContextMenu');
+      var rect = e.currentTarget.getBoundingClientRect();
+      menu.style.top = rect.bottom + 4 + 'px';
+      menu.style.left = rect.left + 'px';
+      menu.classList.add('show');
+    }
+
+    // ===== MODALS =====
+    function openRenameModal() {
+      document.getElementById('convContextMenu').classList.remove('show');
+      var convItem = document.querySelector('.conversation-item[data-conv="' + currentConvId + '"] .conv-text');
+      var name = convItem ? convItem.textContent : '';
+      document.getElementById('renameInput').value = name;
+      document.getElementById('charCount').textContent = name.length;
+      var modal = new bootstrap.Modal(document.getElementById('renameModal'));
+      modal.show();
+    }
+
+    function renameConversation() {
+      var newName = document.getElementById('renameInput').value.trim();
+      if (newName && currentConvId) {
+        var convItem = document.querySelector('.conversation-item[data-conv="' + currentConvId + '"] .conv-text');
+        if (convItem) convItem.textContent = newName;
+        bootstrap.Modal.getInstance(document.getElementById('renameModal')).hide();
+        showToast('Conversation renamed successfully.');
+      }
+    }
+
+    function openDeleteModal() {
+      document.getElementById('convContextMenu').classList.remove('show');
+      var modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+      modal.show();
+    }
+
+    function deleteConversation() {
+      if (currentConvId) {
+        var convItem = document.querySelector('.conversation-item[data-conv="' + currentConvId + '"]');
+        if (convItem) {
+          convItem.style.transition = 'opacity 200ms ease, max-height 200ms ease';
+          convItem.style.opacity = '0';
+          convItem.style.maxHeight = '0';
+          convItem.style.overflow = 'hidden';
+          setTimeout(function() { convItem.remove(); }, 200);
+        }
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+        showToast('Conversation deleted.', 'error');
+      }
+    }
+
+    // ===== TOAST =====
+    function showToast(message, type) {
+      var toast = document.getElementById('appToast');
+      var icon = document.getElementById('toastIcon');
+      var msg = document.getElementById('toastMessage');
+
+      msg.textContent = message;
+      toast.classList.remove('error');
+      if (type === 'error') {
+        toast.classList.add('error');
+        icon.className = 'bi bi-exclamation-circle-fill';
+        icon.style.color = 'var(--error)';
+      } else {
+        icon.className = 'bi bi-check-circle-fill';
+        icon.style.color = 'var(--success)';
       }
 
-      function scrollToBottom() {
-        chatArea.scrollTop = chatArea.scrollHeight;
-      }
+      toast.classList.remove('hiding');
+      toast.classList.add('show');
 
-      function bindActionButtons(actions, textDiv) {
-        actions.querySelector('.copy-response-btn').addEventListener('click', function() {
-          copyToClipboard(textDiv.innerText);
-          showToast('Copied to clipboard', 'success');
-        });
-        actions.querySelector('.thumbs-up-btn').addEventListener('click', function() {
-          this.classList.toggle('active');
-          actions.querySelector('.thumbs-down-btn').classList.remove('active');
-        });
-        actions.querySelector('.thumbs-down-btn').addEventListener('click', function() {
-          this.classList.toggle('active');
-          actions.querySelector('.thumbs-up-btn').classList.remove('active');
-        });
-      }
+      clearTimeout(toast._timeout);
+      toast._timeout = setTimeout(function() {
+        toast.classList.add('hiding');
+        setTimeout(function() {
+          toast.classList.remove('show', 'hiding');
+        }, 300);
+      }, 3000);
+    }
 
-      function bindCodeCopyButtons(container) {
-        container.querySelectorAll('.code-copy-btn').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            var codeEl = btn.closest('.code-block').querySelector('code');
-            copyToClipboard(codeEl.innerText);
-            btn.innerHTML = '<i class="bi bi-check2"></i> Copied';
-            setTimeout(function() { btn.innerHTML = '<i class="bi bi-clipboard"></i> Copy'; }, 2000);
-          });
-        });
-      }
+    // ===== SEND MESSAGE (mock) =====
+    function sendMessage() {
+      var textarea = document.getElementById('promptTextarea');
+      var text = textarea.value.trim();
+      if (!text) return;
 
-      /* ===================================================
-         CODE BLOCK HELPER
-         =================================================== */
-      function makeCodeBlock(lang, code) {
-        return '<div class="code-block">'
-          + '<div class="code-block-header"><span>' + escapeHTML(lang) + '</span>'
-          + '<button class="code-copy-btn"><i class="bi bi-clipboard"></i> Copy</button></div>'
-          + '<pre><code>' + escapeHTML(code) + '</code></pre></div>';
-      }
+      var container = document.getElementById('chatMessages');
 
-      /* ===================================================
-         MOCK CHAT THREAD
-         =================================================== */
-      function loadMockThread() {
-        // User message 1
-        chatContainer.appendChild(createUserMessage(
-          'Can you explain how to create a REST API with Express.js? I need a basic example with CRUD operations.',
-          false
-        ));
+      // Add user message
+      var row = document.createElement('div');
+      row.className = 'message-row user-message';
+      row.innerHTML = '<div>' +
+        '<div class="message-bubble">' + escapeHtml(text) + '</div>' +
+        '<div class="message-actions">' +
+          '<button class="msg-action-btn" title="Copy" onclick="copyText(this, \'' + escapeHtml(text).replace(/'/g, "\\'") + '\')"><i class="bi bi-copy"></i></button>' +
+        '</div>' +
+      '</div>';
+      container.appendChild(row);
 
-        // Assistant message 1 with code blocks
-        var a1 = '<p>Sure! Here\'s a basic Express.js REST API with CRUD operations for managing a list of items. I\'ll walk you through the setup and each endpoint.</p>'
-          + '<p>First, initialize your project and install the dependency:</p>'
-          + makeCodeBlock('bash', 'npm init -y\nnpm install express')
-          + '<p>Now create your main server file:</p>'
-          + makeCodeBlock('javascript',
-            "const express = require('express');\nconst app = express();\nconst PORT = 3000;\n\napp.use(express.json());\n\nlet items = [\n  { id: 1, name: 'Item One', description: 'First item' },\n  { id: 2, name: 'Item Two', description: 'Second item' }\n];\nlet nextId = 3;\n\n// GET all items\napp.get('/api/items', (req, res) => {\n  res.json(items);\n});\n\n// GET single item\napp.get('/api/items/:id', (req, res) => {\n  const item = items.find(i => i.id === parseInt(req.params.id));\n  if (!item) return res.status(404).json({ error: 'Not found' });\n  res.json(item);\n});\n\n// POST create item\napp.post('/api/items', (req, res) => {\n  const { name, description } = req.body;\n  const item = { id: nextId++, name, description };\n  items.push(item);\n  res.status(201).json(item);\n});\n\n// PUT update item\napp.put('/api/items/:id', (req, res) => {\n  const item = items.find(i => i.id === parseInt(req.params.id));\n  if (!item) return res.status(404).json({ error: 'Not found' });\n  item.name = req.body.name || item.name;\n  item.description = req.body.description || item.description;\n  res.json(item);\n});\n\n// DELETE item\napp.delete('/api/items/:id', (req, res) => {\n  const index = items.findIndex(i => i.id === parseInt(req.params.id));\n  if (index === -1) return res.status(404).json({ error: 'Not found' });\n  items.splice(index, 1);\n  res.status(204).send();\n});\n\napp.listen(PORT, () => {\n  console.log(`Server running on http://localhost:${PORT}`);\n});")
-          + '<p>This gives you all four CRUD operations:</p>'
-          + '<ul>'
-          + '<li><strong>GET /api/items</strong> \u2014 List all items</li>'
-          + '<li><strong>GET /api/items/:id</strong> \u2014 Get a specific item</li>'
-          + '<li><strong>POST /api/items</strong> \u2014 Create a new item</li>'
-          + '<li><strong>PUT /api/items/:id</strong> \u2014 Update an existing item</li>'
-          + '<li><strong>DELETE /api/items/:id</strong> \u2014 Remove an item</li>'
-          + '</ul>'
-          + '<p>You can test it with <strong>curl</strong> or a tool like Postman. Let me know if you want to add features like validation, middleware, or a database connection!</p>';
+      textarea.value = '';
+      textarea.style.height = 'auto';
+      scrollToBottom();
+    }
 
-        chatContainer.appendChild(createAssistantMessage(a1, false));
+    // ===== STREAMING =====
+    function startStreaming() {
+      var streamingWords = (
+        "The space complexity of binary search is O(1) for the iterative implementation shown above, " +
+        "since it only uses a constant amount of extra space regardless of the input size. The algorithm " +
+        "only needs three variables (left, right, and mid) to keep track of the current search boundaries, " +
+        "making it very memory-efficient. However, if you implement binary search recursively, the space " +
+        "complexity becomes O(log n) due to the call stack. Each recursive call adds a new frame to the " +
+        "stack, and since the maximum recursion depth is log n, that becomes the space overhead. For most " +
+        "practical applications, the iterative version is preferred precisely because of this constant " +
+        "space advantage."
+      ).split(' ');
 
-        // User message 2
-        chatContainer.appendChild(createUserMessage(
-          "That's great! How would I add error handling middleware and input validation to this?",
-          false
-        ));
+      var target = document.getElementById('streamingText');
+      var index = 0;
+      var cursor = document.createElement('span');
+      cursor.className = 'streaming-cursor';
+      cursor.textContent = '|';
 
-        // Assistant message 2
-        var a2 = '<p>Great question! Adding error handling middleware and input validation makes your API much more robust. Here\'s how to enhance the previous example:</p>'
-          + '<p><strong>1. Input Validation Middleware</strong></p>'
-          + '<p>Create a simple validation function that checks required fields:</p>'
-          + makeCodeBlock('javascript',
-            "function validateItem(req, res, next) {\n  const { name } = req.body;\n\n  if (!name || typeof name !== 'string' || name.trim().length === 0) {\n    return res.status(400).json({\n      error: 'Validation failed',\n      details: 'Name is required and must be a non-empty string'\n    });\n  }\n\n  if (name.length > 100) {\n    return res.status(400).json({\n      error: 'Validation failed',\n      details: 'Name must be 100 characters or fewer'\n    });\n  }\n\n  next();\n}")
-          + '<p><strong>2. Global Error Handling Middleware</strong></p>'
-          + '<p>Add this at the end of your middleware chain (after all routes) to catch any unhandled errors:</p>'
-          + makeCodeBlock('javascript',
-            "app.use((err, req, res, next) => {\n  console.error(err.stack);\n  res.status(err.status || 500).json({\n    error: err.message || 'Internal server error',\n    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })\n  });\n});")
-          + '<p>Then apply the validation middleware to your POST and PUT routes:</p>'
-          + makeCodeBlock('javascript',
-            "app.post('/api/items', validateItem, (req, res) => { /* ... */ });\napp.put('/api/items/:id', validateItem, (req, res) => { /* ... */ });")
-          + '<p>This pattern keeps your route handlers clean and puts validation logic in reusable middleware. For more complex applications, consider using a library like <strong>Joi</strong> or <strong>express-validator</strong> for schema-based validation.</p>';
-
-        chatContainer.appendChild(createAssistantMessage(a2, false));
-
-        // User message 3
-        chatContainer.appendChild(createUserMessage(
-          "What about adding rate limiting and security headers? I want to make sure the API is production-ready.",
-          false
-        ));
-
-        // Start streaming response with thinking dots
-        startStreamingResponse();
-        scrollToBottom();
-      }
-
-      /* ===================================================
-         STREAMING RESPONSE SIMULATION
-         =================================================== */
-      function startStreamingResponse() {
-        isStreaming = true;
-        updateSendButton();
-
-        var thinkingEl = createThinkingDots();
-        chatContainer.appendChild(thinkingEl);
-        scrollToBottom();
-
-        var streamWords = (
-          'Excellent thinking! Security is critical for production APIs. '
-          + 'Here are the key packages and configurations you should add:\n\n'
-          + '**Rate Limiting** with `express-rate-limit` prevents abuse by limiting how many '
-          + 'requests a client can make within a time window. This protects your API from '
-          + 'brute force attacks and denial-of-service attempts.\n\n'
-          + 'Install the required packages:\n\n'
-          + '```\nnpm install express-rate-limit helmet cors\n```\n\n'
-          + '**Helmet** automatically sets various HTTP security headers including '
-          + 'Content-Security-Policy, X-Content-Type-Options, X-Frame-Options, '
-          + 'and several others. It is one of the easiest ways to improve your API\'s security posture.\n\n'
-          + '**CORS** (Cross-Origin Resource Sharing) should be configured to only allow '
-          + 'requests from your trusted domains in production. Never use a wildcard origin '
-          + 'in production environments.\n\n'
-          + 'Here is the recommended setup for your Express application. Add this '
-          + 'configuration near the top of your server file, before your route definitions. '
-          + 'This ensures all incoming requests pass through the security middleware first. '
-          + 'You should also consider adding request logging with Morgan and implementing '
-          + 'HTTPS in production for encrypted communication.'
-        ).split(' ');
-
-        var wordIndex = 0;
-        var accumulatedText = '';
-
-        thinkingTimeout = setTimeout(function() {
-          if (thinkingEl.parentNode) thinkingEl.parentNode.removeChild(thinkingEl);
-
-          var streamMsg = document.createElement('div');
-          streamMsg.className = 'message message-assistant';
-          streamMsg.id = 'streamingMessage';
-
-          var avatar = document.createElement('div');
-          avatar.className = 'assistant-avatar';
-          avatar.textContent = 'E';
-
-          var content = document.createElement('div');
-          content.className = 'assistant-content';
-
-          var label = document.createElement('div');
-          label.className = 'assistant-label';
-          label.textContent = 'Enterprise GPT';
-
-          var textDiv = document.createElement('div');
-          textDiv.className = 'assistant-text';
-          textDiv.id = 'streamingText';
-
-          var actions = document.createElement('div');
-          actions.className = 'assistant-actions';
-          actions.innerHTML = '<button class="action-btn copy-response-btn" title="Copy"><i class="bi bi-clipboard"></i></button>'
-            + '<button class="action-btn thumbs-up-btn" title="Helpful"><i class="bi bi-hand-thumbs-up"></i></button>'
-            + '<button class="action-btn thumbs-down-btn" title="Not helpful"><i class="bi bi-hand-thumbs-down"></i></button>';
-
-          content.appendChild(label);
-          content.appendChild(textDiv);
-          content.appendChild(actions);
-          streamMsg.appendChild(avatar);
-          streamMsg.appendChild(content);
-          chatContainer.appendChild(streamMsg);
+      function addWord() {
+        if (index < streamingWords.length) {
+          var word = streamingWords[index];
+          if (index > 0) {
+            target.insertBefore(document.createTextNode(' '), cursor);
+          }
+          target.insertBefore(document.createTextNode(word), cursor);
+          index++;
           scrollToBottom();
-
-          streamingInterval = setInterval(function() {
-            if (wordIndex < streamWords.length) {
-              accumulatedText += (wordIndex > 0 ? ' ' : '') + streamWords[wordIndex];
-              wordIndex++;
-              renderStreamingText(textDiv, accumulatedText, false);
-              scrollToBottom();
-            } else {
-              clearInterval(streamingInterval);
-              streamingInterval = null;
-              isStreaming = false;
-              updateSendButton();
-              renderStreamingText(textDiv, accumulatedText, true);
-              bindActionButtons(actions, textDiv);
-              bindCodeCopyButtons(textDiv);
-              scrollToBottom();
-            }
-          }, 60);
-        }, 1500);
-      }
-
-      function renderStreamingText(container, text, finished) {
-        var html = escapeHTML(text);
-
-        // Bold **text**
-        html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-
-        // Inline code `text`
-        html = html.replace(/`([^`\n]+)`/g, '<code style="background:var(--bg-tertiary);padding:2px 5px;border-radius:3px;font-size:13px;font-family:\'SF Mono\',\'Cascadia Code\',\'Fira Code\',\'Consolas\',monospace;">$1</code>');
-
-        // Code blocks ```...```
-        html = html.replace(/```\n([\s\S]*?)```/g, function(match, code) {
-          var temp = document.createElement('div');
-          temp.innerHTML = code;
-          var decoded = temp.textContent || temp.innerText;
-          return '<div class="code-block"><div class="code-block-header"><span>bash</span>'
-            + '<button class="code-copy-btn"><i class="bi bi-clipboard"></i> Copy</button></div>'
-            + '<pre><code>' + escapeHTML(decoded.trim()) + '</code></pre></div>';
-        });
-
-        // Paragraphs
-        html = html.replace(/\n\n/g, '</p><p>');
-        html = '<p>' + html + '</p>';
-        html = html.replace(/<p><\/p>/g, '');
-
-        if (!finished) {
-          html += '<span class="streaming-cursor"></span>';
-        }
-
-        container.innerHTML = html;
-      }
-
-      function stopStreaming() {
-        if (streamingInterval) { clearInterval(streamingInterval); streamingInterval = null; }
-        if (thinkingTimeout) { clearTimeout(thinkingTimeout); thinkingTimeout = null; }
-        var thinking = document.getElementById('thinkingMessage');
-        if (thinking && thinking.parentNode) thinking.parentNode.removeChild(thinking);
-        var cursor = document.querySelector('.streaming-cursor');
-        if (cursor) cursor.parentNode.removeChild(cursor);
-
-        var streamMsg = document.getElementById('streamingMessage');
-        if (streamMsg) {
-          var actions = streamMsg.querySelector('.assistant-actions');
-          var textDiv = streamMsg.querySelector('.assistant-text');
-          if (actions && textDiv) {
-            bindActionButtons(actions, textDiv);
-            bindCodeCopyButtons(textDiv);
+        } else {
+          clearInterval(streamInterval);
+          if (cursor.parentNode) {
+            cursor.parentNode.removeChild(cursor);
           }
         }
-
-        isStreaming = false;
-        updateSendButton();
       }
 
-      /* ===================================================
-         SEND USER MESSAGE
-         =================================================== */
-      function sendMessage() {
-        var text = messageInput.value.trim();
-        if (!text) return;
+      target.appendChild(cursor);
+      var streamInterval = setInterval(addWord, 80);
+    }
 
-        emptyState.classList.remove('visible');
-        chatContainer.appendChild(createUserMessage(text, true));
-
-        messageInput.value = '';
-        autoExpandTextarea();
-        updateSendButton();
-        attachedFiles = [];
-        renderFileChips();
-        scrollToBottom();
-
-        simulateResponse();
-      }
-
-      function simulateResponse() {
-        isStreaming = true;
-        updateSendButton();
-
-        var thinkingEl = createThinkingDots();
-        chatContainer.appendChild(thinkingEl);
-        scrollToBottom();
-
-        thinkingTimeout = setTimeout(function() {
-          if (thinkingEl.parentNode) thinkingEl.parentNode.removeChild(thinkingEl);
-
-          var responses = [
-            'That\'s an interesting question! Let me think about the best way to approach this. There are several considerations to keep in mind when implementing this kind of solution. First, you\'ll want to ensure proper error handling is in place. Second, consider the performance implications of your choices. Third, think about maintainability and how your team will work with this code going forward.',
-            'I\'d be happy to help with that. Based on your requirements, I\'d recommend starting with a modular approach. Break down the problem into smaller, manageable components that can be tested independently. This makes debugging easier and improves code reusability across your project.',
-            'Great follow-up question! This builds nicely on what we discussed earlier. The key insight here is that you should always prioritize security without sacrificing developer experience. Modern tooling makes this much easier than it used to be, with packages that handle most of the boilerplate for you.'
-          ];
-
-          var responseText = responses[Math.floor(Math.random() * responses.length)];
-          var words = responseText.split(' ');
-          var wordIndex = 0;
-          var accumulated = '';
-
-          var streamMsg = document.createElement('div');
-          streamMsg.className = 'message message-assistant';
-
-          var avatar = document.createElement('div');
-          avatar.className = 'assistant-avatar';
-          avatar.textContent = 'E';
-
-          var content = document.createElement('div');
-          content.className = 'assistant-content';
-
-          var label = document.createElement('div');
-          label.className = 'assistant-label';
-          label.textContent = 'Enterprise GPT';
-
-          var textDiv = document.createElement('div');
-          textDiv.className = 'assistant-text';
-
-          var actions = document.createElement('div');
-          actions.className = 'assistant-actions';
-          actions.innerHTML = '<button class="action-btn copy-response-btn" title="Copy"><i class="bi bi-clipboard"></i></button>'
-            + '<button class="action-btn thumbs-up-btn" title="Helpful"><i class="bi bi-hand-thumbs-up"></i></button>'
-            + '<button class="action-btn thumbs-down-btn" title="Not helpful"><i class="bi bi-hand-thumbs-down"></i></button>';
-
-          content.appendChild(label);
-          content.appendChild(textDiv);
-          content.appendChild(actions);
-          streamMsg.appendChild(avatar);
-          streamMsg.appendChild(content);
-          chatContainer.appendChild(streamMsg);
-          scrollToBottom();
-
-          streamingInterval = setInterval(function() {
-            if (wordIndex < words.length) {
-              accumulated += (wordIndex > 0 ? ' ' : '') + words[wordIndex];
-              wordIndex++;
-              renderStreamingText(textDiv, accumulated, false);
-              scrollToBottom();
-            } else {
-              clearInterval(streamingInterval);
-              streamingInterval = null;
-              isStreaming = false;
-              updateSendButton();
-              renderStreamingText(textDiv, accumulated, true);
-              bindActionButtons(actions, textDiv);
-              scrollToBottom();
-            }
-          }, 50);
-        }, 1200);
-      }
-
-      /* ===================================================
-         NEW CONVERSATION
-         =================================================== */
-      newConversationBtn.addEventListener('click', function() {
-        stopStreaming();
-        chatContainer.innerHTML = '';
-        chatContainer.appendChild(emptyState);
-        emptyState.classList.add('visible');
-        conversations.forEach(function(c) { c.selected = false; });
-        renderRecentList();
+    // ===== COPY HELPERS =====
+    function copyText(btn, text) {
+      navigator.clipboard.writeText(text).then(function() {
+        var icon = btn.querySelector('i');
+        icon.className = 'bi bi-check-lg';
+        setTimeout(function() { icon.className = 'bi bi-copy'; }, 1500);
+        showToast('Copied to clipboard.');
       });
+    }
 
-      /* ===================================================
-         SUGGESTION CHIPS
-         =================================================== */
-      document.querySelectorAll('.suggestion-chip').forEach(function(chip) {
-        chip.addEventListener('click', function() {
-          messageInput.value = chip.textContent;
-          autoExpandTextarea();
-          updateSendButton();
-          messageInput.focus();
-        });
+    function copyAssistantMsg(btn) {
+      var content = btn.closest('.assistant-content');
+      var textEl = content.querySelector('.assistant-text');
+      var text = textEl.innerText || textEl.textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        var icon = btn.querySelector('i');
+        icon.className = 'bi bi-check-lg';
+        setTimeout(function() { icon.className = 'bi bi-copy'; }, 1500);
+        showToast('Copied to clipboard.');
       });
+    }
 
-      /* ===================================================
-         CLOSE DROPDOWNS ON OUTSIDE CLICK
-         =================================================== */
-      document.addEventListener('click', function(e) {
-        if (!e.target.closest('#modelSelector')) modelDropdown.classList.remove('show');
-        if (!e.target.closest('.recent-item-menu-btn') && !e.target.closest('.context-dropdown')) closeAllDropdowns();
+    function copyCode(btn) {
+      var pre = btn.closest('.code-block-wrapper').querySelector('pre code');
+      var text = pre.innerText || pre.textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+        setTimeout(function() {
+          btn.innerHTML = '<i class="bi bi-copy"></i> Copy';
+        }, 1500);
+        showToast('Code copied to clipboard.');
       });
+    }
 
-      /* ===================================================
-         KEYBOARD: Escape closes modal
-         =================================================== */
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-          hideDeleteModal();
-          modelDropdown.classList.remove('show');
-          closeAllDropdowns();
-        }
+    // ===== SCROLL =====
+    function scrollToBottom() {
+      var area = document.getElementById('chatArea');
+      requestAnimationFrame(function() {
+        area.scrollTop = area.scrollHeight;
       });
+    }
 
-      /* ===================================================
-         INIT
-         =================================================== */
-      renderRecentList();
-      loadMockThread();
-    })();
+    // ===== UTILS =====
+    function escapeHtml(str) {
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
   </script>
 </body>
 </html>

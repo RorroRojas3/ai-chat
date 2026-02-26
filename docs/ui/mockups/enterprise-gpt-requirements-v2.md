@@ -10,7 +10,7 @@ The application consists of **four self-contained HTML files**, each with all CS
 
 ## Design Philosophy
 
-The current enterprise palette (#355872, #7AAACE, #9CD5FF, #F7F8F0) should be used **sparingly as accents** — not as dominant surface colors. The overall look should be **neutral, quiet, and spacious**, using the brand colors only for interactive highlights, selected states, and key moments of emphasis.
+The enterprise palette (`#061E29`, `#1D546D`, `#5F9598`, `#F3F4F4`) should be used **sparingly as accents** — not as dominant surface colors. The overall look should be **neutral, quiet, and spacious**, using the brand colors only for interactive highlights, selected states, and key moments of emphasis.
 
 ### Key Aesthetic Principles
 
@@ -39,7 +39,7 @@ The current enterprise palette (#355872, #7AAACE, #9CD5FF, #F7F8F0) should be us
 ### UI Behavior Standards
 
 - **Modals:** All modals use Bootstrap's native modal component — no `prompt()` or `confirm()` dialogs
-- **Rename actions:** Inline editable text field (click title to edit in-place) — not a modal for simple renames
+- **Rename actions:** Bootstrap modal with text input field, character counter, and Cancel/Rename buttons — consistent modal pattern for all rename actions (conversations, projects, etc.)
 - **Delete confirmations:** Bootstrap modal with clear destructive action styling (red delete button)
 - **Toast notifications:** Bootstrap Toasts on every CRUD action — positioned **bottom-center** (not bottom-right), minimal styling, auto-dismiss after 3 seconds. Toast should have a thin left accent border matching the action type (green for success, red for error).
 - **Persistence:** Dark/light mode toggle and sidebar collapse state persist via `localStorage`
@@ -52,10 +52,10 @@ The current enterprise palette (#355872, #7AAACE, #9CD5FF, #F7F8F0) should be us
 
 | Token | Hex | Usage |
 |---|---|---|
-| `--brand-primary` | `#355872` | Primary buttons, active nav indicator, selected conversation bg tint |
-| `--brand-secondary` | `#7AAACE` | Secondary accents, links, unread badges, focus rings |
-| `--brand-light` | `#9CD5FF` | Subtle highlights, tag backgrounds (light mode only) |
-| `--brand-surface` | `#F7F8F0` | Not used as a page background — reserve for special callout cards if needed |
+| `--brand-primary` | `#061E29` | Darkest — primary text, navbar accents, deep emphasis |
+| `--brand-secondary` | `#1D546D` | Sidebar background, primary buttons, filled accents |
+| `--brand-accent` | `#5F9598` | Lighter accent — hover states, secondary buttons, focus rings, links |
+| `--brand-surface` | `#F3F4F4` | Page backgrounds, light surfaces, input field backgrounds |
 
 ### Neutral Palette
 
@@ -78,49 +78,77 @@ The current enterprise palette (#355872, #7AAACE, #9CD5FF, #F7F8F0) should be us
 | `--success` | `#16A34A` | Success badges, enabled status |
 | `--error` | `#DC2626` | Error badges, delete buttons, suspended status |
 | `--warning` | `#D97706` | Warning badges |
-| `--info` | `#7AAACE` | Info badges (reuse brand secondary) |
+| `--info` | `#5F9598` | Info badges (reuse brand accent) |
+
+---
+
+## Shared Navbar (all four pages)
+
+A slim top navbar that spans the full width of the main content area (not the sidebar).
+
+### Structure
+
+- **Background:** `--bg-primary` with a `1px` bottom border in `--border-default`
+- **Left side:** Brand text "AI Assistant" in `--text-primary`, semibold
+- **Right side:** Dark/light mode toggle — sun icon (`bi-sun-fill`) for light mode, moon icon (`bi-moon-fill`) for dark mode. Icon-only button, `--text-primary` color, subtle hover background (`--bg-hover`). Persists via `localStorage`.
+- **Mobile (<768px):** Add a hamburger button (`bi-list`) on the left side (before brand text) to toggle the sidebar overlay
 
 ---
 
 ## Shared Sidebar (all four pages)
 
-The sidebar should feel like **Claude.ai's sidebar** — clean, understated, functional.
+The sidebar should feel like **Claude.ai's sidebar** — clean, understated, functional. The toggle button lives **inside the sidebar**, not in the navbar or main content area.
 
 ### Structure
 
-- **Width:** 260px when open. Collapsible to 0px (fully hidden, not icon-only).
+- **Expanded state:** 260px width. Full sidebar content visible. A collapse button (`bi-chevron-left`) in the sidebar header collapses it.
+- **Collapsed state:** 60px width. A narrow vertical strip showing icon-only buttons for key navigation actions, plus an expand button (`bi-chevron-right`) at the top.
 - **Background:** `--bg-secondary` with a `1px` right border in `--border-default`
-- **Toggle button:** Small icon button (`bi-layout-sidebar`) pinned to the top-left of the main content area when sidebar is closed. Inside the sidebar header when open. No heavy styling — just an icon button with hover state.
+- **Transition:** 200ms ease-in-out width animation, content area adjusts smoothly
+- **Persistence:** Expanded/collapsed state persists via `localStorage`
 
-### Content (top to bottom)
+### Expanded Content (top to bottom)
 
-1. **New Conversation button**
+1. **Header row**
+   - Logo/icon on the left
+   - Collapse button (`bi-chevron-left`) on the right
+
+2. **New Conversation button**
    - Full-width, outlined style (not filled) — `1px solid --border-default`, text in `--text-primary`
    - Icon: `bi-plus-lg` on the left
    - On hover: subtle background fill (`--bg-hover`)
-   - Matches ChatGPT's "+ New chat" button aesthetic
 
-2. **Navigation links**
+3. **Navigation links**
    - Simple text links with left-padding, small icon on left
    - Links: Chat (`bi-chat-dots`), Conversations (`bi-clock-history`), Notifications (`bi-bell`), Admin (`bi-gear`)
-   - **Active page:** Text in `--brand-primary`, subtle left border or background tint
-   - **Notifications badge:** Small pill counter next to the bell icon, `--brand-secondary` bg, white text, only visible when unread > 0
+   - **Active page:** Text in `--brand-accent`, subtle left border or background tint
+   - **Notifications badge:** Small pill counter next to the bell icon, `--brand-accent` bg, white text, only visible when unread > 0
    - Vertical spacing: 4px between items, section separated from conversations list by a subtle divider
 
-3. **Recent Conversations list**
+4. **Recent Conversations list**
    - Label: "Recent" in `--text-secondary`, small font, above the list
    - Each item: Single-line truncated title, `--text-primary`
    - **Hover:** `--bg-hover` background, reveal a `⋮` overflow menu button (hidden by default)
-   - **Selected conversation:** Slightly tinted background using `rgba(53,88,114,0.08)` (brand-primary at low opacity)
-   - **Overflow menu (⋮):** Dropdown with Rename, Delete
+   - **Selected conversation:** Slightly tinted background using `rgba(6,30,41,0.08)` (brand-primary at low opacity)
+   - **Overflow menu (⋮):** Dropdown with Rename, Delete. **Rename opens a Bootstrap modal** (not inline edit).
    - Shows the **10 most recent** conversations
    - List scrolls independently if it overflows
 
-4. **User section (bottom, pinned)**
+5. **User section (bottom, pinned)**
    - Separated by a top border (`--border-default`)
    - User initials in a circle badge: 32px, `--bg-tertiary` background, `--text-primary` text, subtle border
    - Name displayed next to avatar: "Rodrigo Rojas" in `--text-primary`, "Enterprise AI" label below in `--text-secondary` small text
-   - **Dark/light mode toggle:** Small sun/moon icon button aligned to the right of the user section
+
+### Collapsed Content (top to bottom)
+
+1. **Expand button** (`bi-chevron-right`) — centered at the top
+2. **Icon-only buttons** — vertically stacked, centered:
+   - New Chat (`bi-plus-circle`)
+   - Chats (`bi-chat-text`)
+   - Conversations (`bi-clock-history`)
+   - Admin (`bi-gear`)
+3. Each button: 44px square, icon centered, `--text-primary` color, rounded hover state (`--bg-hover`)
+4. Tooltips on hover showing the full label (e.g., "New Chat", "Conversations")
 
 ---
 
@@ -159,19 +187,28 @@ When no conversation is loaded, show a centered empty state:
 
 Sticky to the bottom of the chat area (within the centered column, not full-width). Styled as a **single rounded container** (border-radius: 24px, `1px solid --border-default`, `--bg-primary` background) that holds all input elements — similar to ChatGPT's unified input bar.
 
-**Inside the input container (bottom to top):**
+**Inside the input container (top to bottom):**
 
-1. **Textarea** — auto-expanding, no visible border (border: none), placeholder: "Message Enterprise GPT..."
-2. **Bottom toolbar row** (inside the container, below the textarea):
-   - Left side: File upload button (`bi-paperclip`, icon-only, `--text-secondary`), Model selector (small dropdown or pill button showing current model name, e.g., "GPT-4o" — subtle, not a full Bootstrap select)
-   - Right side: Send button (`bi-arrow-up` in a filled circle, `--brand-primary` bg, white icon) — **only enabled when text is present or files are attached** (disabled state: `--bg-tertiary` bg, `--text-tertiary` icon). Stop button (`bi-stop-fill` in same circle position) replaces Send while streaming.
-
-3. **File attachment area** (appears above textarea when files are selected):
-   - Chips showing: file icon (based on type), file name (truncated), file size, remove `×` button
+1. **File attachment area** (appears **above the textarea**, inside the container, when files are attached):
+   - Horizontal scrollable row of file cards/chips
+   - Each card shows: **file type icon** (dynamic based on extension — `bi-file-earmark-pdf` for PDF, `bi-file-earmark-word` for Word, `bi-file-earmark-excel` for Excel, `bi-file-earmark-image` for images, `bi-file-earmark-code` for code files, `bi-file-earmark` for generic), **file name** (truncated), **file size** (human-readable), remove `×` button
    - Chip style: `--bg-tertiary` background, rounded, small text
    - Supports multiple files
+   - **Files can be added via:** the paperclip button OR **drag-and-drop** directly onto the prompt box
+   - **Drag-and-drop:** When files are dragged over the prompt box, show a visual overlay (dashed border, "Drop file(s)" text with file icon) indicating the drop zone
+
+2. **Textarea** — auto-expanding, no visible border (border: none), placeholder: "Message Enterprise GPT..."
+
+3. **Bottom toolbar row** (inside the container, below the textarea):
+   - Left side:
+     - File upload button (`bi-paperclip`, icon-only, `--text-secondary`) — opens native file picker
+     - Model selector (small dropdown or pill button showing current model name, e.g., "GPT-4o" — subtle, not a full Bootstrap select)
+     - **MCP/Tools selector** (`bi-wrench` icon, multi-select dropdown) — shows available tools/MCP servers. Each item has a checkmark when selected. Button text shows count: "Tools", "1 Tool", "3 Tools". Items can be toggled on/off independently (dropdown stays open on click).
+   - Right side: Send button (`bi-arrow-up` in a filled circle, `--brand-secondary` bg, white icon) — **only enabled when text is present or files are attached** (disabled state: `--bg-tertiary` bg, `--text-tertiary` icon). Stop button (`bi-stop-fill` in same circle position) replaces Send while streaming.
 
 **Model selector options (static):** GPT-4o, GPT-4o Mini, Claude 3.5 Sonnet, Gemini 1.5 Pro
+
+**MCP/Tools options (static mock):** Web Search, Code Interpreter, File Reader, Database Query
 
 ### Mock Chat Thread
 
@@ -239,7 +276,7 @@ Notifications use **very subtle** color coding — matching the calm overall aes
 | Success | `bi-check-circle-fill` | `#16A34A` | Left border 3px accent; icon in accent color; rest of row is default bg | Same pattern, dark bg |
 | Error | `bi-x-circle-fill` | `#DC2626` | Same pattern | Same pattern |
 | Warning | `bi-exclamation-triangle-fill` | `#D97706` | Same pattern | Same pattern |
-| Info | `bi-info-circle-fill` | `#7AAACE` | Same pattern | Same pattern |
+| Info | `bi-info-circle-fill` | `#5F9598` | Same pattern | Same pattern |
 
 **Color application rules:**
 - **Left border:** 3px solid accent color
@@ -319,7 +356,7 @@ Each tab follows:
 | Avatar | Initials circle badge (32px, same style as sidebar avatar) |
 | Full Name | First + Last, `--text-primary` |
 | Email | `--text-secondary` |
-| Role | Small badge: Admin (`--brand-primary` bg), User (`--brand-secondary` bg), Viewer (`--bg-tertiary` bg, `--text-secondary` text) |
+| Role | Small badge: Admin (`--brand-secondary` bg, white text), User (`--brand-accent` bg, white text), Viewer (`--bg-tertiary` bg, `--text-secondary` text) |
 | Status | Small badge: Active (`--success` bg, white text), Inactive (`--bg-tertiary` bg, `--text-secondary` text), Suspended (`--error` bg, white text) |
 | Last Login | Relative timestamp; full datetime on hover |
 | Actions | Icon buttons: `bi-pencil` Edit, `bi-trash` Delete — both `--text-secondary`, appear emphasized on row hover |
@@ -396,12 +433,15 @@ Validation: All required, email format, passwords match. Bootstrap validation fe
 
 ---
 
-## Responsive Behavior (Bonus)
+## Responsive Behavior (Required)
 
-While the primary target is desktop (1280px+), the layout should gracefully handle:
-- **< 1024px:** Sidebar defaults to hidden (overlay mode when toggled open)
-- **< 768px:** Chat input container goes full-width with reduced padding
-- Tables in admin switch to card layout or horizontal scroll
+All pages must be fully usable on desktop, tablet, and mobile. This is a **mandatory requirement**, not optional.
+
+### Breakpoints
+
+- **Desktop (≥1024px):** Sidebar is persistent — either expanded (260px) or collapsed strip (60px). Full layout with all features visible.
+- **Tablet (768px–1023px):** Sidebar defaults to collapsed strip (60px). Can expand as an overlay on top of content (with backdrop). Content area takes remaining width.
+- **Mobile (<768px):** Sidebar is fully hidden by default. A hamburger button (`bi-list`) appears in the navbar to open the sidebar as a full-screen overlay (slide-in from left, with backdrop). Chat input container goes full-width with reduced padding. Admin tables switch to card layout or horizontal scroll. Modals go near-full-width with reduced margins. File cards in prompt box stack vertically if needed. Dropdowns (model selector, tools) go full-width.
 
 ---
 
@@ -425,3 +465,19 @@ While the primary target is desktop (1280px+), the layout should gracefully hand
 | **Code blocks** | Not specified | Styled code blocks in assistant messages |
 | **Action buttons** | Always visible | Appear on hover (cleaner resting state) |
 | **Responsive** | Not mentioned | Basic responsive breakpoints defined |
+
+---
+
+## What Changed from v2 → v3
+
+| Area | v2 (Old) | v3 (Current) |
+|---|---|---|
+| **Color palette** | `#355872`, `#7AAACE`, `#9CD5FF`, `#F7F8F0` | `#061E29`, `#1D546D`, `#5F9598`, `#F3F4F4` |
+| **Rename actions** | Inline editable text field (click to edit in-place) | Bootstrap modal with text input, character counter, Cancel/Rename buttons |
+| **Sidebar toggle** | Toggle button pinned to main content area; sidebar collapses to 0px (fully hidden) | Toggle button lives inside the sidebar; collapses to 60px icon strip with mini navigation buttons |
+| **Theme toggle location** | Sun/moon button in sidebar user section (bottom) | Sun/moon button in the navbar (top-right) |
+| **File drag-and-drop** | Mentioned but not detailed | Explicit drag-and-drop zone on prompt box with visual overlay (dashed border, icon, "Drop file(s)" text) |
+| **File attachment position** | Described as "above textarea" but ambiguous | Explicitly at the **top of the prompt box**, inside the container, above the textarea. Shows file type icon (dynamic by extension), name, size, remove button |
+| **MCP/Tools dropdown** | Not specified | Multi-select dropdown (`bi-wrench`) in prompt toolbar — shows available MCP servers/tools with toggle selection |
+| **Responsive** | Bonus / optional | **Mandatory** — full desktop, tablet, and mobile support with specific breakpoint behaviors |
+| **Navbar** | Not explicitly defined as a shared component | New **Shared Navbar** section — brand text left, theme toggle right, hamburger on mobile |

@@ -1,22 +1,20 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using RR.AI_Chat.Dto.Actions.Graph;
+using RR.AI_Chat.Dto;
 using RR.AI_Chat.Dto.Actions.User;
 using RR.AI_Chat.Entity;
 using RR.AI_Chat.Repository;
+using RR.AI_Chat.Service.Exceptions;
 
 namespace RR.AI_Chat.Service
 {
     public interface IUserService
     {
-        /// <summary>
-        /// Creates a new user via the graph service and persists it to the local database.
-        /// </summary>
-        /// <param name="request">The user details to create.</param>
-        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is null.</exception>
-        /// <returns>A task that represents the asynchronous operation.</returns>
-        Task CreateUserAsync(CreateUserActionDto request, CancellationToken cancellationToken);
+        Task CreateUserAsync(CancellationToken cancellationToken);
+
+        Task<UserDto> UpdateUserAsync(UpdateUserActionDto request, CancellationToken cancellationToken);
+
+        Task DeactivateUserAsync(Guid oid, CancellationToken cancellationToken);
 
         /// <summary>
         /// Determines whether a user with the specified identifier exists in the database.
@@ -28,47 +26,77 @@ namespace RR.AI_Chat.Service
     }   
 
     public class UserService(ILogger<UserService> logger,
+        ITokenService tokenService,
         IGraphService graphService,
         AIChatDbContext ctx) : IUserService
     {
         private readonly ILogger<UserService> _logger = logger;
+        private readonly ITokenService _tokenService = tokenService;
         private readonly IGraphService _graphService = graphService;
         private readonly AIChatDbContext _ctx = ctx;
 
         /// <inheritdoc />
-        public async Task CreateUserAsync(CreateUserActionDto request, CancellationToken cancellationToken)
+        public async Task CreateUserAsync(CancellationToken cancellationToken)
         {
-            ArgumentNullException.ThrowIfNull(request); 
+            var oid = _tokenService.GetOid();
 
-            var graphRequest = new CreateGraphUserActionDto
+            var userExist = await IsUserInDatabaseAsync(oid, cancellationToken);
+            if (userExist)
             {
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Email = request.Email
-            };
-
-            var user = await _graphService.CreateUserAsync(graphRequest, cancellationToken);
+                return;
+            }
 
             var date = DateTimeOffset.UtcNow;
+            var graphUser = await _graphService.GetUserAsync(oid, cancellationToken);
             var newUser = new User
             {
-                Id = Guid.Parse(user.Id!),
-                FirstName = user.GivenName!,
-                LastName = user.Surname!,
-                Email = request.Email,
+                Id = oid,
+                FirstName = graphUser.GivenName!,
+                LastName = graphUser.Surname!,
+                Email = graphUser.Mail!,
                 DateCreated = date,
-                DateModified = date,
+                DateModified = date
             };
+
             await _ctx.Users.AddAsync(newUser, cancellationToken);
             await _ctx.SaveChangesAsync(cancellationToken);
+        }
 
-            _logger.LogInformation("Created new user with ID {UserId}.", newUser.Id);
+        public async Task<UserDto> UpdateUserAsync(UpdateUserActionDto request, CancellationToken cancellationToken)
+        {
+            var oid = _tokenService.GetOid();
+
+            var user = await _ctx.Users
+                        .Where(x => x.Id == oid && !x.DateDeactivated.HasValue)
+                        .FirstOrDefaultAsync(cancellationToken) ?? throw new NotFoundException($"User {oid} not found"); ;
+
+            user.FirstName = request.FirstName;
+            user.LastName = request.LastName;
+            user.Email = request.Email;
+            user.DateModified = DateTimeOffset.UtcNow;
+
+            await _ctx.SaveChangesAsync(cancellationToken);
+            return new()
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email
+            };
+        }
+
+        public async Task DeactivateUserAsync(Guid oid, CancellationToken cancellationToken)
+        {
+            var rows = await _ctx.Users
+                        .Where(x => x.Id == oid && !x.DateDeactivated.HasValue)
+                        .ExecuteUpdateAsync(update => 
+                            update.SetProperty(x => x.DateDeactivated, DateTimeOffset.UtcNow), cancellationToken);
         }
 
         /// <inheritdoc />
         public async Task<bool> IsUserInDatabaseAsync(Guid userId, CancellationToken cancellationToken)
         {
-            return await _ctx.Users.Where(x => x.Id == userId).AnyAsync(cancellationToken);
+            return await _ctx.Users.Where(x => x.Id == userId && !x.DateDeactivated.HasValue).AnyAsync(cancellationToken);
         }
     }
 }

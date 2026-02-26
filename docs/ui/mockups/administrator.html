@@ -1,31 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Management - Enterprise GPT</title>
+    <title>Admin Management - AI Assistant</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
+        /* ===== CSS Variables ===== */
         :root {
-            --brand-primary: #355872;
-            --brand-secondary: #7AAACE;
-            --brand-light: #9CD5FF;
-            --brand-surface: #F7F8F0;
+            --brand-primary: #061E29;
+            --brand-secondary: #1D546D;
+            --brand-accent: #5F9598;
+            --brand-surface: #F3F4F4;
+
+            --success: #16A34A;
+            --error: #DC2626;
+            --warning: #D97706;
+            --info: #5F9598;
+
+            /* Light theme (default) */
             --bg-primary: #FFFFFF;
             --bg-secondary: #F9FAFB;
             --bg-tertiary: #F3F4F6;
             --bg-hover: rgba(0,0,0,0.04);
             --border-default: #E5E7EB;
-            --border-strong: #D1D5DB;
             --text-primary: #111827;
             --text-secondary: #6B7280;
             --text-tertiary: #9CA3AF;
-            --success: #16A34A;
-            --error: #DC2626;
-            --warning: #D97706;
-            --info: #7AAACE;
+
             --sidebar-width: 260px;
+            --sidebar-collapsed-width: 60px;
+            --navbar-height: 56px;
+            --transition-speed: 150ms;
         }
 
         [data-theme="dark"] {
@@ -34,478 +41,397 @@
             --bg-tertiary: #2A2A2A;
             --bg-hover: rgba(255,255,255,0.06);
             --border-default: #333333;
-            --border-strong: #444444;
             --text-primary: #E5E7EB;
             --text-secondary: #9CA3AF;
             --text-tertiary: #6B7280;
+            --brand-surface: #1A1A1A;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
+        /* ===== Reset & Base ===== */
+        *, *::before, *::after {
             box-sizing: border-box;
         }
 
         body {
+            margin: 0;
+            padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            font-size: 14px;
-            line-height: 1.6;
-            background-color: var(--bg-primary);
+            background-color: var(--brand-surface);
             color: var(--text-primary);
             overflow: hidden;
             height: 100vh;
         }
 
-        /* ===== ACCESS DENIED SCREEN ===== */
-        .access-denied-screen {
+        a { text-decoration: none; }
+
+        /* ===== Navbar ===== */
+        .top-navbar {
             position: fixed;
-            inset: 0;
-            z-index: 9999;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--navbar-height);
             background: var(--bg-primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 16px;
-            text-align: center;
-            padding: 24px;
-        }
-
-        .access-denied-screen .icon-lock {
-            font-size: 64px;
-            color: var(--text-tertiary);
-            margin-bottom: 8px;
-        }
-
-        .access-denied-screen h2 {
-            font-size: 24px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 0;
-        }
-
-        .access-denied-screen p {
-            color: var(--text-secondary);
-            font-size: 15px;
-            margin: 0;
-        }
-
-        .access-denied-screen .btn-return {
-            border: 1px solid var(--border-strong);
-            background: transparent;
-            color: var(--text-primary);
-            padding: 8px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            text-decoration: none;
-            transition: all 150ms ease;
-            margin-top: 8px;
-        }
-
-        .access-denied-screen .btn-return:hover {
-            background: var(--bg-hover);
-        }
-
-        .access-denied-screen .demo-login-link {
-            color: var(--text-secondary);
-            font-size: 13px;
-            cursor: pointer;
-            text-decoration: underline;
-            background: none;
-            border: none;
-            transition: color 150ms ease;
-        }
-
-        .access-denied-screen .demo-login-link:hover {
-            color: var(--brand-primary);
-        }
-
-        /* ===== LAYOUT ===== */
-        .app-layout {
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* ===== SIDEBAR ===== */
-        .sidebar {
-            width: var(--sidebar-width);
-            min-width: 0;
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border-default);
-            display: flex;
-            flex-direction: column;
-            transition: width 200ms ease-in-out, min-width 200ms ease-in-out, opacity 200ms ease-in-out;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .sidebar.collapsed {
-            width: 0;
-            min-width: 0;
-            border-right: none;
-        }
-
-        .sidebar.collapsed .sidebar-inner {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .sidebar-inner {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            width: 260px;
-            min-width: 260px;
-            opacity: 1;
-            transition: opacity 150ms ease;
-        }
-
-        .sidebar-header {
-            padding: 12px 12px 8px;
+            border-bottom: 1px solid var(--border-default);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            padding: 0 16px;
+            z-index: 1050;
+        }
+
+        .navbar-brand {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .navbar-brand i {
+            color: var(--brand-secondary);
+            font-size: 1.25rem;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            font-size: 1.125rem;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .hamburger-btn {
+            display: none;
+        }
+
+        /* ===== Layout ===== */
+        .app-layout {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            padding-top: var(--navbar-height);
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            min-width: var(--sidebar-width);
+            height: calc(100vh - var(--navbar-height));
+            background: var(--brand-secondary);
+            color: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            transition: width 200ms ease, min-width 200ms ease;
+            overflow: hidden;
+            position: relative;
+            z-index: 1040;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+            min-width: var(--sidebar-collapsed-width);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header-title {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.7;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .sidebar.collapsed .sidebar-header-title {
+            display: none;
         }
 
         .sidebar-toggle {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 18px;
-            cursor: pointer;
-            padding: 6px;
+            width: 28px;
+            height: 28px;
             border-radius: 6px;
-            transition: all 150ms ease;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: #FFFFFF;
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
+            transition: background var(--transition-speed) ease;
+            flex-shrink: 0;
+            font-size: 0.875rem;
         }
 
         .sidebar-toggle:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
+            background: rgba(255,255,255,0.2);
         }
 
-        .btn-new-conversation {
+        .sidebar.collapsed .sidebar-toggle i::before {
+            content: "\F285";
+        }
+
+        /* New Chat Button */
+        .new-chat-btn {
+            margin: 0 12px 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            color: #FFFFFF;
+            font-size: 0.875rem;
+            font-weight: 500;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-            padding: 9px 12px;
-            margin: 4px 0 8px;
-            border: 1px solid var(--border-default);
-            background: transparent;
-            color: var(--text-primary);
-            border-radius: 8px;
-            font-size: 14px;
+            gap: 10px;
             cursor: pointer;
-            transition: all 150ms ease;
+            transition: background var(--transition-speed) ease;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
-        .btn-new-conversation:hover {
-            background: var(--bg-hover);
+        .new-chat-btn:hover {
+            background: rgba(255,255,255,0.18);
         }
 
+        .sidebar.collapsed .new-chat-btn span {
+            display: none;
+        }
+
+        .sidebar.collapsed .new-chat-btn {
+            justify-content: center;
+            padding: 10px;
+            margin: 0 8px 8px;
+        }
+
+        /* Sidebar Nav */
         .sidebar-nav {
+            padding: 4px 8px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            color: rgba(255,255,255,0.75);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            white-space: nowrap;
+            overflow: hidden;
+            margin-bottom: 2px;
+        }
+
+        .sidebar-nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: #FFFFFF;
+        }
+
+        .sidebar-nav-item.active {
+            background: rgba(255,255,255,0.15);
+            color: #FFFFFF;
+            font-weight: 500;
+        }
+
+        .sidebar-nav-item i {
+            font-size: 1.125rem;
+            flex-shrink: 0;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar.collapsed .sidebar-nav-item span {
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-nav-item {
+            justify-content: center;
+            padding: 9px;
+        }
+
+        /* Sidebar Divider */
+        .sidebar-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 8px 12px;
+        }
+
+        /* Recent Conversations */
+        .sidebar-section-title {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: rgba(255,255,255,0.45);
+            padding: 8px 16px 4px;
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .sidebar-section-title {
+            display: none;
+        }
+
+        .recent-conversations {
+            flex: 1;
+            overflow-y: auto;
             padding: 0 8px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.15) transparent;
         }
 
-        .sidebar-nav-padding {
-            padding: 0 12px;
+        .sidebar.collapsed .recent-conversations {
+            display: none;
         }
 
-        .nav-link-item {
+        .recent-conv-item {
             display: flex;
             align-items: center;
             gap: 10px;
             padding: 8px 12px;
             border-radius: 8px;
-            color: var(--text-primary);
-            text-decoration: none;
-            font-size: 14px;
+            color: rgba(255,255,255,0.65);
+            font-size: 0.8125rem;
             cursor: pointer;
-            transition: all 150ms ease;
-            margin-bottom: 2px;
-            position: relative;
-        }
-
-        .nav-link-item:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-
-        .nav-link-item.active {
-            background: rgba(53,88,114,0.08);
-            color: var(--brand-primary);
-            font-weight: 500;
-            border-left: 3px solid var(--brand-primary);
-            padding-left: 9px;
-        }
-
-        [data-theme="dark"] .nav-link-item.active {
-            color: var(--brand-light);
-            border-left-color: var(--brand-light);
-            background: rgba(156,213,255,0.08);
-        }
-
-        .nav-link-item.dimmed {
-            color: var(--text-tertiary);
-        }
-
-        .nav-link-item .badge-count {
-            background: var(--error);
-            color: #fff;
-            font-size: 11px;
-            font-weight: 600;
-            padding: 1px 6px;
-            border-radius: 10px;
-            margin-left: auto;
-        }
-
-        .nav-link-item i {
-            font-size: 16px;
-            width: 20px;
-            text-align: center;
-        }
-
-        .nav-divider {
-            height: 1px;
-            background: var(--border-default);
-            margin: 8px 12px;
-        }
-
-        /* Recent conversations */
-        .recent-section {
-            flex: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            padding: 0 8px;
-        }
-
-        .recent-label {
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: var(--text-tertiary);
-            padding: 8px 12px 4px;
-            letter-spacing: 0.5px;
-        }
-
-        .recent-list {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 4px;
-        }
-
-        .recent-list::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .recent-list::-webkit-scrollbar-thumb {
-            background: var(--border-default);
-            border-radius: 4px;
-        }
-
-        .recent-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 7px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 150ms ease;
-            font-size: 13px;
-            color: var(--text-primary);
-            position: relative;
-        }
-
-        .recent-item:hover {
-            background: var(--bg-hover);
-        }
-
-        .recent-item.selected {
-            background: rgba(53,88,114,0.08);
-        }
-
-        .recent-item-text {
-            flex: 1;
+            transition: all var(--transition-speed) ease;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
         }
 
-        .recent-item-menu {
-            opacity: 0;
-            background: none;
-            border: none;
-            color: var(--text-tertiary);
-            cursor: pointer;
-            padding: 2px 4px;
-            border-radius: 4px;
-            font-size: 14px;
-            transition: all 150ms ease;
+        .recent-conv-item:hover {
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.9);
+        }
+
+        .recent-conv-item i {
+            font-size: 0.875rem;
             flex-shrink: 0;
+            opacity: 0.5;
         }
 
-        .recent-item:hover .recent-item-menu {
-            opacity: 1;
-        }
-
-        .recent-item-menu:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-
-        /* User section */
+        /* Sidebar User */
         .sidebar-user {
-            border-top: 1px solid var(--border-default);
             padding: 12px;
+            border-top: 1px solid rgba(255,255,255,0.1);
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--brand-primary);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 600;
             flex-shrink: 0;
         }
 
-        .user-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .user-name {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-primary);
-            line-height: 1.3;
-        }
-
-        .user-org {
-            font-size: 11px;
-            color: var(--text-tertiary);
-            line-height: 1.3;
-        }
-
-        .theme-toggle {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 18px;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 6px;
-            transition: all 150ms ease;
+        .sidebar-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--brand-accent);
             display: flex;
             align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #FFFFFF;
+            flex-shrink: 0;
         }
 
-        .theme-toggle:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
+        .sidebar-user-info {
+            overflow: hidden;
+            white-space: nowrap;
         }
 
-        /* ===== MAIN CONTENT ===== */
+        .sidebar-user-name {
+            font-size: 0.8125rem;
+            font-weight: 500;
+        }
+
+        .sidebar-user-role {
+            font-size: 0.6875rem;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .sidebar.collapsed .sidebar-user-info {
+            display: none;
+        }
+
+        /* ===== Main Content ===== */
         .main-content {
             flex: 1;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
+            padding: 32px 24px;
+            background: var(--brand-surface);
         }
 
-        .main-header {
-            display: flex;
-            align-items: center;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-default);
-            background: var(--bg-primary);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            gap: 12px;
-        }
-
-        .main-header .sidebar-toggle-external {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 18px;
-            cursor: pointer;
-            padding: 6px;
-            border-radius: 6px;
-            transition: all 150ms ease;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .main-header .sidebar-toggle-external:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-
-        .sidebar.collapsed ~ .main-content .sidebar-toggle-external {
-            display: flex;
-        }
-
-        .main-header-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .main-header-title i {
-            color: var(--brand-primary);
-            margin-right: 8px;
-        }
-
-        [data-theme="dark"] .main-header-title i {
-            color: var(--brand-light);
-        }
-
-        .content-wrapper {
+        .admin-container {
             max-width: 1100px;
-            width: 100%;
             margin: 0 auto;
-            padding: 24px;
-            flex: 1;
         }
 
-        /* ===== TABS ===== */
+        /* Page Header */
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0 0 4px;
+        }
+
+        .page-header p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* ===== Tabs ===== */
         .admin-tabs {
             display: flex;
+            border-bottom: 1px solid var(--border-default);
+            margin-bottom: 24px;
             gap: 0;
-            border-bottom: 2px solid var(--border-default);
-            margin-bottom: 20px;
         }
 
         .admin-tab {
-            padding: 10px 20px;
-            background: none;
-            border: none;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -2px;
-            font-size: 14px;
+            padding: 12px 20px;
+            font-size: 0.875rem;
             font-weight: 500;
             color: var(--text-secondary);
             cursor: pointer;
-            transition: all 150ms ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            border: none;
+            background: none;
+            border-bottom: 2px solid transparent;
+            transition: all var(--transition-speed) ease;
+            white-space: nowrap;
         }
 
         .admin-tab:hover {
@@ -513,151 +439,157 @@
         }
 
         .admin-tab.active {
-            color: var(--brand-primary);
-            border-bottom-color: var(--brand-primary);
+            color: var(--brand-secondary);
+            border-bottom-color: var(--brand-secondary);
         }
 
-        [data-theme="dark"] .admin-tab.active {
-            color: var(--brand-light);
-            border-bottom-color: var(--brand-light);
-        }
-
-        .tab-panel {
+        .tab-content {
             display: none;
         }
 
-        .tab-panel.active {
+        .tab-content.active {
             display: block;
         }
 
-        /* ===== TOOLBAR ===== */
+        /* ===== Toolbar ===== */
         .toolbar {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             margin-bottom: 16px;
             flex-wrap: wrap;
         }
 
         .toolbar-search {
-            position: relative;
             flex: 1;
             min-width: 200px;
             max-width: 320px;
+            position: relative;
         }
 
         .toolbar-search i {
             position: absolute;
-            left: 10px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-tertiary);
-            font-size: 14px;
+            font-size: 0.875rem;
         }
 
         .toolbar-search input {
             width: 100%;
-            padding: 7px 12px 7px 32px;
+            padding: 8px 12px 8px 36px;
             border: 1px solid var(--border-default);
             border-radius: 8px;
-            font-size: 13px;
             background: var(--bg-primary);
             color: var(--text-primary);
-            transition: all 150ms ease;
+            font-size: 0.8125rem;
+            font-family: inherit;
+            transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
         }
 
         .toolbar-search input:focus {
             outline: none;
-            border-color: var(--brand-secondary);
-            box-shadow: 0 0 0 3px rgba(122,170,206,0.15);
+            border-color: var(--brand-accent);
+            box-shadow: 0 0 0 3px rgba(95,149,152,0.15);
         }
 
         .toolbar-search input::placeholder {
             color: var(--text-tertiary);
         }
 
-        .toolbar-filter {
-            padding: 7px 12px;
-            border: 1px solid var(--border-default);
-            border-radius: 8px;
-            font-size: 13px;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 150ms ease;
-            appearance: auto;
+        .toolbar-filters {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .toolbar-filter:focus {
+        .filter-select {
+            padding: 8px 32px 8px 12px;
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.8125rem;
+            font-family: inherit;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236B7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            transition: border-color var(--transition-speed) ease;
+        }
+
+        .filter-select:focus {
             outline: none;
-            border-color: var(--brand-secondary);
+            border-color: var(--brand-accent);
+            box-shadow: 0 0 0 3px rgba(95,149,152,0.15);
         }
 
         .toolbar-right {
             margin-left: auto;
         }
 
-        .btn-add {
-            display: inline-flex;
+        .btn-primary-brand {
+            padding: 8px 18px;
+            border-radius: 8px;
+            border: none;
+            background: var(--brand-secondary);
+            color: #FFFFFF;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
             align-items: center;
             gap: 6px;
-            padding: 8px 16px;
-            background: var(--brand-primary);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 150ms ease;
+            transition: background var(--transition-speed) ease;
+            white-space: nowrap;
         }
 
-        .btn-add:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+        .btn-primary-brand:hover {
+            background: var(--brand-accent);
         }
 
-        /* ===== DATA TABLE ===== */
-        .table-wrapper {
-            overflow-x: auto;
-            border: 1px solid var(--border-default);
-            border-radius: 10px;
+        /* ===== Data Table ===== */
+        .data-table-wrapper {
             background: var(--bg-primary);
+            border-radius: 12px;
+            border: 1px solid var(--border-default);
+            overflow: hidden;
+        }
+
+        .data-table-scroll {
+            overflow-x: auto;
         }
 
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 0.8125rem;
         }
 
         .data-table thead th {
-            padding: 10px 14px;
+            padding: 12px 16px;
             text-align: left;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.04em;
             color: var(--text-secondary);
-            background: var(--bg-secondary);
             border-bottom: 1px solid var(--border-default);
+            background: var(--bg-secondary);
             white-space: nowrap;
         }
 
-        .data-table thead th:first-child {
-            border-top-left-radius: 10px;
-        }
-
-        .data-table thead th:last-child {
-            border-top-right-radius: 10px;
-        }
-
-        .data-table tbody tr {
+        .data-table tbody td {
+            padding: 12px 16px;
             border-bottom: 1px solid var(--border-default);
-            transition: background 150ms ease;
+            vertical-align: middle;
+            color: var(--text-primary);
         }
 
-        .data-table tbody tr:last-child {
+        .data-table tbody tr:last-child td {
             border-bottom: none;
         }
 
@@ -665,186 +597,166 @@
             background: var(--bg-hover);
         }
 
-        .data-table tbody td {
-            padding: 10px 14px;
-            vertical-align: middle;
-            color: var(--text-primary);
-        }
-
-        .table-avatar {
+        /* Avatar */
+        .user-avatar {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: var(--bg-tertiary);
-            color: var(--text-secondary);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 0.6875rem;
             font-weight: 600;
+            color: #FFFFFF;
             flex-shrink: 0;
         }
 
-        .text-mono {
-            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .text-muted-col {
-            color: var(--text-secondary);
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         /* Badges */
-        .badge-role-admin {
-            background: var(--brand-primary);
-            color: #fff;
-            font-size: 11px;
-            font-weight: 500;
-            padding: 3px 10px;
-            border-radius: 12px;
+        .badge-role {
             display: inline-block;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 0.6875rem;
+            font-weight: 500;
         }
 
-        .badge-role-user {
+        .badge-role.admin {
             background: var(--brand-secondary);
-            color: #fff;
-            font-size: 11px;
-            font-weight: 500;
-            padding: 3px 10px;
-            border-radius: 12px;
-            display: inline-block;
+            color: #FFFFFF;
         }
 
-        .badge-role-viewer {
+        .badge-role.user {
+            background: var(--brand-accent);
+            color: #FFFFFF;
+        }
+
+        .badge-role.viewer {
             background: var(--bg-tertiary);
             color: var(--text-secondary);
-            font-size: 11px;
-            font-weight: 500;
-            padding: 3px 10px;
-            border-radius: 12px;
-            display: inline-block;
         }
 
-        .badge-status-active {
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 0.6875rem;
+            font-weight: 500;
+        }
+
+        .badge-status .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .badge-status.active {
+            background: rgba(22,163,74,0.1);
+            color: var(--success);
+        }
+
+        .badge-status.active .status-dot {
             background: var(--success);
-            color: #fff;
-            font-size: 11px;
-            font-weight: 500;
-            padding: 3px 10px;
-            border-radius: 12px;
-            display: inline-block;
         }
 
-        .badge-status-inactive {
+        .badge-status.inactive {
             background: var(--bg-tertiary);
             color: var(--text-secondary);
-            font-size: 11px;
-            font-weight: 500;
-            padding: 3px 10px;
-            border-radius: 12px;
-            display: inline-block;
         }
 
-        .badge-status-suspended {
+        .badge-status.inactive .status-dot {
+            background: var(--text-tertiary);
+        }
+
+        .badge-status.suspended {
+            background: rgba(220,38,38,0.1);
+            color: var(--error);
+        }
+
+        .badge-status.suspended .status-dot {
             background: var(--error);
-            color: #fff;
-            font-size: 11px;
-            font-weight: 500;
-            padding: 3px 10px;
-            border-radius: 12px;
-            display: inline-block;
         }
 
-        .badge-enabled {
+        .badge-status.enabled {
+            background: rgba(22,163,74,0.1);
+            color: var(--success);
+        }
+
+        .badge-status.enabled .status-dot {
             background: var(--success);
-            color: #fff;
-            font-size: 11px;
-            font-weight: 500;
-            padding: 3px 10px;
-            border-radius: 12px;
-            display: inline-block;
         }
 
-        .badge-disabled {
+        .badge-status.disabled {
             background: var(--bg-tertiary);
             color: var(--text-secondary);
-            font-size: 11px;
-            font-weight: 500;
-            padding: 3px 10px;
-            border-radius: 12px;
-            display: inline-block;
         }
 
-        .badge-available-all {
-            background: rgba(122,170,206,0.15);
-            color: var(--brand-primary);
-            font-size: 11px;
-            font-weight: 500;
-            padding: 3px 10px;
-            border-radius: 12px;
-            display: inline-block;
-        }
-
-        [data-theme="dark"] .badge-available-all {
-            color: var(--brand-light);
-        }
-
-        .badge-available-admin {
-            background: rgba(53,88,114,0.15);
-            color: var(--brand-primary);
-            font-size: 11px;
-            font-weight: 500;
-            padding: 3px 10px;
-            border-radius: 12px;
-            display: inline-block;
-        }
-
-        [data-theme="dark"] .badge-available-admin {
-            color: var(--brand-light);
-        }
-
-        .badge-available-custom {
-            background: rgba(217,119,6,0.12);
-            color: var(--warning);
-            font-size: 11px;
-            font-weight: 500;
-            padding: 3px 10px;
-            border-radius: 12px;
-            display: inline-block;
+        .badge-status.disabled .status-dot {
+            background: var(--text-tertiary);
         }
 
         .badge-category {
-            font-size: 11px;
-            font-weight: 500;
-            padding: 3px 10px;
-            border-radius: 12px;
             display: inline-block;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 0.6875rem;
+            font-weight: 500;
         }
 
-        .badge-category-chat { background: rgba(122,170,206,0.15); color: var(--brand-primary); }
-        .badge-category-files { background: rgba(22,163,74,0.12); color: var(--success); }
-        .badge-category-admin { background: rgba(53,88,114,0.15); color: var(--brand-primary); }
-        .badge-category-models { background: rgba(217,119,6,0.12); color: var(--warning); }
-        .badge-category-system { background: var(--bg-tertiary); color: var(--text-secondary); }
+        .badge-category.chat { background: rgba(29,84,109,0.1); color: var(--brand-secondary); }
+        .badge-category.files { background: rgba(217,119,6,0.1); color: var(--warning); }
+        .badge-category.admin-cat { background: rgba(220,38,38,0.1); color: var(--error); }
+        .badge-category.models { background: rgba(95,149,152,0.1); color: var(--brand-accent); }
+        .badge-category.system { background: var(--bg-tertiary); color: var(--text-secondary); }
 
-        [data-theme="dark"] .badge-category-chat { color: var(--brand-light); }
-        [data-theme="dark"] .badge-category-admin { color: var(--brand-light); }
-
-        /* Action buttons */
-        .action-btn {
-            background: none;
-            border: none;
-            color: var(--text-tertiary);
-            font-size: 15px;
-            cursor: pointer;
-            padding: 4px 6px;
-            border-radius: 4px;
-            transition: all 150ms ease;
+        .badge-availability {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 0.6875rem;
+            font-weight: 500;
         }
 
-        .data-table tbody tr:hover .action-btn {
+        .badge-availability.all { background: rgba(22,163,74,0.1); color: var(--success); }
+        .badge-availability.admins { background: rgba(29,84,109,0.1); color: var(--brand-secondary); }
+        .badge-availability.custom { background: rgba(217,119,6,0.1); color: var(--warning); }
+
+        .text-secondary-color {
             color: var(--text-secondary);
+        }
+
+        .text-mono {
+            font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Table Action Buttons */
+        .action-btns {
+            display: flex;
+            gap: 4px;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            font-size: 0.875rem;
         }
 
         .action-btn:hover {
@@ -852,139 +764,17 @@
             color: var(--text-primary);
         }
 
-        .action-btn.delete-btn:hover {
+        .action-btn.delete:hover {
+            background: rgba(220,38,38,0.08);
             color: var(--error);
         }
 
-        /* ===== MODALS ===== */
-        .modal-content {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-default);
-            border-radius: 12px;
-        }
-
-        .modal-header {
-            border-bottom: 1px solid var(--border-default);
-            padding: 16px 20px;
-        }
-
-        .modal-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .modal-footer {
-            border-top: 1px solid var(--border-default);
-            padding: 14px 20px;
-        }
-
-        .modal .form-label {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-
-        .modal .form-control,
-        .modal .form-select {
-            font-size: 13px;
-            border-color: var(--border-default);
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            border-radius: 8px;
-            padding: 8px 12px;
-            transition: all 150ms ease;
-        }
-
-        .modal .form-control:focus,
-        .modal .form-select:focus {
-            border-color: var(--brand-secondary);
-            box-shadow: 0 0 0 3px rgba(122,170,206,0.15);
-        }
-
-        .modal .form-control::placeholder {
-            color: var(--text-tertiary);
-        }
-
-        .modal .btn-close {
-            filter: none;
-            opacity: 0.5;
-            color: var(--text-secondary);
-        }
-
-        [data-theme="dark"] .modal .btn-close {
-            filter: invert(1);
-        }
-
-        .btn-modal-cancel {
-            border: 1px solid var(--border-default);
-            background: transparent;
-            color: var(--text-primary);
-            padding: 8px 18px;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 150ms ease;
-        }
-
-        .btn-modal-cancel:hover {
-            background: var(--bg-hover);
-        }
-
-        .btn-modal-save {
-            background: var(--brand-primary);
-            color: #fff;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 150ms ease;
-        }
-
-        .btn-modal-save:hover {
-            opacity: 0.9;
-        }
-
-        .btn-modal-delete {
-            background: var(--error);
-            color: #fff;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 150ms ease;
-        }
-
-        .btn-modal-delete:hover {
-            opacity: 0.9;
-        }
-
-        .delete-modal-warning {
-            color: var(--text-secondary);
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .delete-modal-name {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        /* Permission checkboxes */
+        /* Permissions checkbox */
         .perm-check {
             width: 18px;
             height: 18px;
+            accent-color: var(--brand-secondary);
             cursor: pointer;
-            accent-color: var(--brand-primary);
         }
 
         .perm-check:disabled {
@@ -992,55 +782,376 @@
             opacity: 0.6;
         }
 
-        /* ===== TOAST ===== */
+        /* ===== Modal ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px 0;
+        }
+
+        .modal-header h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+            transition: background var(--transition-speed) ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+        }
+
+        .modal-body {
+            padding: 20px 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .form-control-custom {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid var(--border-default);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+        }
+
+        .form-control-custom:focus {
+            outline: none;
+            border-color: var(--brand-accent);
+            box-shadow: 0 0 0 3px rgba(95,149,152,0.15);
+        }
+
+        textarea.form-control-custom {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            display: none;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-tertiary);
+            border-radius: 100px;
+            cursor: pointer;
+            transition: background var(--transition-speed) ease;
+        }
+
+        .toggle-slider::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #FFFFFF;
+            transition: transform var(--transition-speed) ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--brand-secondary);
+        }
+
+        .toggle-switch input:checked + .toggle-slider::after {
+            transform: translateX(20px);
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 0 24px 20px;
+        }
+
+        .btn-cancel {
+            padding: 9px 18px;
+            border-radius: 8px;
+            border: 1px solid var(--border-default);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background var(--transition-speed) ease;
+        }
+
+        .btn-cancel:hover {
+            background: var(--bg-hover);
+        }
+
+        .btn-save {
+            padding: 9px 18px;
+            border-radius: 8px;
+            border: none;
+            background: var(--brand-secondary);
+            color: #FFFFFF;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background var(--transition-speed) ease;
+        }
+
+        .btn-save:hover {
+            background: var(--brand-accent);
+        }
+
+        .btn-delete-confirm {
+            padding: 9px 18px;
+            border-radius: 8px;
+            border: none;
+            background: var(--error);
+            color: #FFFFFF;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background var(--transition-speed) ease;
+        }
+
+        .btn-delete-confirm:hover {
+            background: #B91C1C;
+        }
+
+        .delete-warning {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px;
+            background: rgba(220,38,38,0.06);
+            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+
+        .delete-warning i {
+            color: var(--error);
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .delete-warning p {
+            margin: 0;
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .delete-warning strong {
+            color: var(--text-primary);
+        }
+
+        /* Permission role checkboxes in modal */
+        .perm-role-grid {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .perm-role-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+
+        /* ===== Access Denied ===== */
+        .access-denied-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--brand-surface);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .access-denied-overlay.active {
+            display: flex;
+        }
+
+        .access-denied-card {
+            text-align: center;
+            max-width: 400px;
+            padding: 48px 32px;
+        }
+
+        .access-denied-card i.shield-icon {
+            font-size: 4rem;
+            color: var(--text-tertiary);
+            margin-bottom: 24px;
+        }
+
+        .access-denied-card h2 {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0 0 8px;
+        }
+
+        .access-denied-card p {
+            font-size: 0.9375rem;
+            color: var(--text-secondary);
+            margin: 0 0 32px;
+            line-height: 1.5;
+        }
+
+        .btn-outline-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border-radius: 8px;
+            border: 1px solid var(--brand-secondary);
+            background: transparent;
+            color: var(--brand-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            margin-bottom: 16px;
+        }
+
+        .btn-outline-brand:hover {
+            background: var(--brand-secondary);
+            color: #FFFFFF;
+        }
+
+        .demo-link {
+            display: inline-block;
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: color var(--transition-speed) ease;
+        }
+
+        .demo-link:hover {
+            color: var(--brand-secondary);
+        }
+
+        /* ===== Toast ===== */
         .toast-container {
             position: fixed;
             bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 10000;
+            z-index: 1200;
             display: flex;
-            flex-direction: column-reverse;
+            flex-direction: column;
             gap: 8px;
-            pointer-events: none;
+            align-items: center;
         }
 
-        .toast-item {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-default);
-            border-radius: 10px;
-            padding: 12px 18px;
-            font-size: 13px;
-            color: var(--text-primary);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        .toast-msg {
             display: flex;
             align-items: center;
             gap: 10px;
-            pointer-events: auto;
-            animation: toastIn 200ms ease forwards;
+            padding: 12px 20px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            border: 1px solid var(--border-default);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            font-size: 0.8125rem;
+            color: var(--text-primary);
+            animation: toastIn 200ms ease, toastOut 200ms ease 2.8s forwards;
             min-width: 280px;
-            border-left: 3px solid var(--success);
         }
 
-        .toast-item.toast-error {
-            border-left-color: var(--error);
+        .toast-msg.success { border-left: 4px solid var(--success); }
+        .toast-msg.error { border-left: 4px solid var(--error); }
+        .toast-msg.warning { border-left: 4px solid var(--warning); }
+        .toast-msg.info { border-left: 4px solid var(--info); }
+
+        .toast-msg i {
+            font-size: 1.125rem;
+            flex-shrink: 0;
         }
 
-        .toast-item.toast-out {
-            animation: toastOut 200ms ease forwards;
-        }
-
-        .toast-item i {
-            font-size: 16px;
-        }
-
-        .toast-item.toast-error i {
-            color: var(--error);
-        }
-
-        .toast-item:not(.toast-error) i {
-            color: var(--success);
-        }
+        .toast-msg.success i { color: var(--success); }
+        .toast-msg.error i { color: var(--error); }
+        .toast-msg.warning i { color: var(--warning); }
+        .toast-msg.info i { color: var(--info); }
 
         @keyframes toastIn {
             from { opacity: 0; transform: translateY(12px); }
@@ -1052,277 +1163,356 @@
             to { opacity: 0; transform: translateY(12px); }
         }
 
-        /* ===== SIDEBAR OVERLAY (mobile) ===== */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-            z-index: 99;
-            transition: opacity 200ms ease;
+        /* ===== Pagination (Optional hint) ===== */
+        .table-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-default);
         }
 
-        .sidebar-overlay.show {
-            display: block;
-        }
-
-        /* ===== RESPONSIVE ===== */
+        /* ===== Responsive ===== */
         @media (max-width: 1024px) {
             .sidebar {
+                width: var(--sidebar-collapsed-width);
+                min-width: var(--sidebar-collapsed-width);
+            }
+            .sidebar .sidebar-header-title { display: none; }
+            .sidebar .sidebar-nav-item span { display: none; }
+            .sidebar .sidebar-nav-item { justify-content: center; padding: 9px; }
+            .sidebar .new-chat-btn span { display: none; }
+            .sidebar .new-chat-btn { justify-content: center; padding: 10px; margin: 0 8px 8px; }
+            .sidebar .sidebar-section-title { display: none; }
+            .sidebar .recent-conversations { display: none; }
+            .sidebar .sidebar-user-info { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: flex;
+            }
+
+            .sidebar {
                 position: fixed;
+                top: var(--navbar-height);
                 left: 0;
-                top: 0;
                 bottom: 0;
-                z-index: 100;
-                width: 260px;
+                z-index: 1060;
                 transform: translateX(-100%);
-                transition: transform 200ms ease-in-out;
+                width: var(--sidebar-width);
+                min-width: var(--sidebar-width);
             }
 
-            .sidebar.collapsed {
-                transform: translateX(-100%);
-                width: 260px;
-                border-right: 1px solid var(--border-default);
-            }
-
-            .sidebar:not(.collapsed) {
+            .sidebar.mobile-open {
                 transform: translateX(0);
             }
 
-            .main-header .sidebar-toggle-external {
-                display: flex !important;
+            .sidebar.mobile-open ~ .sidebar-overlay {
+                display: block;
             }
 
-            .content-wrapper {
-                padding: 16px;
+            .sidebar .sidebar-header-title { display: block; }
+            .sidebar .sidebar-nav-item span { display: inline; }
+            .sidebar .sidebar-nav-item { justify-content: flex-start; padding: 9px 12px; }
+            .sidebar .new-chat-btn span { display: inline; }
+            .sidebar .new-chat-btn { justify-content: flex-start; padding: 10px 16px; margin: 0 12px 8px; }
+            .sidebar .sidebar-section-title { display: block; }
+            .sidebar .recent-conversations { display: block; }
+            .sidebar .sidebar-user-info { display: block; }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                top: var(--navbar-height);
+                background: rgba(0,0,0,0.3);
+                z-index: 1055;
             }
-        }
 
-        /* Form switch / toggle override */
-        .form-check-input:checked {
-            background-color: var(--brand-primary);
-            border-color: var(--brand-primary);
-        }
+            .main-content {
+                padding: 20px 16px;
+            }
 
-        /* No-results row */
-        .no-results-row td {
-            text-align: center;
-            padding: 40px 14px !important;
-            color: var(--text-tertiary);
-            font-size: 14px;
-        }
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
 
-        /* Backdrop override for dark mode */
-        [data-theme="dark"] .modal-backdrop {
-            background: rgba(0,0,0,0.6);
-        }
+            .toolbar-search {
+                max-width: 100%;
+            }
 
-        .form-check-label {
-            font-size: 13px;
-            color: var(--text-primary);
-        }
+            .toolbar-right {
+                margin-left: 0;
+            }
 
-        .modal .form-check {
-            margin-bottom: 2px;
+            .toolbar-filters {
+                flex-wrap: wrap;
+            }
+
+            .modal-box {
+                max-width: 100%;
+                border-radius: 12px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            /* Card layout for mobile tables */
+            .data-table thead {
+                display: none;
+            }
+
+            .data-table tbody tr {
+                display: block;
+                padding: 14px 16px;
+                border-bottom: 1px solid var(--border-default);
+            }
+
+            .data-table tbody td {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 4px 0;
+                border-bottom: none;
+            }
+
+            .data-table tbody td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                font-size: 0.6875rem;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: var(--text-secondary);
+                margin-right: 12px;
+                flex-shrink: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- ACCESS DENIED SCREEN -->
-    <div class="access-denied-screen" id="accessDenied" style="display:none;">
-        <i class="bi bi-shield-lock icon-lock"></i>
+
+<!-- ===== Access Denied Overlay ===== -->
+<div id="accessDenied" class="access-denied-overlay">
+    <div class="access-denied-card">
+        <i class="bi bi-shield-lock shield-icon"></i>
         <h2>Admin Access Required</h2>
-        <p>You don't have permission to view this page.</p>
-        <a href="index.html" class="btn-return">Return to Chat</a>
-        <button class="demo-login-link" onclick="loginAsAdmin()">Login as Admin (Demo)</button>
+        <p>You don't have permission to view this page. Please contact your administrator for access.</p>
+        <div>
+            <button class="btn-outline-brand" onclick="window.location.href='index.html'">
+                <i class="bi bi-arrow-left"></i> Return to Chat
+            </button>
+        </div>
+        <span class="demo-link" onclick="loginAsAdmin()">Login as Admin (Demo)</span>
     </div>
+</div>
 
-    <!-- SIDEBAR OVERLAY -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<!-- ===== Navbar ===== -->
+<nav class="top-navbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <button class="btn-icon hamburger-btn" onclick="toggleMobileSidebar()" aria-label="Toggle sidebar">
+            <i class="bi bi-list"></i>
+        </button>
+        <div class="navbar-brand">
+            <i class="bi bi-cpu"></i>
+            <span>AI Assistant</span>
+        </div>
+    </div>
+    <div class="navbar-actions">
+        <button class="btn-icon" onclick="toggleTheme()" id="themeToggle" aria-label="Toggle theme">
+            <i class="bi bi-sun"></i>
+        </button>
+    </div>
+</nav>
 
-    <!-- APP LAYOUT -->
-    <div class="app-layout" id="appLayout" style="display:none;">
-        <!-- SIDEBAR -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-inner">
-                <div class="sidebar-header">
-                    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
-                        <i class="bi bi-layout-sidebar"></i>
-                    </button>
-                </div>
+<!-- ===== App Layout ===== -->
+<div class="app-layout">
 
-                <div class="sidebar-nav-padding">
-                    <button class="btn-new-conversation" onclick="window.location.href='index.html'">
-                        <i class="bi bi-plus-lg"></i> New Conversation
-                    </button>
-                </div>
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
 
-                <nav class="sidebar-nav">
-                    <a href="index.html" class="nav-link-item">
-                        <i class="bi bi-chat-dots"></i> Chat
-                    </a>
-                    <a href="conversations.html" class="nav-link-item">
-                        <i class="bi bi-clock-history"></i> Conversations
-                    </a>
-                    <a href="notifications.html" class="nav-link-item">
-                        <i class="bi bi-bell"></i> Notifications
-                        <span class="badge-count">3</span>
-                    </a>
-                    <a href="administrator.html" class="nav-link-item active" id="adminNavLink">
-                        <i class="bi bi-gear"></i> Admin
-                    </a>
-                </nav>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-header-title">Navigation</span>
+            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        </div>
 
-                <div class="nav-divider"></div>
+        <button class="new-chat-btn" onclick="window.location.href='index.html'">
+            <i class="bi bi-plus-lg"></i>
+            <span>New Chat</span>
+        </button>
 
-                <div class="recent-section">
-                    <div class="recent-label">Recent</div>
-                    <div class="recent-list">
-                        <div class="recent-item"><span class="recent-item-text">API Integration Strategy</span><button class="recent-item-menu"><i class="bi bi-three-dots"></i></button></div>
-                        <div class="recent-item"><span class="recent-item-text">Database Schema Design</span><button class="recent-item-menu"><i class="bi bi-three-dots"></i></button></div>
-                        <div class="recent-item"><span class="recent-item-text">Kubernetes Deployment Guide</span><button class="recent-item-menu"><i class="bi bi-three-dots"></i></button></div>
-                        <div class="recent-item"><span class="recent-item-text">React Component Architecture</span><button class="recent-item-menu"><i class="bi bi-three-dots"></i></button></div>
-                        <div class="recent-item"><span class="recent-item-text">CI/CD Pipeline Configuration</span><button class="recent-item-menu"><i class="bi bi-three-dots"></i></button></div>
-                        <div class="recent-item"><span class="recent-item-text">Security Audit Recommendations</span><button class="recent-item-menu"><i class="bi bi-three-dots"></i></button></div>
-                        <div class="recent-item"><span class="recent-item-text">Performance Optimization Tips</span><button class="recent-item-menu"><i class="bi bi-three-dots"></i></button></div>
-                        <div class="recent-item"><span class="recent-item-text">Microservices Communication</span><button class="recent-item-menu"><i class="bi bi-three-dots"></i></button></div>
-                        <div class="recent-item"><span class="recent-item-text">Data Migration Playbook</span><button class="recent-item-menu"><i class="bi bi-three-dots"></i></button></div>
-                        <div class="recent-item"><span class="recent-item-text">OAuth 2.0 Implementation</span><button class="recent-item-menu"><i class="bi bi-three-dots"></i></button></div>
-                    </div>
-                </div>
+        <nav class="sidebar-nav">
+            <a class="sidebar-nav-item" href="index.html">
+                <i class="bi bi-chat-dots"></i>
+                <span>Chat</span>
+            </a>
+            <a class="sidebar-nav-item" href="conversations.html">
+                <i class="bi bi-clock-history"></i>
+                <span>Conversations</span>
+            </a>
+            <a class="sidebar-nav-item active" href="administrator.html">
+                <i class="bi bi-gear"></i>
+                <span>Admin</span>
+            </a>
+        </nav>
 
-                <div class="sidebar-user">
-                    <div class="user-avatar">RR</div>
-                    <div class="user-info">
-                        <div class="user-name">Rodrigo Rojas</div>
-                        <div class="user-org">Enterprise AI</div>
-                    </div>
-                    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle dark mode">
-                        <i class="bi bi-moon"></i>
-                    </button>
-                </div>
+        <div class="sidebar-divider"></div>
+
+        <div class="sidebar-section-title">Recent</div>
+        <div class="recent-conversations">
+            <div class="recent-conv-item"><i class="bi bi-chat"></i><span>API Authentication Setup</span></div>
+            <div class="recent-conv-item"><i class="bi bi-chat"></i><span>React Component Patterns</span></div>
+            <div class="recent-conv-item"><i class="bi bi-chat"></i><span>Database Query Optimization</span></div>
+            <div class="recent-conv-item"><i class="bi bi-chat"></i><span>Docker Deployment Guide</span></div>
+            <div class="recent-conv-item"><i class="bi bi-chat"></i><span>TypeScript Best Practices</span></div>
+            <div class="recent-conv-item"><i class="bi bi-chat"></i><span>CI/CD Pipeline Design</span></div>
+            <div class="recent-conv-item"><i class="bi bi-chat"></i><span>REST vs GraphQL Analysis</span></div>
+            <div class="recent-conv-item"><i class="bi bi-chat"></i><span>Unit Testing Strategies</span></div>
+            <div class="recent-conv-item"><i class="bi bi-chat"></i><span>AWS Lambda Functions</span></div>
+            <div class="recent-conv-item"><i class="bi bi-chat"></i><span>CSS Grid Layout Help</span></div>
+        </div>
+
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar">AR</div>
+            <div class="sidebar-user-info">
+                <div class="sidebar-user-name">Admin User</div>
+                <div class="sidebar-user-role">Administrator</div>
             </div>
-        </aside>
+        </div>
+    </aside>
 
-        <!-- MAIN CONTENT -->
-        <main class="main-content">
-            <div class="main-header">
-                <button class="sidebar-toggle-external" onclick="toggleSidebar()" title="Toggle sidebar">
-                    <i class="bi bi-layout-sidebar"></i>
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <div class="admin-container">
+
+            <div class="page-header">
+                <h1>Administration</h1>
+                <p>Manage users, models, and permissions for your organization.</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-tab="users" onclick="switchTab('users')">
+                    <i class="bi bi-people" style="margin-right:6px;"></i>Users
                 </button>
-                <div class="main-header-title"><i class="bi bi-gear"></i>Admin Management</div>
+                <button class="admin-tab" data-tab="models" onclick="switchTab('models')">
+                    <i class="bi bi-cpu" style="margin-right:6px;"></i>LLM Models
+                </button>
+                <button class="admin-tab" data-tab="permissions" onclick="switchTab('permissions')">
+                    <i class="bi bi-shield-check" style="margin-right:6px;"></i>Permissions
+                </button>
             </div>
 
-            <div class="content-wrapper">
-                <!-- TABS -->
-                <div class="admin-tabs">
-                    <button class="admin-tab active" data-tab="users" onclick="switchTab('users')">
-                        <i class="bi bi-people"></i> Users
-                    </button>
-                    <button class="admin-tab" data-tab="models" onclick="switchTab('models')">
-                        <i class="bi bi-cpu"></i> LLM Models
-                    </button>
-                    <button class="admin-tab" data-tab="permissions" onclick="switchTab('permissions')">
-                        <i class="bi bi-shield-check"></i> Permissions
-                    </button>
-                </div>
-
-                <!-- ==================== USERS TAB ==================== -->
-                <div class="tab-panel active" id="tab-users">
-                    <div class="toolbar">
-                        <div class="toolbar-search">
-                            <i class="bi bi-search"></i>
-                            <input type="text" id="userSearch" placeholder="Search users..." oninput="filterUsers()">
-                        </div>
-                        <select class="toolbar-filter" id="userRoleFilter" onchange="filterUsers()">
+            <!-- ===== TAB: Users ===== -->
+            <div class="tab-content active" id="tab-users">
+                <div class="toolbar">
+                    <div class="toolbar-search">
+                        <i class="bi bi-search"></i>
+                        <input type="text" placeholder="Search users..." id="userSearch" oninput="filterUsers()">
+                    </div>
+                    <div class="toolbar-filters">
+                        <select class="filter-select" id="roleFilter" onchange="filterUsers()">
                             <option value="">All Roles</option>
                             <option value="Admin">Admin</option>
                             <option value="User">User</option>
                             <option value="Viewer">Viewer</option>
                         </select>
-                        <select class="toolbar-filter" id="userStatusFilter" onchange="filterUsers()">
+                        <select class="filter-select" id="statusFilter" onchange="filterUsers()">
                             <option value="">All Statuses</option>
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>
                             <option value="Suspended">Suspended</option>
                         </select>
-                        <div class="toolbar-right">
-                            <button class="btn-add" onclick="openUserModal()">
-                                <i class="bi bi-plus-lg"></i> Add User
-                            </button>
-                        </div>
                     </div>
-                    <div class="table-wrapper">
+                    <div class="toolbar-right">
+                        <button class="btn-primary-brand" onclick="openUserModal()">
+                            <i class="bi bi-plus-lg"></i> Add User
+                        </button>
+                    </div>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <div class="data-table-scroll">
                         <table class="data-table" id="usersTable">
                             <thead>
                                 <tr>
-                                    <th style="width:48px"></th>
-                                    <th>Full Name</th>
+                                    <th>User</th>
                                     <th>Email</th>
                                     <th>Role</th>
                                     <th>Status</th>
                                     <th>Last Login</th>
-                                    <th style="width:90px">Actions</th>
+                                    <th style="width:90px;">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="usersBody"></tbody>
+                            <tbody id="usersTableBody"></tbody>
                         </table>
                     </div>
+                    <div class="table-footer" id="usersFooter"></div>
                 </div>
+            </div>
 
-                <!-- ==================== MODELS TAB ==================== -->
-                <div class="tab-panel" id="tab-models">
-                    <div class="toolbar">
-                        <div class="toolbar-search">
-                            <i class="bi bi-search"></i>
-                            <input type="text" id="modelSearch" placeholder="Search models..." oninput="filterModels()">
-                        </div>
-                        <select class="toolbar-filter" id="modelProviderFilter" onchange="filterModels()">
+            <!-- ===== TAB: LLM Models ===== -->
+            <div class="tab-content" id="tab-models">
+                <div class="toolbar">
+                    <div class="toolbar-search">
+                        <i class="bi bi-search"></i>
+                        <input type="text" placeholder="Search models..." id="modelSearch" oninput="filterModels()">
+                    </div>
+                    <div class="toolbar-filters">
+                        <select class="filter-select" id="providerFilter" onchange="filterModels()">
                             <option value="">All Providers</option>
                             <option value="OpenAI">OpenAI</option>
                             <option value="Anthropic">Anthropic</option>
                             <option value="Google">Google</option>
                             <option value="Meta">Meta</option>
-                            <option value="Mistral">Mistral</option>
                         </select>
-                        <select class="toolbar-filter" id="modelStatusFilter" onchange="filterModels()">
-                            <option value="">All Statuses</option>
-                            <option value="Enabled">Enabled</option>
-                            <option value="Disabled">Disabled</option>
-                        </select>
-                        <div class="toolbar-right">
-                            <button class="btn-add" onclick="openModelModal()">
-                                <i class="bi bi-plus-lg"></i> Add Model
-                            </button>
-                        </div>
                     </div>
-                    <div class="table-wrapper">
+                    <div class="toolbar-right">
+                        <button class="btn-primary-brand" onclick="openModelModal()">
+                            <i class="bi bi-plus-lg"></i> Add Model
+                        </button>
+                    </div>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <div class="data-table-scroll">
                         <table class="data-table" id="modelsTable">
                             <thead>
                                 <tr>
-                                    <th style="width:48px"></th>
+                                    <th style="width:40px;"></th>
                                     <th>Model Name</th>
                                     <th>Provider</th>
                                     <th>Model ID</th>
                                     <th>Max Tokens</th>
                                     <th>Status</th>
                                     <th>Available To</th>
-                                    <th style="width:90px">Actions</th>
+                                    <th style="width:90px;">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="modelsBody"></tbody>
+                            <tbody id="modelsTableBody"></tbody>
                         </table>
                     </div>
+                    <div class="table-footer" id="modelsFooter"></div>
                 </div>
+            </div>
 
-                <!-- ==================== PERMISSIONS TAB ==================== -->
-                <div class="tab-panel" id="tab-permissions">
-                    <div class="toolbar">
-                        <div class="toolbar-search">
-                            <i class="bi bi-search"></i>
-                            <input type="text" id="permSearch" placeholder="Search permissions..." oninput="filterPermissions()">
-                        </div>
-                        <select class="toolbar-filter" id="permCategoryFilter" onchange="filterPermissions()">
+            <!-- ===== TAB: Permissions ===== -->
+            <div class="tab-content" id="tab-permissions">
+                <div class="toolbar">
+                    <div class="toolbar-search">
+                        <i class="bi bi-search"></i>
+                        <input type="text" placeholder="Search permissions..." id="permSearch" oninput="filterPermissions()">
+                    </div>
+                    <div class="toolbar-filters">
+                        <select class="filter-select" id="categoryFilter" onchange="filterPermissions()">
                             <option value="">All Categories</option>
                             <option value="Chat">Chat</option>
                             <option value="Files">Files</option>
@@ -1330,847 +1520,765 @@
                             <option value="Models">Models</option>
                             <option value="System">System</option>
                         </select>
-                        <div class="toolbar-right">
-                            <button class="btn-add" onclick="openPermModal()">
-                                <i class="bi bi-plus-lg"></i> Add Permission
-                            </button>
-                        </div>
                     </div>
-                    <div class="table-wrapper">
+                    <div class="toolbar-right">
+                        <button class="btn-primary-brand" onclick="openPermModal()">
+                            <i class="bi bi-plus-lg"></i> Add Permission
+                        </button>
+                    </div>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <div class="data-table-scroll">
                         <table class="data-table" id="permsTable">
                             <thead>
                                 <tr>
-                                    <th>Permission Name</th>
+                                    <th>Permission</th>
                                     <th>Category</th>
-                                    <th style="width:70px;text-align:center">Admin</th>
-                                    <th style="width:70px;text-align:center">User</th>
-                                    <th style="width:70px;text-align:center">Viewer</th>
-                                    <th style="width:90px">Actions</th>
+                                    <th style="text-align:center;width:90px;">Admin</th>
+                                    <th style="text-align:center;width:90px;">User</th>
+                                    <th style="text-align:center;width:90px;">Viewer</th>
+                                    <th style="width:90px;">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="permsBody"></tbody>
+                            <tbody id="permsTableBody"></tbody>
                         </table>
                     </div>
+                    <div class="table-footer" id="permsFooter"></div>
                 </div>
             </div>
-        </main>
-    </div>
 
-    <!-- ==================== USER MODAL ==================== -->
-    <div class="modal fade" id="userModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="userModalTitle">Add User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="userForm" novalidate onsubmit="saveUser(event)">
-                    <div class="modal-body">
-                        <input type="hidden" id="userId">
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label class="form-label">First Name *</label>
-                                <input type="text" class="form-control" id="userFirstName" required>
-                                <div class="invalid-feedback">First name is required.</div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Last Name *</label>
-                                <input type="text" class="form-control" id="userLastName" required>
-                                <div class="invalid-feedback">Last name is required.</div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email *</label>
-                            <input type="email" class="form-control" id="userEmail" required>
-                            <div class="invalid-feedback">Please enter a valid email address.</div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label class="form-label">Role *</label>
-                                <select class="form-select" id="userRole" required>
-                                    <option value="">Select role</option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="User">User</option>
-                                    <option value="Viewer">Viewer</option>
-                                </select>
-                                <div class="invalid-feedback">Please select a role.</div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Status *</label>
-                                <select class="form-select" id="userStatus" required>
-                                    <option value="">Select status</option>
-                                    <option value="Active">Active</option>
-                                    <option value="Inactive">Inactive</option>
-                                    <option value="Suspended">Suspended</option>
-                                </select>
-                                <div class="invalid-feedback">Please select a status.</div>
-                            </div>
-                        </div>
-                        <div id="passwordFields">
-                            <div class="mb-3">
-                                <label class="form-label">Password *</label>
-                                <input type="password" class="form-control" id="userPassword">
-                                <div class="invalid-feedback">Password is required.</div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Confirm Password *</label>
-                                <input type="password" class="form-control" id="userConfirmPassword">
-                                <div class="invalid-feedback">Passwords do not match.</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn-modal-save">Save User</button>
-                    </div>
-                </form>
-            </div>
         </div>
-    </div>
+    </main>
+</div>
 
-    <!-- ==================== MODEL MODAL ==================== -->
-    <div class="modal fade" id="modelModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modelModalTitle">Add Model</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="modelForm" novalidate onsubmit="saveModel(event)">
-                    <div class="modal-body">
-                        <input type="hidden" id="modelId">
-                        <div class="mb-3">
-                            <label class="form-label">Model Name *</label>
-                            <input type="text" class="form-control" id="modelName" required>
-                            <div class="invalid-feedback">Model name is required.</div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label class="form-label">Provider *</label>
-                                <select class="form-select" id="modelProvider" required>
-                                    <option value="">Select provider</option>
-                                    <option value="OpenAI">OpenAI</option>
-                                    <option value="Anthropic">Anthropic</option>
-                                    <option value="Google">Google</option>
-                                    <option value="Meta">Meta</option>
-                                    <option value="Mistral">Mistral</option>
-                                </select>
-                                <div class="invalid-feedback">Please select a provider.</div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Model ID *</label>
-                                <input type="text" class="form-control" id="modelSlug" required style="font-family:'SF Mono','Consolas','Monaco',monospace;font-size:13px;">
-                                <div class="invalid-feedback">Model ID is required.</div>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label class="form-label">Max Tokens *</label>
-                                <input type="number" class="form-control" id="modelMaxTokens" required min="1">
-                                <div class="invalid-feedback">Max tokens is required.</div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Available To *</label>
-                                <select class="form-select" id="modelAvailableTo" required>
-                                    <option value="">Select availability</option>
-                                    <option value="All Users">All Users</option>
-                                    <option value="Admins Only">Admins Only</option>
-                                    <option value="Custom">Custom</option>
-                                </select>
-                                <div class="invalid-feedback">Please select availability.</div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">API Endpoint</label>
-                            <input type="text" class="form-control" id="modelEndpoint" placeholder="Optional">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Description</label>
-                            <textarea class="form-control" id="modelDescription" rows="2" placeholder="Optional description"></textarea>
-                        </div>
-                        <div class="mb-3 form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="modelEnabled" checked>
-                            <label class="form-check-label" for="modelEnabled">Enabled</label>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn-modal-save">Save Model</button>
-                    </div>
-                </form>
-            </div>
+<!-- ===== User Modal ===== -->
+<div class="modal-overlay" id="userModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="userModalTitle">Add User</h3>
+            <button class="modal-close" onclick="closeModal('userModal')"><i class="bi bi-x-lg"></i></button>
         </div>
-    </div>
-
-    <!-- ==================== PERMISSION MODAL ==================== -->
-    <div class="modal fade" id="permModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="permModalTitle">Add Permission</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-body">
+            <input type="hidden" id="userEditIndex" value="-1">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="userFirstName">First Name</label>
+                    <input type="text" class="form-control-custom" id="userFirstName" placeholder="John">
                 </div>
-                <form id="permForm" novalidate onsubmit="savePerm(event)">
-                    <div class="modal-body">
-                        <input type="hidden" id="permId">
-                        <div class="mb-3">
-                            <label class="form-label">Permission Name *</label>
-                            <input type="text" class="form-control" id="permName" required>
-                            <div class="invalid-feedback">Permission name is required.</div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Category *</label>
-                            <select class="form-select" id="permCategory" required>
-                                <option value="">Select category</option>
-                                <option value="Chat">Chat</option>
-                                <option value="Files">Files</option>
-                                <option value="Admin">Admin</option>
-                                <option value="Models">Models</option>
-                                <option value="System">System</option>
-                            </select>
-                            <div class="invalid-feedback">Please select a category.</div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Description</label>
-                            <textarea class="form-control" id="permDescription" rows="2" placeholder="Optional description"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label d-block">Role Access</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="permAdmin" checked disabled>
-                                <label class="form-check-label" for="permAdmin">Admin (always enabled)</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="permUser">
-                                <label class="form-check-label" for="permUser">User</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="permViewer">
-                                <label class="form-check-label" for="permViewer">Viewer</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn-modal-save">Save Permission</button>
-                    </div>
-                </form>
+                <div class="form-group">
+                    <label for="userLastName">Last Name</label>
+                    <input type="text" class="form-control-custom" id="userLastName" placeholder="Doe">
+                </div>
             </div>
-        </div>
-    </div>
-
-    <!-- ==================== DELETE MODAL ==================== -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
-        <div class="modal-dialog modal-sm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirm Delete</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="form-group">
+                <label for="userEmail">Email</label>
+                <input type="email" class="form-control-custom" id="userEmail" placeholder="john.doe@company.com">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="userRole">Role</label>
+                    <select class="form-control-custom" id="userRole">
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Viewer">Viewer</option>
+                    </select>
                 </div>
-                <div class="modal-body">
-                    <p class="delete-modal-warning">Are you sure you want to delete <span class="delete-modal-name" id="deleteName"></span>? This action cannot be undone.</p>
+                <div class="form-group">
+                    <label for="userStatus">Status</label>
+                    <select class="form-control-custom" id="userStatus">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Suspended">Suspended</option>
+                    </select>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn-modal-delete" id="deleteConfirmBtn">Delete</button>
+            </div>
+            <div id="passwordFields">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="userPassword">Password</label>
+                        <input type="password" class="form-control-custom" id="userPassword" placeholder="Min 8 characters">
+                    </div>
+                    <div class="form-group">
+                        <label for="userConfirmPassword">Confirm Password</label>
+                        <input type="password" class="form-control-custom" id="userConfirmPassword" placeholder="Confirm password">
+                    </div>
                 </div>
             </div>
         </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('userModal')">Cancel</button>
+            <button class="btn-save" onclick="saveUser()">Save User</button>
+        </div>
     </div>
+</div>
 
-    <!-- TOAST CONTAINER -->
-    <div class="toast-container" id="toastContainer"></div>
+<!-- ===== Delete Confirmation Modal ===== -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box" style="max-width:420px;">
+        <div class="modal-header">
+            <h3 id="deleteModalTitle">Delete User</h3>
+            <button class="modal-close" onclick="closeModal('deleteModal')"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="delete-warning">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <p id="deleteModalMsg">This action cannot be undone. Are you sure you want to delete this item?</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('deleteModal')">Cancel</button>
+            <button class="btn-delete-confirm" id="deleteConfirmBtn" onclick="confirmDelete()">Delete</button>
+        </div>
+    </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    // ================================================================
-    //  DATA
-    // ================================================================
-    var users = [
-        { id:1,  firstName:'Rodrigo',  lastName:'Rojas',     email:'rodrigo.rojas@enterprise.com',   role:'Admin',  status:'Active',    lastLogin: new Date(Date.now()-1000*60*5) },
-        { id:2,  firstName:'Maria',    lastName:'Garcia',    email:'maria.garcia@enterprise.com',    role:'Admin',  status:'Active',    lastLogin: new Date(Date.now()-1000*60*30) },
-        { id:3,  firstName:'James',    lastName:'Wilson',    email:'james.wilson@enterprise.com',    role:'User',   status:'Active',    lastLogin: new Date(Date.now()-1000*60*60*2) },
-        { id:4,  firstName:'Emily',    lastName:'Chen',      email:'emily.chen@enterprise.com',      role:'User',   status:'Active',    lastLogin: new Date(Date.now()-1000*60*60*5) },
-        { id:5,  firstName:'Michael',  lastName:'Brown',     email:'michael.brown@enterprise.com',   role:'User',   status:'Active',    lastLogin: new Date(Date.now()-1000*60*60*24) },
-        { id:6,  firstName:'Sarah',    lastName:'Johnson',   email:'sarah.johnson@enterprise.com',   role:'User',   status:'Inactive',  lastLogin: new Date(Date.now()-1000*60*60*24*7) },
-        { id:7,  firstName:'David',    lastName:'Lee',       email:'david.lee@enterprise.com',       role:'User',   status:'Active',    lastLogin: new Date(Date.now()-1000*60*60*3) },
-        { id:8,  firstName:'Ana',      lastName:'Martinez',  email:'ana.martinez@enterprise.com',    role:'Viewer', status:'Active',    lastLogin: new Date(Date.now()-1000*60*60*12) },
-        { id:9,  firstName:'Robert',   lastName:'Taylor',    email:'robert.taylor@enterprise.com',   role:'Viewer', status:'Active',    lastLogin: new Date(Date.now()-1000*60*60*48) },
-        { id:10, firstName:'Lisa',     lastName:'Anderson',  email:'lisa.anderson@enterprise.com',   role:'User',   status:'Suspended', lastLogin: new Date(Date.now()-1000*60*60*24*14) },
-        { id:11, firstName:'Thomas',   lastName:'White',     email:'thomas.white@enterprise.com',    role:'User',   status:'Active',    lastLogin: new Date(Date.now()-1000*60*60*6) },
-        { id:12, firstName:'Jennifer', lastName:'Harris',    email:'jennifer.harris@enterprise.com', role:'Viewer', status:'Inactive',  lastLogin: new Date(Date.now()-1000*60*60*24*30) },
-        { id:13, firstName:'Daniel',   lastName:'Clark',     email:'daniel.clark@enterprise.com',    role:'User',   status:'Active',    lastLogin: new Date(Date.now()-1000*60*45) },
-        { id:14, firstName:'Laura',    lastName:'Lewis',     email:'laura.lewis@enterprise.com',     role:'User',   status:'Active',    lastLogin: new Date(Date.now()-1000*60*60*8) },
-        { id:15, firstName:'Kevin',    lastName:'Walker',    email:'kevin.walker@enterprise.com',    role:'Viewer', status:'Suspended', lastLogin: new Date(Date.now()-1000*60*60*24*60) }
-    ];
-    var userNextId = 16;
+<!-- ===== Model Modal ===== -->
+<div class="modal-overlay" id="modelModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="modelModalTitle">Add Model</h3>
+            <button class="modal-close" onclick="closeModal('modelModal')"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="modelEditIndex" value="-1">
+            <div class="form-group">
+                <label for="modelName">Model Name</label>
+                <input type="text" class="form-control-custom" id="modelName" placeholder="GPT-4o">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="modelProvider">Provider</label>
+                    <select class="form-control-custom" id="modelProvider">
+                        <option value="OpenAI">OpenAI</option>
+                        <option value="Anthropic">Anthropic</option>
+                        <option value="Google">Google</option>
+                        <option value="Meta">Meta</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="modelMaxTokens">Max Tokens</label>
+                    <input type="number" class="form-control-custom" id="modelMaxTokens" placeholder="128000">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="modelId">Model ID</label>
+                <input type="text" class="form-control-custom" id="modelId" placeholder="gpt-4o" style="font-family:'SF Mono','Cascadia Code','Fira Code',monospace;font-size:0.8125rem;">
+            </div>
+            <div class="form-group">
+                <label for="modelEndpoint">API Endpoint</label>
+                <input type="text" class="form-control-custom" id="modelEndpoint" placeholder="https://api.openai.com/v1/chat/completions">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Status</label>
+                    <div class="form-toggle" style="margin-top:4px;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="modelStatus" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span id="modelStatusLabel" style="font-size:0.8125rem;">Enabled</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="modelAvailability">Available To</label>
+                    <select class="form-control-custom" id="modelAvailability">
+                        <option value="All Users">All Users</option>
+                        <option value="Admins Only">Admins Only</option>
+                        <option value="Custom">Custom</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="modelDescription">Description</label>
+                <textarea class="form-control-custom" id="modelDescription" placeholder="Brief description of the model..." rows="3"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('modelModal')">Cancel</button>
+            <button class="btn-save" onclick="saveModel()">Save Model</button>
+        </div>
+    </div>
+</div>
 
-    var models = [
-        { id:1, name:'GPT-4o',           provider:'OpenAI',    slug:'gpt-4o',           maxTokens:128000,  status:'Enabled',  availableTo:'All Users',   endpoint:'', description:'Most capable GPT-4 model' },
-        { id:2, name:'GPT-4o Mini',       provider:'OpenAI',    slug:'gpt-4o-mini',      maxTokens:128000,  status:'Enabled',  availableTo:'All Users',   endpoint:'', description:'Affordable small model' },
-        { id:3, name:'GPT-4 Turbo',       provider:'OpenAI',    slug:'gpt-4-turbo',      maxTokens:128000,  status:'Disabled', availableTo:'Admins Only', endpoint:'', description:'Previous generation GPT-4' },
-        { id:4, name:'Claude 3.5 Sonnet', provider:'Anthropic', slug:'claude-3-5-sonnet',maxTokens:200000,  status:'Enabled',  availableTo:'All Users',   endpoint:'', description:'Balanced intelligence and speed' },
-        { id:5, name:'Claude 3 Opus',     provider:'Anthropic', slug:'claude-3-opus',    maxTokens:200000,  status:'Enabled',  availableTo:'Admins Only', endpoint:'', description:'Most capable Claude model' },
-        { id:6, name:'Gemini 1.5 Pro',    provider:'Google',    slug:'gemini-1.5-pro',   maxTokens:1000000, status:'Enabled',  availableTo:'All Users',   endpoint:'', description:'Advanced Google model' },
-        { id:7, name:'Gemini 1.5 Flash',  provider:'Google',    slug:'gemini-1.5-flash', maxTokens:1000000, status:'Enabled',  availableTo:'All Users',   endpoint:'', description:'Fast Google model' },
-        { id:8, name:'Llama 3.1 70B',     provider:'Meta',      slug:'llama-3.1-70b',    maxTokens:128000,  status:'Disabled', availableTo:'Custom',      endpoint:'', description:'Open-source large model' }
-    ];
-    var modelNextId = 9;
+<!-- ===== Permission Modal ===== -->
+<div class="modal-overlay" id="permModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="permModalTitle">Add Permission</h3>
+            <button class="modal-close" onclick="closeModal('permModal')"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="permEditIndex" value="-1">
+            <div class="form-group">
+                <label for="permName">Permission Name</label>
+                <input type="text" class="form-control-custom" id="permName" placeholder="Can Upload Files">
+            </div>
+            <div class="form-group">
+                <label for="permCategory">Category</label>
+                <select class="form-control-custom" id="permCategory">
+                    <option value="Chat">Chat</option>
+                    <option value="Files">Files</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Models">Models</option>
+                    <option value="System">System</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="permDescription">Description</label>
+                <textarea class="form-control-custom" id="permDescription" placeholder="Describe what this permission allows..." rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Role Access</label>
+                <div class="perm-role-grid" style="margin-top:6px;">
+                    <label class="perm-role-item">
+                        <input type="checkbox" class="perm-check" checked disabled>
+                        <span>Admin</span>
+                    </label>
+                    <label class="perm-role-item">
+                        <input type="checkbox" class="perm-check" id="permRoleUser">
+                        <span>User</span>
+                    </label>
+                    <label class="perm-role-item">
+                        <input type="checkbox" class="perm-check" id="permRoleViewer">
+                        <span>Viewer</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('permModal')">Cancel</button>
+            <button class="btn-save" onclick="savePerm()">Save Permission</button>
+        </div>
+    </div>
+</div>
 
-    var permissions = [
-        { id:1,  name:'Send Messages',            category:'Chat',   admin:true, user:true,  viewer:false, description:'' },
-        { id:2,  name:'Create Conversations',      category:'Chat',   admin:true, user:true,  viewer:false, description:'' },
-        { id:3,  name:'Delete Own Conversations',   category:'Chat',   admin:true, user:true,  viewer:false, description:'' },
-        { id:4,  name:'Upload Files',              category:'Files',  admin:true, user:true,  viewer:false, description:'' },
-        { id:5,  name:'Download Files',            category:'Files',  admin:true, user:true,  viewer:true,  description:'' },
-        { id:6,  name:'Delete Files',              category:'Files',  admin:true, user:false, viewer:false, description:'' },
-        { id:7,  name:'View All Conversations',     category:'Admin',  admin:true, user:false, viewer:false, description:'' },
-        { id:8,  name:'Manage Users',              category:'Admin',  admin:true, user:false, viewer:false, description:'' },
-        { id:9,  name:'Configure Models',          category:'Models', admin:true, user:false, viewer:false, description:'' },
-        { id:10, name:'Select Model',              category:'Models', admin:true, user:true,  viewer:false, description:'' },
-        { id:11, name:'View System Logs',           category:'System', admin:true, user:false, viewer:false, description:'' },
-        { id:12, name:'Export Data',               category:'System', admin:true, user:true,  viewer:false, description:'' }
-    ];
-    var permNextId = 13;
+<!-- ===== Toast Container ===== -->
+<div class="toast-container" id="toastContainer"></div>
 
-    // ================================================================
-    //  ACCESS CONTROL
-    // ================================================================
-    function checkAccess() {
-        var isAdmin = localStorage.getItem('isAdmin') === 'true';
-        if (!isAdmin) {
-            document.getElementById('accessDenied').style.display = 'flex';
-            document.getElementById('appLayout').style.display = 'none';
-        } else {
-            document.getElementById('accessDenied').style.display = 'none';
-            document.getElementById('appLayout').style.display = 'flex';
-        }
+<!-- ===== Bootstrap JS ===== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// ===== Mock Data =====
+const avatarColors = ['#1D546D','#5F9598','#D97706','#DC2626','#16A34A','#7C3AED','#DB2777','#0891B2','#059669','#EA580C'];
+
+let usersData = [
+    { firstName:'Elena', lastName:'Rodriguez', email:'elena.rodriguez@company.com', role:'Admin', status:'Active', lastLogin:'2 minutes ago' },
+    { firstName:'James', lastName:'Mitchell', email:'james.mitchell@company.com', role:'Admin', status:'Active', lastLogin:'15 minutes ago' },
+    { firstName:'Sarah', lastName:'Chen', email:'sarah.chen@company.com', role:'User', status:'Active', lastLogin:'1 hour ago' },
+    { firstName:'Marcus', lastName:'Johnson', email:'marcus.johnson@company.com', role:'User', status:'Active', lastLogin:'3 hours ago' },
+    { firstName:'Priya', lastName:'Sharma', email:'priya.sharma@company.com', role:'User', status:'Active', lastLogin:'5 hours ago' },
+    { firstName:'David', lastName:'Kim', email:'david.kim@company.com', role:'User', status:'Inactive', lastLogin:'2 days ago' },
+    { firstName:'Olivia', lastName:'Brown', email:'olivia.brown@company.com', role:'User', status:'Active', lastLogin:'30 minutes ago' },
+    { firstName:'Alexander', lastName:'Petrov', email:'alexander.petrov@company.com', role:'Viewer', status:'Active', lastLogin:'1 day ago' },
+    { firstName:'Fatima', lastName:'Al-Hassan', email:'fatima.alhassan@company.com', role:'User', status:'Active', lastLogin:'4 hours ago' },
+    { firstName:'Thomas', lastName:'Weber', email:'thomas.weber@company.com', role:'Viewer', status:'Inactive', lastLogin:'1 week ago' },
+    { firstName:'Maria', lastName:'Garcia', email:'maria.garcia@company.com', role:'User', status:'Suspended', lastLogin:'3 days ago' },
+    { firstName:'Ryan', lastName:'O\'Connor', email:'ryan.oconnor@company.com', role:'User', status:'Active', lastLogin:'20 minutes ago' },
+    { firstName:'Yuki', lastName:'Tanaka', email:'yuki.tanaka@company.com', role:'Viewer', status:'Active', lastLogin:'6 hours ago' },
+    { firstName:'Carlos', lastName:'Mendez', email:'carlos.mendez@company.com', role:'Admin', status:'Active', lastLogin:'45 minutes ago' },
+    { firstName:'Anna', lastName:'Novak', email:'anna.novak@company.com', role:'User', status:'Inactive', lastLogin:'5 days ago' },
+];
+
+let modelsData = [
+    { name:'GPT-4o', provider:'OpenAI', modelId:'gpt-4o', maxTokens:128000, status:'Enabled', availability:'All Users', description:'Most capable OpenAI model with vision capabilities.', endpoint:'https://api.openai.com/v1/chat/completions' },
+    { name:'GPT-4o Mini', provider:'OpenAI', modelId:'gpt-4o-mini', maxTokens:128000, status:'Enabled', availability:'All Users', description:'Affordable small model for lightweight tasks.', endpoint:'https://api.openai.com/v1/chat/completions' },
+    { name:'GPT-3.5 Turbo', provider:'OpenAI', modelId:'gpt-3.5-turbo', maxTokens:16385, status:'Disabled', availability:'All Users', description:'Legacy fast model, lower cost.', endpoint:'https://api.openai.com/v1/chat/completions' },
+    { name:'Claude 3.5 Sonnet', provider:'Anthropic', modelId:'claude-3-5-sonnet-20241022', maxTokens:200000, status:'Enabled', availability:'All Users', description:'Anthropic\'s most intelligent model with excellent reasoning.', endpoint:'https://api.anthropic.com/v1/messages' },
+    { name:'Claude 3 Haiku', provider:'Anthropic', modelId:'claude-3-haiku-20240307', maxTokens:200000, status:'Enabled', availability:'All Users', description:'Fastest Anthropic model for simple tasks.', endpoint:'https://api.anthropic.com/v1/messages' },
+    { name:'Gemini 1.5 Pro', provider:'Google', modelId:'gemini-1.5-pro', maxTokens:2097152, status:'Enabled', availability:'Admins Only', description:'Google\'s most capable multimodal model.', endpoint:'https://generativelanguage.googleapis.com/v1beta' },
+    { name:'Gemini 1.5 Flash', provider:'Google', modelId:'gemini-1.5-flash', maxTokens:1048576, status:'Enabled', availability:'All Users', description:'Fast and efficient Google model.', endpoint:'https://generativelanguage.googleapis.com/v1beta' },
+    { name:'Llama 3.1 70B', provider:'Meta', modelId:'llama-3.1-70b-instruct', maxTokens:131072, status:'Enabled', availability:'Custom', description:'Open source large language model by Meta.', endpoint:'https://api.together.xyz/v1/chat/completions' },
+];
+
+let permsData = [
+    { name:'Can Send Messages', category:'Chat', admin:true, user:true, viewer:false },
+    { name:'Can Create Conversations', category:'Chat', admin:true, user:true, viewer:false },
+    { name:'Can Delete Conversations', category:'Chat', admin:true, user:true, viewer:false },
+    { name:'Can Upload Files', category:'Files', admin:true, user:true, viewer:false },
+    { name:'Can Download Files', category:'Files', admin:true, user:true, viewer:true },
+    { name:'Can Delete Files', category:'Files', admin:true, user:false, viewer:false },
+    { name:'Can Manage Users', category:'Admin', admin:true, user:false, viewer:false },
+    { name:'Can Manage Models', category:'Models', admin:true, user:false, viewer:false },
+    { name:'Can Switch Models', category:'Models', admin:true, user:true, viewer:false },
+    { name:'Can View Analytics', category:'Admin', admin:true, user:false, viewer:false },
+    { name:'Can Export Data', category:'System', admin:true, user:true, viewer:false },
+    { name:'Can Manage System Settings', category:'System', admin:true, user:false, viewer:false },
+];
+
+let deleteContext = { type:'', index:-1 };
+
+// ===== Theme Management =====
+function initTheme() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    updateThemeIcon(saved);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    updateThemeIcon(next);
+}
+
+function updateThemeIcon(theme) {
+    const icon = document.querySelector('#themeToggle i');
+    icon.className = theme === 'dark' ? 'bi bi-moon' : 'bi bi-sun';
+}
+
+// ===== Sidebar =====
+function initSidebar() {
+    const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (collapsed) {
+        document.getElementById('sidebar').classList.add('collapsed');
     }
+}
 
-    function loginAsAdmin() {
-        localStorage.setItem('isAdmin', 'true');
-        location.reload();
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('collapsed');
+    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+}
+
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('mobile-open');
+}
+
+// ===== Access Control =====
+function checkAccess() {
+    const isAdmin = localStorage.getItem('isAdmin');
+    if (isAdmin !== 'true') {
+        document.getElementById('accessDenied').classList.add('active');
     }
-
-    // ================================================================
-    //  THEME
-    // ================================================================
-    function initTheme() {
-        var theme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', theme);
-        updateThemeIcon(theme);
-    }
-
-    function toggleTheme() {
-        var current = document.documentElement.getAttribute('data-theme');
-        var next = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('theme', next);
-        updateThemeIcon(next);
-    }
-
-    function updateThemeIcon(theme) {
-        var icon = document.querySelector('#themeToggle i');
-        if (icon) {
-            icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
-        }
-    }
-
-    // ================================================================
-    //  SIDEBAR
-    // ================================================================
-    function initSidebar() {
-        var collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        var sidebar = document.getElementById('sidebar');
-        if (collapsed) sidebar.classList.add('collapsed');
-    }
-
-    function toggleSidebar() {
-        var sidebar = document.getElementById('sidebar');
-        var overlay = document.getElementById('sidebarOverlay');
-        var isMobile = window.innerWidth <= 1024;
-
-        if (isMobile) {
-            sidebar.classList.toggle('collapsed');
-            overlay.classList.toggle('show', !sidebar.classList.contains('collapsed'));
-        } else {
-            sidebar.classList.toggle('collapsed');
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        }
-    }
-
-    // ================================================================
-    //  TABS
-    // ================================================================
-    function switchTab(tab) {
-        document.querySelectorAll('.admin-tab').forEach(function(t) { t.classList.remove('active'); });
-        document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
-        document.querySelector('.admin-tab[data-tab="' + tab + '"]').classList.add('active');
-        document.getElementById('tab-' + tab).classList.add('active');
-    }
-
-    // ================================================================
-    //  TOAST
-    // ================================================================
-    function showToast(message, isError) {
-        var container = document.getElementById('toastContainer');
-        var toast = document.createElement('div');
-        toast.className = 'toast-item' + (isError ? ' toast-error' : '');
-        toast.innerHTML = '<i class="bi ' + (isError ? 'bi-exclamation-circle' : 'bi-check-circle') + '"></i> ' + escapeHtml(message);
-        container.appendChild(toast);
-        setTimeout(function() {
-            toast.classList.add('toast-out');
-            setTimeout(function() { toast.remove(); }, 200);
-        }, 3000);
-    }
-
-    // ================================================================
-    //  UTILITIES
-    // ================================================================
-    function escapeHtml(str) {
-        var d = document.createElement('div');
-        d.textContent = str;
-        return d.innerHTML;
-    }
-
-    function relativeTime(date) {
-        var now = Date.now();
-        var diff = now - date.getTime();
-        var secs = Math.floor(diff / 1000);
-        if (secs < 60) return 'Just now';
-        var mins = Math.floor(secs / 60);
-        if (mins < 60) return mins + 'm ago';
-        var hrs = Math.floor(mins / 60);
-        if (hrs < 24) return hrs + 'h ago';
-        var days = Math.floor(hrs / 24);
-        if (days < 30) return days + 'd ago';
-        var months = Math.floor(days / 30);
-        return months + 'mo ago';
-    }
-
-    function formatDateTime(date) {
-        return date.toLocaleString('en-US', {
-            year: 'numeric', month: 'short', day: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-        });
-    }
-
-    function formatNumber(n) {
-        return n.toLocaleString('en-US');
-    }
-
-    function getInitials(first, last) {
-        return (first.charAt(0) + last.charAt(0)).toUpperCase();
-    }
-
-    function roleBadge(role) {
-        var cls = { Admin:'badge-role-admin', User:'badge-role-user', Viewer:'badge-role-viewer' };
-        return '<span class="' + (cls[role] || 'badge-role-viewer') + '">' + role + '</span>';
-    }
-
-    function statusBadge(status) {
-        var cls = { Active:'badge-status-active', Inactive:'badge-status-inactive', Suspended:'badge-status-suspended' };
-        return '<span class="' + (cls[status] || 'badge-status-inactive') + '">' + status + '</span>';
-    }
-
-    function modelStatusBadge(status) {
-        return '<span class="' + (status === 'Enabled' ? 'badge-enabled' : 'badge-disabled') + '">' + status + '</span>';
-    }
-
-    function availableToBadge(val) {
-        var cls = { 'All Users':'badge-available-all', 'Admins Only':'badge-available-admin', 'Custom':'badge-available-custom' };
-        return '<span class="' + (cls[val] || 'badge-available-all') + '">' + val + '</span>';
-    }
-
-    function categoryBadge(cat) {
-        return '<span class="badge-category badge-category-' + cat.toLowerCase() + '">' + cat + '</span>';
-    }
-
-    // ================================================================
-    //  USERS - RENDER & FILTER
-    // ================================================================
-    function renderUsers() {
-        var body = document.getElementById('usersBody');
-        var search = document.getElementById('userSearch').value.toLowerCase();
-        var roleFilter = document.getElementById('userRoleFilter').value;
-        var statusFilter = document.getElementById('userStatusFilter').value;
-
-        var filtered = users.filter(function(u) {
-            var name = (u.firstName + ' ' + u.lastName).toLowerCase();
-            var matchSearch = !search || name.indexOf(search) !== -1 || u.email.toLowerCase().indexOf(search) !== -1;
-            var matchRole = !roleFilter || u.role === roleFilter;
-            var matchStatus = !statusFilter || u.status === statusFilter;
-            return matchSearch && matchRole && matchStatus;
-        });
-
-        if (filtered.length === 0) {
-            body.innerHTML = '<tr class="no-results-row"><td colspan="7">No users found.</td></tr>';
-            return;
-        }
-
-        body.innerHTML = filtered.map(function(u) {
-            return '<tr>' +
-                '<td><div class="table-avatar">' + getInitials(u.firstName, u.lastName) + '</div></td>' +
-                '<td>' + escapeHtml(u.firstName + ' ' + u.lastName) + '</td>' +
-                '<td class="text-muted-col">' + escapeHtml(u.email) + '</td>' +
-                '<td>' + roleBadge(u.role) + '</td>' +
-                '<td>' + statusBadge(u.status) + '</td>' +
-                '<td><span title="' + formatDateTime(u.lastLogin) + '">' + relativeTime(u.lastLogin) + '</span></td>' +
-                '<td>' +
-                    '<button class="action-btn" title="Edit" onclick="openUserModal(' + u.id + ')"><i class="bi bi-pencil"></i></button>' +
-                    '<button class="action-btn delete-btn" title="Delete" onclick="confirmDeleteUser(' + u.id + ')"><i class="bi bi-trash"></i></button>' +
-                '</td>' +
-            '</tr>';
-        }).join('');
-    }
-
-    function filterUsers() { renderUsers(); }
-
-    // ================================================================
-    //  USERS - CRUD
-    // ================================================================
-    var userModalInstance;
-    function openUserModal(id) {
-        var form = document.getElementById('userForm');
-        form.classList.remove('was-validated');
-        var isEdit = !!id;
-
-        document.getElementById('userModalTitle').textContent = isEdit ? 'Edit User' : 'Add User';
-        document.getElementById('passwordFields').style.display = isEdit ? 'none' : 'block';
-
-        if (isEdit) {
-            var u = users.find(function(x) { return x.id === id; });
-            document.getElementById('userId').value = u.id;
-            document.getElementById('userFirstName').value = u.firstName;
-            document.getElementById('userLastName').value = u.lastName;
-            document.getElementById('userEmail').value = u.email;
-            document.getElementById('userRole').value = u.role;
-            document.getElementById('userStatus').value = u.status;
-            document.getElementById('userPassword').value = '';
-            document.getElementById('userConfirmPassword').value = '';
-            document.getElementById('userPassword').removeAttribute('required');
-            document.getElementById('userConfirmPassword').removeAttribute('required');
-        } else {
-            document.getElementById('userId').value = '';
-            form.reset();
-            document.getElementById('userPassword').setAttribute('required', '');
-            document.getElementById('userConfirmPassword').setAttribute('required', '');
-        }
-
-        if (!userModalInstance) userModalInstance = new bootstrap.Modal(document.getElementById('userModal'));
-        userModalInstance.show();
-    }
-
-    function saveUser(e) {
-        e.preventDefault();
-        var form = document.getElementById('userForm');
-        var isEdit = !!document.getElementById('userId').value;
-
-        // Password match check
-        if (!isEdit) {
-            var pw = document.getElementById('userPassword').value;
-            var cpw = document.getElementById('userConfirmPassword').value;
-            if (pw && cpw && pw !== cpw) {
-                document.getElementById('userConfirmPassword').setCustomValidity('Passwords do not match');
-            } else {
-                document.getElementById('userConfirmPassword').setCustomValidity('');
-            }
-        }
-
-        form.classList.add('was-validated');
-        if (!form.checkValidity()) return;
-
-        var data = {
-            firstName: document.getElementById('userFirstName').value.trim(),
-            lastName: document.getElementById('userLastName').value.trim(),
-            email: document.getElementById('userEmail').value.trim(),
-            role: document.getElementById('userRole').value,
-            status: document.getElementById('userStatus').value
-        };
-
-        if (isEdit) {
-            var id = parseInt(document.getElementById('userId').value);
-            var idx = users.findIndex(function(u) { return u.id === id; });
-            users[idx] = Object.assign({}, users[idx], data);
-            showToast('User "' + data.firstName + ' ' + data.lastName + '" updated successfully.');
-        } else {
-            data.id = userNextId++;
-            data.lastLogin = new Date();
-            users.push(data);
-            showToast('User "' + data.firstName + ' ' + data.lastName + '" created successfully.');
-        }
-
-        userModalInstance.hide();
-        renderUsers();
-    }
-
-    function confirmDeleteUser(id) {
-        var u = users.find(function(x) { return x.id === id; });
-        document.getElementById('deleteName').textContent = u.firstName + ' ' + u.lastName;
-        document.getElementById('deleteConfirmBtn').onclick = function() {
-            users = users.filter(function(x) { return x.id !== id; });
-            deleteModalInstance.hide();
-            renderUsers();
-            showToast('User "' + u.firstName + ' ' + u.lastName + '" deleted successfully.');
-        };
-        if (!deleteModalInstance) deleteModalInstance = new bootstrap.Modal(document.getElementById('deleteModal'));
-        deleteModalInstance.show();
-    }
-
-    // ================================================================
-    //  MODELS - RENDER & FILTER
-    // ================================================================
-    function renderModels() {
-        var body = document.getElementById('modelsBody');
-        var search = document.getElementById('modelSearch').value.toLowerCase();
-        var providerFilter = document.getElementById('modelProviderFilter').value;
-        var statusFilter = document.getElementById('modelStatusFilter').value;
-
-        var filtered = models.filter(function(m) {
-            var matchSearch = !search || m.name.toLowerCase().indexOf(search) !== -1 || m.slug.toLowerCase().indexOf(search) !== -1 || m.provider.toLowerCase().indexOf(search) !== -1;
-            var matchProvider = !providerFilter || m.provider === providerFilter;
-            var matchStatus = !statusFilter || m.status === statusFilter;
-            return matchSearch && matchProvider && matchStatus;
-        });
-
-        if (filtered.length === 0) {
-            body.innerHTML = '<tr class="no-results-row"><td colspan="8">No models found.</td></tr>';
-            return;
-        }
-
-        body.innerHTML = filtered.map(function(m) {
-            return '<tr>' +
-                '<td><i class="bi bi-cpu" style="font-size:18px;color:var(--text-secondary)"></i></td>' +
-                '<td>' + escapeHtml(m.name) + '</td>' +
-                '<td class="text-muted-col">' + escapeHtml(m.provider) + '</td>' +
-                '<td class="text-mono">' + escapeHtml(m.slug) + '</td>' +
-                '<td>' + formatNumber(m.maxTokens) + '</td>' +
-                '<td>' + modelStatusBadge(m.status) + '</td>' +
-                '<td>' + availableToBadge(m.availableTo) + '</td>' +
-                '<td>' +
-                    '<button class="action-btn" title="Edit" onclick="openModelModal(' + m.id + ')"><i class="bi bi-pencil"></i></button>' +
-                    '<button class="action-btn delete-btn" title="Delete" onclick="confirmDeleteModel(' + m.id + ')"><i class="bi bi-trash"></i></button>' +
-                '</td>' +
-            '</tr>';
-        }).join('');
-    }
-
-    function filterModels() { renderModels(); }
-
-    // ================================================================
-    //  MODELS - CRUD
-    // ================================================================
-    var modelModalInstance;
-    function openModelModal(id) {
-        var form = document.getElementById('modelForm');
-        form.classList.remove('was-validated');
-        var isEdit = !!id;
-
-        document.getElementById('modelModalTitle').textContent = isEdit ? 'Edit Model' : 'Add Model';
-
-        if (isEdit) {
-            var m = models.find(function(x) { return x.id === id; });
-            document.getElementById('modelId').value = m.id;
-            document.getElementById('modelName').value = m.name;
-            document.getElementById('modelProvider').value = m.provider;
-            document.getElementById('modelSlug').value = m.slug;
-            document.getElementById('modelMaxTokens').value = m.maxTokens;
-            document.getElementById('modelAvailableTo').value = m.availableTo;
-            document.getElementById('modelEndpoint').value = m.endpoint || '';
-            document.getElementById('modelDescription').value = m.description || '';
-            document.getElementById('modelEnabled').checked = m.status === 'Enabled';
-        } else {
-            document.getElementById('modelId').value = '';
-            form.reset();
-            document.getElementById('modelEnabled').checked = true;
-        }
-
-        if (!modelModalInstance) modelModalInstance = new bootstrap.Modal(document.getElementById('modelModal'));
-        modelModalInstance.show();
-    }
-
-    function saveModel(e) {
-        e.preventDefault();
-        var form = document.getElementById('modelForm');
-        form.classList.add('was-validated');
-        if (!form.checkValidity()) return;
-
-        var isEdit = !!document.getElementById('modelId').value;
-        var data = {
-            name: document.getElementById('modelName').value.trim(),
-            provider: document.getElementById('modelProvider').value,
-            slug: document.getElementById('modelSlug').value.trim(),
-            maxTokens: parseInt(document.getElementById('modelMaxTokens').value),
-            availableTo: document.getElementById('modelAvailableTo').value,
-            endpoint: document.getElementById('modelEndpoint').value.trim(),
-            description: document.getElementById('modelDescription').value.trim(),
-            status: document.getElementById('modelEnabled').checked ? 'Enabled' : 'Disabled'
-        };
-
-        if (isEdit) {
-            var id = parseInt(document.getElementById('modelId').value);
-            var idx = models.findIndex(function(m) { return m.id === id; });
-            models[idx] = Object.assign({}, models[idx], data);
-            showToast('Model "' + data.name + '" updated successfully.');
-        } else {
-            data.id = modelNextId++;
-            models.push(data);
-            showToast('Model "' + data.name + '" added successfully.');
-        }
-
-        modelModalInstance.hide();
-        renderModels();
-    }
-
-    function confirmDeleteModel(id) {
-        var m = models.find(function(x) { return x.id === id; });
-        document.getElementById('deleteName').textContent = m.name;
-        document.getElementById('deleteConfirmBtn').onclick = function() {
-            models = models.filter(function(x) { return x.id !== id; });
-            deleteModalInstance.hide();
-            renderModels();
-            showToast('Model "' + m.name + '" deleted successfully.');
-        };
-        if (!deleteModalInstance) deleteModalInstance = new bootstrap.Modal(document.getElementById('deleteModal'));
-        deleteModalInstance.show();
-    }
-
-    // ================================================================
-    //  PERMISSIONS - RENDER & FILTER
-    // ================================================================
-    function renderPermissions() {
-        var body = document.getElementById('permsBody');
-        var search = document.getElementById('permSearch').value.toLowerCase();
-        var catFilter = document.getElementById('permCategoryFilter').value;
-
-        var filtered = permissions.filter(function(p) {
-            var matchSearch = !search || p.name.toLowerCase().indexOf(search) !== -1;
-            var matchCat = !catFilter || p.category === catFilter;
-            return matchSearch && matchCat;
-        });
-
-        if (filtered.length === 0) {
-            body.innerHTML = '<tr class="no-results-row"><td colspan="6">No permissions found.</td></tr>';
-            return;
-        }
-
-        body.innerHTML = filtered.map(function(p) {
-            return '<tr>' +
-                '<td>' + escapeHtml(p.name) + '</td>' +
-                '<td>' + categoryBadge(p.category) + '</td>' +
-                '<td style="text-align:center"><input type="checkbox" class="perm-check" checked disabled></td>' +
-                '<td style="text-align:center"><input type="checkbox" class="perm-check" ' + (p.user ? 'checked' : '') + ' onchange="togglePerm(' + p.id + ',\'user\',this.checked)"></td>' +
-                '<td style="text-align:center"><input type="checkbox" class="perm-check" ' + (p.viewer ? 'checked' : '') + ' onchange="togglePerm(' + p.id + ',\'viewer\',this.checked)"></td>' +
-                '<td>' +
-                    '<button class="action-btn" title="Edit" onclick="openPermModal(' + p.id + ')"><i class="bi bi-pencil"></i></button>' +
-                    '<button class="action-btn delete-btn" title="Delete" onclick="confirmDeletePerm(' + p.id + ')"><i class="bi bi-trash"></i></button>' +
-                '</td>' +
-            '</tr>';
-        }).join('');
-    }
-
-    function filterPermissions() { renderPermissions(); }
-
-    function togglePerm(id, role, checked) {
-        var p = permissions.find(function(x) { return x.id === id; });
-        p[role] = checked;
-        var roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
-        var state = checked ? 'granted' : 'revoked';
-        showToast('"' + p.name + '" ' + state + ' for ' + roleLabel + ' role.');
-    }
-
-    // ================================================================
-    //  PERMISSIONS - CRUD
-    // ================================================================
-    var permModalInstance;
-    function openPermModal(id) {
-        var form = document.getElementById('permForm');
-        form.classList.remove('was-validated');
-        var isEdit = !!id;
-
-        document.getElementById('permModalTitle').textContent = isEdit ? 'Edit Permission' : 'Add Permission';
-
-        if (isEdit) {
-            var p = permissions.find(function(x) { return x.id === id; });
-            document.getElementById('permId').value = p.id;
-            document.getElementById('permName').value = p.name;
-            document.getElementById('permCategory').value = p.category;
-            document.getElementById('permDescription').value = p.description || '';
-            document.getElementById('permUser').checked = p.user;
-            document.getElementById('permViewer').checked = p.viewer;
-        } else {
-            document.getElementById('permId').value = '';
-            form.reset();
-            document.getElementById('permAdmin').checked = true;
-        }
-
-        if (!permModalInstance) permModalInstance = new bootstrap.Modal(document.getElementById('permModal'));
-        permModalInstance.show();
-    }
-
-    function savePerm(e) {
-        e.preventDefault();
-        var form = document.getElementById('permForm');
-        form.classList.add('was-validated');
-        if (!form.checkValidity()) return;
-
-        var isEdit = !!document.getElementById('permId').value;
-        var data = {
-            name: document.getElementById('permName').value.trim(),
-            category: document.getElementById('permCategory').value,
-            description: document.getElementById('permDescription').value.trim(),
-            admin: true,
-            user: document.getElementById('permUser').checked,
-            viewer: document.getElementById('permViewer').checked
-        };
-
-        if (isEdit) {
-            var id = parseInt(document.getElementById('permId').value);
-            var idx = permissions.findIndex(function(p) { return p.id === id; });
-            permissions[idx] = Object.assign({}, permissions[idx], data);
-            showToast('Permission "' + data.name + '" updated successfully.');
-        } else {
-            data.id = permNextId++;
-            permissions.push(data);
-            showToast('Permission "' + data.name + '" added successfully.');
-        }
-
-        permModalInstance.hide();
-        renderPermissions();
-    }
-
-    var deleteModalInstance;
-    function confirmDeletePerm(id) {
-        var p = permissions.find(function(x) { return x.id === id; });
-        document.getElementById('deleteName').textContent = p.name;
-        document.getElementById('deleteConfirmBtn').onclick = function() {
-            permissions = permissions.filter(function(x) { return x.id !== id; });
-            deleteModalInstance.hide();
-            renderPermissions();
-            showToast('Permission "' + p.name + '" deleted successfully.');
-        };
-        if (!deleteModalInstance) deleteModalInstance = new bootstrap.Modal(document.getElementById('deleteModal'));
-        deleteModalInstance.show();
-    }
-
-    // ================================================================
-    //  INIT
-    // ================================================================
-    document.addEventListener('DOMContentLoaded', function() {
-        initTheme();
-        initSidebar();
-        checkAccess();
-        renderUsers();
-        renderModels();
-        renderPermissions();
-
-        // Close sidebar overlay on resize
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 1024) {
-                document.getElementById('sidebarOverlay').classList.remove('show');
-            }
-        });
+}
+
+function loginAsAdmin() {
+    localStorage.setItem('isAdmin', 'true');
+    window.location.reload();
+}
+
+// ===== Tabs =====
+function switchTab(tab) {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector(`.admin-tab[data-tab="${tab}"]`).classList.add('active');
+    document.getElementById(`tab-${tab}`).classList.add('active');
+}
+
+// ===== Toast =====
+function showToast(message, type='success') {
+    const icons = { success:'bi-check-circle-fill', error:'bi-x-circle-fill', warning:'bi-exclamation-triangle-fill', info:'bi-info-circle-fill' };
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast-msg ${type}`;
+    toast.innerHTML = `<i class="bi ${icons[type]}"></i><span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
+}
+
+// ===== Modal Helpers =====
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay) overlay.classList.remove('active');
     });
-    </script>
+});
+
+// ===== User Functions =====
+function getInitials(first, last) {
+    return (first.charAt(0) + last.charAt(0)).toUpperCase();
+}
+
+function getAvatarColor(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    return avatarColors[Math.abs(hash) % avatarColors.length];
+}
+
+function renderUsers(data) {
+    const tbody = document.getElementById('usersTableBody');
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-tertiary);">No users found.</td></tr>';
+    } else {
+        tbody.innerHTML = data.map((u, i) => {
+            const origIndex = usersData.indexOf(u);
+            const initials = getInitials(u.firstName, u.lastName);
+            const color = getAvatarColor(u.email);
+            const roleClass = u.role.toLowerCase();
+            const statusClass = u.status.toLowerCase();
+            return `<tr>
+                <td data-label="User">
+                    <div class="user-info">
+                        <div class="user-avatar" style="background:${color}">${initials}</div>
+                        <span>${u.firstName} ${u.lastName}</span>
+                    </div>
+                </td>
+                <td data-label="Email" class="text-secondary-color">${u.email}</td>
+                <td data-label="Role"><span class="badge-role ${roleClass}">${u.role}</span></td>
+                <td data-label="Status"><span class="badge-status ${statusClass}"><span class="status-dot"></span>${u.status}</span></td>
+                <td data-label="Last Login" class="text-secondary-color">${u.lastLogin}</td>
+                <td data-label="Actions">
+                    <div class="action-btns">
+                        <button class="action-btn" title="Edit" onclick="editUser(${origIndex})"><i class="bi bi-pencil"></i></button>
+                        <button class="action-btn delete" title="Delete" onclick="deleteUser(${origIndex})"><i class="bi bi-trash"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+    document.getElementById('usersFooter').textContent = `Showing ${data.length} of ${usersData.length} users`;
+}
+
+function filterUsers() {
+    const search = document.getElementById('userSearch').value.toLowerCase();
+    const role = document.getElementById('roleFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const filtered = usersData.filter(u => {
+        const matchSearch = !search || `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(search);
+        const matchRole = !role || u.role === role;
+        const matchStatus = !status || u.status === status;
+        return matchSearch && matchRole && matchStatus;
+    });
+    renderUsers(filtered);
+}
+
+function openUserModal(index = -1) {
+    document.getElementById('userEditIndex').value = index;
+    if (index >= 0) {
+        const u = usersData[index];
+        document.getElementById('userModalTitle').textContent = 'Edit User';
+        document.getElementById('userFirstName').value = u.firstName;
+        document.getElementById('userLastName').value = u.lastName;
+        document.getElementById('userEmail').value = u.email;
+        document.getElementById('userRole').value = u.role;
+        document.getElementById('userStatus').value = u.status;
+        document.getElementById('passwordFields').style.display = 'none';
+    } else {
+        document.getElementById('userModalTitle').textContent = 'Add User';
+        document.getElementById('userFirstName').value = '';
+        document.getElementById('userLastName').value = '';
+        document.getElementById('userEmail').value = '';
+        document.getElementById('userRole').value = 'User';
+        document.getElementById('userStatus').value = 'Active';
+        document.getElementById('userPassword').value = '';
+        document.getElementById('userConfirmPassword').value = '';
+        document.getElementById('passwordFields').style.display = 'block';
+    }
+    openModal('userModal');
+}
+
+function editUser(index) { openUserModal(index); }
+
+function saveUser() {
+    const index = parseInt(document.getElementById('userEditIndex').value);
+    const firstName = document.getElementById('userFirstName').value.trim();
+    const lastName = document.getElementById('userLastName').value.trim();
+    const email = document.getElementById('userEmail').value.trim();
+    const role = document.getElementById('userRole').value;
+    const status = document.getElementById('userStatus').value;
+
+    if (!firstName || !lastName || !email) {
+        showToast('Please fill in all required fields.', 'error');
+        return;
+    }
+
+    if (index < 0) {
+        const pw = document.getElementById('userPassword').value;
+        const cpw = document.getElementById('userConfirmPassword').value;
+        if (!pw || pw.length < 8) { showToast('Password must be at least 8 characters.', 'error'); return; }
+        if (pw !== cpw) { showToast('Passwords do not match.', 'error'); return; }
+        usersData.push({ firstName, lastName, email, role, status, lastLogin:'Just now' });
+        showToast(`User ${firstName} ${lastName} created successfully.`, 'success');
+    } else {
+        usersData[index] = { ...usersData[index], firstName, lastName, email, role, status };
+        showToast(`User ${firstName} ${lastName} updated successfully.`, 'success');
+    }
+
+    closeModal('userModal');
+    filterUsers();
+}
+
+function deleteUser(index) {
+    deleteContext = { type:'user', index };
+    document.getElementById('deleteModalTitle').textContent = `Delete ${usersData[index].firstName} ${usersData[index].lastName}?`;
+    document.getElementById('deleteModalMsg').innerHTML = `This action cannot be undone. The user <strong>${usersData[index].firstName} ${usersData[index].lastName}</strong> and all their associated data will be permanently removed.`;
+    openModal('deleteModal');
+}
+
+// ===== Model Functions =====
+function renderModels(data) {
+    const tbody = document.getElementById('modelsTableBody');
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-tertiary);">No models found.</td></tr>';
+    } else {
+        tbody.innerHTML = data.map((m, i) => {
+            const origIndex = modelsData.indexOf(m);
+            const statusClass = m.status.toLowerCase();
+            const avail = m.availability.replace(/\s+/g, '-').toLowerCase();
+            let availClass = 'all';
+            if (m.availability === 'Admins Only') availClass = 'admins';
+            else if (m.availability === 'Custom') availClass = 'custom';
+            return `<tr>
+                <td data-label=""><i class="bi bi-cpu" style="font-size:1.125rem;color:var(--brand-accent);"></i></td>
+                <td data-label="Model" style="font-weight:500;">${m.name}</td>
+                <td data-label="Provider">${m.provider}</td>
+                <td data-label="Model ID"><span class="text-mono">${m.modelId}</span></td>
+                <td data-label="Max Tokens">${m.maxTokens.toLocaleString()}</td>
+                <td data-label="Status"><span class="badge-status ${statusClass}"><span class="status-dot"></span>${m.status}</span></td>
+                <td data-label="Available To"><span class="badge-availability ${availClass}">${m.availability}</span></td>
+                <td data-label="Actions">
+                    <div class="action-btns">
+                        <button class="action-btn" title="Edit" onclick="editModel(${origIndex})"><i class="bi bi-pencil"></i></button>
+                        <button class="action-btn delete" title="Delete" onclick="deleteModel(${origIndex})"><i class="bi bi-trash"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+    document.getElementById('modelsFooter').textContent = `Showing ${data.length} of ${modelsData.length} models`;
+}
+
+function filterModels() {
+    const search = document.getElementById('modelSearch').value.toLowerCase();
+    const provider = document.getElementById('providerFilter').value;
+    const filtered = modelsData.filter(m => {
+        const matchSearch = !search || `${m.name} ${m.modelId} ${m.provider}`.toLowerCase().includes(search);
+        const matchProvider = !provider || m.provider === provider;
+        return matchSearch && matchProvider;
+    });
+    renderModels(filtered);
+}
+
+function openModelModal(index = -1) {
+    document.getElementById('modelEditIndex').value = index;
+    if (index >= 0) {
+        const m = modelsData[index];
+        document.getElementById('modelModalTitle').textContent = 'Edit Model';
+        document.getElementById('modelName').value = m.name;
+        document.getElementById('modelProvider').value = m.provider;
+        document.getElementById('modelId').value = m.modelId;
+        document.getElementById('modelMaxTokens').value = m.maxTokens;
+        document.getElementById('modelEndpoint').value = m.endpoint || '';
+        document.getElementById('modelStatus').checked = m.status === 'Enabled';
+        document.getElementById('modelStatusLabel').textContent = m.status === 'Enabled' ? 'Enabled' : 'Disabled';
+        document.getElementById('modelAvailability').value = m.availability;
+        document.getElementById('modelDescription').value = m.description || '';
+    } else {
+        document.getElementById('modelModalTitle').textContent = 'Add Model';
+        document.getElementById('modelName').value = '';
+        document.getElementById('modelProvider').value = 'OpenAI';
+        document.getElementById('modelId').value = '';
+        document.getElementById('modelMaxTokens').value = '';
+        document.getElementById('modelEndpoint').value = '';
+        document.getElementById('modelStatus').checked = true;
+        document.getElementById('modelStatusLabel').textContent = 'Enabled';
+        document.getElementById('modelAvailability').value = 'All Users';
+        document.getElementById('modelDescription').value = '';
+    }
+    openModal('modelModal');
+}
+
+function editModel(index) { openModelModal(index); }
+
+function saveModel() {
+    const index = parseInt(document.getElementById('modelEditIndex').value);
+    const name = document.getElementById('modelName').value.trim();
+    const provider = document.getElementById('modelProvider').value;
+    const modelId = document.getElementById('modelId').value.trim();
+    const maxTokens = parseInt(document.getElementById('modelMaxTokens').value) || 0;
+    const endpoint = document.getElementById('modelEndpoint').value.trim();
+    const status = document.getElementById('modelStatus').checked ? 'Enabled' : 'Disabled';
+    const availability = document.getElementById('modelAvailability').value;
+    const description = document.getElementById('modelDescription').value.trim();
+
+    if (!name || !modelId) {
+        showToast('Please fill in required fields (Name, Model ID).', 'error');
+        return;
+    }
+
+    const obj = { name, provider, modelId, maxTokens, status, availability, description, endpoint };
+
+    if (index < 0) {
+        modelsData.push(obj);
+        showToast(`Model "${name}" added successfully.`, 'success');
+    } else {
+        modelsData[index] = obj;
+        showToast(`Model "${name}" updated successfully.`, 'success');
+    }
+
+    closeModal('modelModal');
+    filterModels();
+}
+
+function deleteModel(index) {
+    deleteContext = { type:'model', index };
+    document.getElementById('deleteModalTitle').textContent = `Delete ${modelsData[index].name}?`;
+    document.getElementById('deleteModalMsg').innerHTML = `This action cannot be undone. The model <strong>${modelsData[index].name}</strong> will be removed and no longer available to users.`;
+    openModal('deleteModal');
+}
+
+// ===== Status toggle label sync =====
+document.getElementById('modelStatus').addEventListener('change', function() {
+    document.getElementById('modelStatusLabel').textContent = this.checked ? 'Enabled' : 'Disabled';
+});
+
+// ===== Permission Functions =====
+function getCategoryClass(cat) {
+    const map = { 'Chat':'chat', 'Files':'files', 'Admin':'admin-cat', 'Models':'models', 'System':'system' };
+    return map[cat] || 'system';
+}
+
+function renderPermissions(data) {
+    const tbody = document.getElementById('permsTableBody');
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-tertiary);">No permissions found.</td></tr>';
+    } else {
+        tbody.innerHTML = data.map((p, i) => {
+            const origIndex = permsData.indexOf(p);
+            const catClass = getCategoryClass(p.category);
+            return `<tr>
+                <td data-label="Permission" style="font-weight:500;">${p.name}</td>
+                <td data-label="Category"><span class="badge-category ${catClass}">${p.category}</span></td>
+                <td data-label="Admin" style="text-align:center;"><input type="checkbox" class="perm-check" checked disabled></td>
+                <td data-label="User" style="text-align:center;"><input type="checkbox" class="perm-check" ${p.user ? 'checked' : ''} onchange="togglePerm(${origIndex},'user',this.checked)"></td>
+                <td data-label="Viewer" style="text-align:center;"><input type="checkbox" class="perm-check" ${p.viewer ? 'checked' : ''} onchange="togglePerm(${origIndex},'viewer',this.checked)"></td>
+                <td data-label="Actions">
+                    <div class="action-btns">
+                        <button class="action-btn" title="Edit" onclick="editPerm(${origIndex})"><i class="bi bi-pencil"></i></button>
+                        <button class="action-btn delete" title="Delete" onclick="deletePerm(${origIndex})"><i class="bi bi-trash"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+    document.getElementById('permsFooter').textContent = `Showing ${data.length} of ${permsData.length} permissions`;
+}
+
+function togglePerm(index, role, val) {
+    permsData[index][role] = val;
+    showToast(`Permission "${permsData[index].name}" updated for ${role}s.`, 'info');
+}
+
+function filterPermissions() {
+    const search = document.getElementById('permSearch').value.toLowerCase();
+    const category = document.getElementById('categoryFilter').value;
+    const filtered = permsData.filter(p => {
+        const matchSearch = !search || p.name.toLowerCase().includes(search);
+        const matchCat = !category || p.category === category;
+        return matchSearch && matchCat;
+    });
+    renderPermissions(filtered);
+}
+
+function openPermModal(index = -1) {
+    document.getElementById('permEditIndex').value = index;
+    if (index >= 0) {
+        const p = permsData[index];
+        document.getElementById('permModalTitle').textContent = 'Edit Permission';
+        document.getElementById('permName').value = p.name;
+        document.getElementById('permCategory').value = p.category;
+        document.getElementById('permDescription').value = p.description || '';
+        document.getElementById('permRoleUser').checked = p.user;
+        document.getElementById('permRoleViewer').checked = p.viewer;
+    } else {
+        document.getElementById('permModalTitle').textContent = 'Add Permission';
+        document.getElementById('permName').value = '';
+        document.getElementById('permCategory').value = 'Chat';
+        document.getElementById('permDescription').value = '';
+        document.getElementById('permRoleUser').checked = false;
+        document.getElementById('permRoleViewer').checked = false;
+    }
+    openModal('permModal');
+}
+
+function editPerm(index) { openPermModal(index); }
+
+function savePerm() {
+    const index = parseInt(document.getElementById('permEditIndex').value);
+    const name = document.getElementById('permName').value.trim();
+    const category = document.getElementById('permCategory').value;
+    const description = document.getElementById('permDescription').value.trim();
+    const user = document.getElementById('permRoleUser').checked;
+    const viewer = document.getElementById('permRoleViewer').checked;
+
+    if (!name) {
+        showToast('Please enter a permission name.', 'error');
+        return;
+    }
+
+    const obj = { name, category, admin:true, user, viewer, description };
+
+    if (index < 0) {
+        permsData.push(obj);
+        showToast(`Permission "${name}" added successfully.`, 'success');
+    } else {
+        permsData[index] = obj;
+        showToast(`Permission "${name}" updated successfully.`, 'success');
+    }
+
+    closeModal('permModal');
+    filterPermissions();
+}
+
+function deletePerm(index) {
+    deleteContext = { type:'perm', index };
+    document.getElementById('deleteModalTitle').textContent = `Delete "${permsData[index].name}"?`;
+    document.getElementById('deleteModalMsg').innerHTML = `This action cannot be undone. The permission <strong>${permsData[index].name}</strong> will be removed from all roles.`;
+    openModal('deleteModal');
+}
+
+// ===== Delete Confirm =====
+function confirmDelete() {
+    const { type, index } = deleteContext;
+    if (type === 'user') {
+        const name = `${usersData[index].firstName} ${usersData[index].lastName}`;
+        usersData.splice(index, 1);
+        showToast(`User "${name}" deleted.`, 'success');
+        filterUsers();
+    } else if (type === 'model') {
+        const name = modelsData[index].name;
+        modelsData.splice(index, 1);
+        showToast(`Model "${name}" deleted.`, 'success');
+        filterModels();
+    } else if (type === 'perm') {
+        const name = permsData[index].name;
+        permsData.splice(index, 1);
+        showToast(`Permission "${name}" deleted.`, 'success');
+        filterPermissions();
+    }
+    closeModal('deleteModal');
+}
+
+// ===== Keyboard shortcuts =====
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+    }
+});
+
+// ===== Init =====
+function init() {
+    initTheme();
+    initSidebar();
+    checkAccess();
+    renderUsers(usersData);
+    renderModels(modelsData);
+    renderPermissions(permsData);
+}
+
+init();
+</script>
 </body>
 </html>
