@@ -16,7 +16,7 @@ import {
 import { ModelService } from './services/model.service';
 import { ModelStore } from './store/model.store';
 import { McpStore } from './store/mcp.store';
-import { SessionService } from './services/session.service';
+import { ConversationService } from './services/conversation.service';
 import {
   MSAL_GUARD_CONFIG,
   MsalBroadcastService,
@@ -54,7 +54,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private authService: MsalService,
     private msalBroadcastService: MsalBroadcastService,
     private storeService: StoreService,
-    private sessionService: SessionService,
+    private conversationService: ConversationService,
     private modelService: ModelService,
     private mcpService: McpService,
     private documentService: DocumentService,
@@ -141,7 +141,7 @@ export class AppComponent implements OnInit, OnDestroy {
           switchMap(() =>
             forkJoin([
               this.modelService.getModels(),
-              this.sessionService.searchSessions(''),
+              this.conversationService.searchConversations(''),
               this.mcpService.getMcpServers(),
               this.documentService.getFileExtensions(),
             ]),

@@ -23,7 +23,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { createMessage } from '../../../dtos/MessageDto';
 import hljs from 'highlight.js';
 import markdown_it_highlightjs from 'markdown-it-highlightjs';
-import { SessionService } from '../../../services/session.service';
+
 import { DocumentService } from '../../../services/document.service';
 import { ModelDto } from '../../../dtos/ModelDto';
 import { AiServiceType } from '../../../dtos/const/AiServiceType';
@@ -51,7 +51,6 @@ export class PromptBoxComponent implements OnDestroy {
   public readonly mcpStore = inject(McpStore);
   private readonly conversationService = inject(ConversationService);
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly sessionService = inject(SessionService);
   private readonly documentService = inject(DocumentService);
   private readonly location = inject(Location);
   private readonly destroyRef = inject(DestroyRef);
@@ -99,7 +98,7 @@ export class PromptBoxComponent implements OnDestroy {
 
       if (!this.storeService.session()) {
         const session = await firstValueFrom(
-          this.sessionService.createSession({
+          this.conversationService.createConversation({
             projectId: this.storeService.projectId(),
           }),
         );
@@ -141,7 +140,7 @@ export class PromptBoxComponent implements OnDestroy {
               createMessage('', false, undefined),
             );
             this.showAttachedFiles = true;
-            this.sessionService.loadMenuSessions().subscribe();
+            this.conversationService.loadMenuConversations().subscribe();
           },
           error: (error) => {
             this.resetPromptState();

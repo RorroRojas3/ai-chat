@@ -1,7 +1,7 @@
 import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StoreService } from '../../store/store.service';
-import { SessionService } from '../../services/session.service';
+import { ConversationService } from '../../services/conversation.service';
 import { FormsModule } from '@angular/forms';
 import {
   catchError,
@@ -40,7 +40,7 @@ export class MenuOffcanvasComponent implements OnInit {
 
   // Inject dependencies using Angular 19 pattern
   public readonly storeService = inject(StoreService);
-  private readonly sessionService = inject(SessionService);
+  private readonly conversationService = inject(ConversationService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly notificationService = inject(NotificationService);
@@ -55,7 +55,7 @@ export class MenuOffcanvasComponent implements OnInit {
       .pipe(
         debounceTime(this.SEARCH_DEBOUNCE_MS),
         distinctUntilChanged(),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((filter: string) => {
         this.performSearch(filter);
@@ -63,12 +63,12 @@ export class MenuOffcanvasComponent implements OnInit {
   }
 
   /**
-   * Performs search using the session service
+   * Performs search using the conversation service
    */
   private performSearch(filter: string): void {
     this.storeService.setMenuSessionSearchFilter(filter);
-    this.sessionService
-      .loadMenuSessions()
+    this.conversationService
+      .loadMenuConversations()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
   }
@@ -138,8 +138,8 @@ export class MenuOffcanvasComponent implements OnInit {
    */
   clearSearch(): void {
     this.storeService.clearMenuSessionSearchFilter();
-    this.sessionService
-      .loadMenuSessions()
+    this.conversationService
+      .loadMenuConversations()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
   }
@@ -223,8 +223,8 @@ export class MenuOffcanvasComponent implements OnInit {
 
     const request = new UpdateSessionActionDto(currentSession.id, newName);
 
-    this.sessionService
-      .updateSession(request)
+    this.conversationService
+      .updateConversation(request)
       .pipe(
         catchError(() => {
           this.notificationService.error('Error renaming chat.');
@@ -242,12 +242,12 @@ export class MenuOffcanvasComponent implements OnInit {
 
           // Reload menu sessions and conditionally reload page sessions
           return forkJoin({
-            menuSessions: this.sessionService.loadMenuSessions(),
+            menuSessions: this.conversationService.loadMenuConversations(),
             pageSessions: shouldReloadPageSessions
-              ? this.sessionService.loadPageSessions(
+              ? this.conversationService.loadPageConversations(
                   this.storeService.pageSessionSearchFilter(),
                   0,
-                  this.storeService.SESSION_PAGE_SIZE
+                  this.storeService.SESSION_PAGE_SIZE,
                 )
               : of(undefined),
           });
@@ -256,7 +256,7 @@ export class MenuOffcanvasComponent implements OnInit {
           this.onCloseRenameModal();
           this.toggleOffcanvas(true);
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }
@@ -323,8 +323,8 @@ export class MenuOffcanvasComponent implements OnInit {
     }
 
     const sessionId = currentSession.id;
-    this.sessionService
-      .deactivateSession(sessionId)
+    this.conversationService
+      .deactivateConversation(sessionId)
       .pipe(
         catchError(() => {
           this.notificationService.error('Error deleting chat.');
@@ -341,12 +341,12 @@ export class MenuOffcanvasComponent implements OnInit {
 
           // Reload menu sessions and conditionally reload page sessions
           return forkJoin({
-            menuSessions: this.sessionService.loadMenuSessions(),
+            menuSessions: this.conversationService.loadMenuConversations(),
             pageSessions: shouldReloadPageSessions
-              ? this.sessionService.loadPageSessions(
+              ? this.conversationService.loadPageConversations(
                   this.storeService.pageSessionSearchFilter(),
                   0,
-                  this.storeService.SESSION_PAGE_SIZE
+                  this.storeService.SESSION_PAGE_SIZE,
                 )
               : of(undefined),
           });
@@ -360,7 +360,7 @@ export class MenuOffcanvasComponent implements OnInit {
           this.onCloseDeleteModal();
           this.toggleOffcanvas(true);
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
   }
@@ -386,7 +386,7 @@ export class MenuOffcanvasComponent implements OnInit {
     if (offcanvasElement) {
       // Get or create Bootstrap's Offcanvas instance
       let bsOffcanvas = (window as any).bootstrap?.Offcanvas?.getInstance(
-        offcanvasElement
+        offcanvasElement,
       );
       if (!bsOffcanvas) {
         bsOffcanvas = new (window as any).bootstrap.Offcanvas(offcanvasElement);

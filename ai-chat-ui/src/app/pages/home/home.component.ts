@@ -11,7 +11,6 @@ import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import hljs from 'highlight.js';
 import { ActivatedRoute } from '@angular/router';
 import { ConversationService } from '../../services/conversation.service';
-import { SessionService } from '../../services/session.service';
 import { NotificationService } from '../../services/notification.service';
 import { catchError, EMPTY, switchMap, tap } from 'rxjs';
 import { ChatRoles } from '../../dtos/const/ChatRoles';
@@ -24,7 +23,6 @@ import { ChatRoles } from '../../dtos/const/ChatRoles';
 })
 export class HomeComponent implements OnInit {
   public readonly storeService = inject(StoreService);
-  private readonly sessionService = inject(SessionService);
   private readonly conversationService = inject(ConversationService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly route = inject(ActivatedRoute);
@@ -73,8 +71,8 @@ export class HomeComponent implements OnInit {
    * @param sessionId - The unique identifier of the session to load
    */
   loadSessionConversation(sessionId: string): void {
-    this.sessionService
-      .getSession(sessionId)
+    this.conversationService
+      .getConversation(sessionId)
       .pipe(
         tap((session) => {
           // Step 2: Set the session in the store

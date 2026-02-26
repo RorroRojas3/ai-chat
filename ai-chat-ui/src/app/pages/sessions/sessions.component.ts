@@ -2,7 +2,7 @@ import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { SessionService } from '../../services/session.service';
+import { ConversationService } from '../../services/conversation.service';
 import { SessionDto } from '../../dtos/SessionDto';
 import {
   catchError,
@@ -40,7 +40,7 @@ export class SessionsComponent implements OnInit {
 
   // Inject dependencies using Angular 19 pattern
   public readonly storeService = inject(StoreService);
-  private readonly sessionService = inject(SessionService);
+  private readonly conversationService = inject(ConversationService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly notificationService = inject(NotificationService);
@@ -67,23 +67,23 @@ export class SessionsComponent implements OnInit {
         debounceTime(this.SEARCH_DEBOUNCE_MS),
         distinctUntilChanged(),
         switchMap((filter) => {
-          this.sessionService.clearPageSessions();
-          return this.sessionService.loadPageSessions(
+          this.conversationService.clearPageConversations();
+          return this.conversationService.loadPageConversations(
             filter,
             this.storeService.pageSessionSkip(),
-            this.storeService.SESSION_PAGE_SIZE
+            this.storeService.SESSION_PAGE_SIZE,
           );
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
 
     // Load initial sessions
-    this.sessionService
-      .loadPageSessions(
+    this.conversationService
+      .loadPageConversations(
         this.storeService.pageSessionSearchFilter(),
         0,
-        this.storeService.SESSION_PAGE_SIZE
+        this.storeService.SESSION_PAGE_SIZE,
       )
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
@@ -101,8 +101,8 @@ export class SessionsComponent implements OnInit {
    * Clears the search term and reloads sessions
    */
   clearSearch(): void {
-    this.sessionService
-      .loadPageSessions('', 0, this.storeService.SESSION_PAGE_SIZE)
+    this.conversationService
+      .loadPageConversations('', 0, this.storeService.SESSION_PAGE_SIZE)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
   }
@@ -124,14 +124,14 @@ export class SessionsComponent implements OnInit {
 
     this.isLoadingMore = true;
     this.storeService.setPageSessionSkip(
-      this.storeService.pageSessionSkip() + this.storeService.SESSION_PAGE_SIZE
+      this.storeService.pageSessionSkip() + this.storeService.SESSION_PAGE_SIZE,
     );
 
-    this.sessionService
-      .searchSessions(
+    this.conversationService
+      .searchConversations(
         this.storeService.pageSessionSearchFilter(),
         this.storeService.pageSessionSkip(),
-        this.storeService.SESSION_PAGE_SIZE
+        this.storeService.SESSION_PAGE_SIZE,
       )
       .pipe(
         catchError(() => {
@@ -139,13 +139,13 @@ export class SessionsComponent implements OnInit {
           return EMPTY;
         }),
         finalize(() => (this.isLoadingMore = false)),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((response) => {
-        this.sessionService.handlePageSessionsResponse(
+        this.conversationService.handlePageConversationsResponse(
           response.items,
           response.totalCount,
-          true
+          true,
         );
       });
   }
@@ -255,15 +255,15 @@ export class SessionsComponent implements OnInit {
     // If single session, use single delete endpoint
     if (this.selectedSessionIds.length === 1) {
       const sessionId = this.selectedSessionIds[0];
-      this.sessionService
-        .deactivateSession(sessionId)
+      this.conversationService
+        .deactivateConversation(sessionId)
         .pipe(
           catchError(() => {
             this.notificationService.error('Error deleting chat.');
             this.closeDeleteModal();
             return EMPTY;
           }),
-          takeUntilDestroyed(this.destroyRef)
+          takeUntilDestroyed(this.destroyRef),
         )
         .subscribe(() => {
           this.handleDeleteSuccess();
@@ -273,15 +273,15 @@ export class SessionsComponent implements OnInit {
       const bulkRequest = new DeactivateSessionBulkActionDto();
       bulkRequest.sessionIds = [...this.selectedSessionIds];
 
-      this.sessionService
-        .deactivateSessionBulk(bulkRequest)
+      this.conversationService
+        .deactivateConversationBulk(bulkRequest)
         .pipe(
           catchError(() => {
             this.notificationService.error('Error deleting chats.');
             this.closeDeleteModal();
             return EMPTY;
           }),
-          takeUntilDestroyed(this.destroyRef)
+          takeUntilDestroyed(this.destroyRef),
         )
         .subscribe(() => {
           this.handleDeleteSuccess();
@@ -295,12 +295,12 @@ export class SessionsComponent implements OnInit {
   private handleDeleteSuccess(): void {
     this.closeDeleteModal();
     forkJoin({
-      pageSessions: this.sessionService.loadPageSessions(
+      pageSessions: this.conversationService.loadPageConversations(
         this.storeService.pageSessionSearchFilter(),
         0,
-        this.storeService.SESSION_PAGE_SIZE
+        this.storeService.SESSION_PAGE_SIZE,
       ),
-      menuSessions: this.sessionService.loadMenuSessions(),
+      menuSessions: this.conversationService.loadMenuConversations(),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
@@ -358,15 +358,15 @@ export class SessionsComponent implements OnInit {
     const sessionId = this.selectedSessionIds[0];
     const request = new UpdateSessionActionDto(sessionId, newName);
 
-    this.sessionService
-      .updateSession(request)
+    this.conversationService
+      .updateConversation(request)
       .pipe(
         catchError(() => {
           this.notificationService.error('Error renaming chat.');
           this.closeRenameModal();
           return EMPTY;
         }),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => {
         this.handleRenameSuccess();
@@ -379,12 +379,12 @@ export class SessionsComponent implements OnInit {
   private handleRenameSuccess(): void {
     this.closeRenameModal();
     forkJoin({
-      pageSessions: this.sessionService.loadPageSessions(
+      pageSessions: this.conversationService.loadPageConversations(
         this.storeService.pageSessionSearchFilter(),
         0,
-        this.storeService.SESSION_PAGE_SIZE
+        this.storeService.SESSION_PAGE_SIZE,
       ),
-      menuSessions: this.sessionService.loadMenuSessions(),
+      menuSessions: this.conversationService.loadMenuConversations(),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
