@@ -11,19 +11,20 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title fw-bold" id="renameConversationModalLabel">
-          Rename Chat
+          Rename Conversation
         </h5>
+        <button type="button" class="btn-close" (click)="handleClose()" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <div class="mb-3">
-          <label for="conversationNameInput" class="form-label">Chat name</label>
+          <label for="conversationNameInput" class="form-label">Conversation name</label>
           <input
             type="text"
             class="form-control"
             [class.is-invalid]="showError()"
             id="conversationNameInput"
             [formControl]="conversationName"
-            placeholder="Enter chat name"
+            placeholder="Conversation name"
             [attr.maxlength]="MAX_NAME_LENGTH"
             aria-describedby="conversationNameHelp conversationNameError"
             autofocus
@@ -35,7 +36,7 @@
             role="alert"
             aria-live="polite"
           >
-            Chat name is required.
+            Conversation name is required.
           </div>
           }
           <div id="conversationNameHelp" class="form-text">
@@ -46,7 +47,7 @@
       <div class="modal-footer">
         <button
           type="button"
-          class="btn btn-lg btn-secondary"
+          class="btn btn-sm modal-btn-cancel"
           (click)="handleClose()"
           aria-label="Cancel rename"
         >
@@ -54,10 +55,10 @@
         </button>
         <button
           type="button"
-          class="btn btn-lg btn-primary"
+          class="btn btn-sm modal-btn-confirm"
           (click)="handleRename()"
           [disabled]="conversationName.invalid"
-          aria-label="Confirm rename chat"
+          aria-label="Confirm rename conversation"
         >
           Rename
         </button>

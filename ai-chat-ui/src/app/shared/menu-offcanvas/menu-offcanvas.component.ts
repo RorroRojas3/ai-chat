@@ -146,14 +146,14 @@ export class MenuOffcanvasComponent implements OnInit {
       .find((c) => c.id === conversationId);
     if (foundConversation) {
       this.storeService.conversation.set(foundConversation);
-      this.router.navigate(['chat', 'conversation', foundConversation.id]);
+      this.router.navigate(['conversation', foundConversation.id]);
     }
     this.closeMobileSidebar();
   }
 
   onClickCreateNewConversation(): void {
     this.storeService.clearForNewConversation();
-    this.router.navigate(['chat']);
+    this.router.navigate(['conversation']);
     this.closeMobileSidebar();
   }
 
@@ -182,9 +182,7 @@ export class MenuOffcanvasComponent implements OnInit {
     this.closeMobileSidebar();
   }
 
-  onRenameConversation(conversationId: string, event: Event): void {
-    event.stopPropagation();
-
+  onRenameConversation(conversationId: string): void {
     const conversation = this.storeService
       .menuConversations()
       .find((c) => c.id === conversationId);
@@ -210,12 +208,12 @@ export class MenuOffcanvasComponent implements OnInit {
       .updateConversation(request)
       .pipe(
         catchError(() => {
-          this.notificationService.error('Error renaming chat.');
+          this.notificationService.error('Error renaming conversation.');
           return EMPTY;
         }),
         switchMap((response) => {
           this.storeService.conversation.set(response);
-          this.notificationService.success('Chat renamed successfully.');
+          this.notificationService.success('Conversation renamed successfully.');
 
           const shouldReloadPageConversations = this.storeService
             .pageConversations()
@@ -245,9 +243,7 @@ export class MenuOffcanvasComponent implements OnInit {
     this.showRenameModal = false;
   }
 
-  onDeleteConversation(conversationId: string, event: Event): void {
-    event.stopPropagation();
-
+  onDeleteConversation(conversationId: string): void {
     const conversation = this.storeService
       .menuConversations()
       .find((c) => c.id === conversationId);
@@ -269,12 +265,12 @@ export class MenuOffcanvasComponent implements OnInit {
       .deactivateConversation(conversationId)
       .pipe(
         catchError(() => {
-          this.notificationService.error('Error deleting chat.');
+          this.notificationService.error('Error deleting conversation.');
           return EMPTY;
         }),
         switchMap(() => {
           this.storeService.conversation.set(null);
-          this.notificationService.success('Chat deleted successfully.');
+          this.notificationService.success('Conversation deleted successfully.');
 
           const shouldReloadPageConversations = this.storeService
             .pageConversations()

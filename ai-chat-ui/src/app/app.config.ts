@@ -74,7 +74,7 @@ export function MSALGuardConfigFactory(): MsalGuardConfiguration {
     authRequest: {
       scopes: [...environment.apiConfig.scopes],
     },
-    loginFailedRoute: '/chat',
+    loginFailedRoute: '/conversation',
   };
 }
 

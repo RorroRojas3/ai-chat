@@ -154,12 +154,12 @@ export class ConversationsComponent implements OnInit {
    * Navigates to the selected conversation
    */
   onClickConversation(conversationId: string): void {
-    this.router.navigate(['chat', 'conversation', conversationId]);
+    this.router.navigate(['conversation', conversationId]);
   }
 
   onClickCreateNewConversation(): void {
     this.storeService.clearForNewConversation();
-    this.router.navigate(['chat']);
+    this.router.navigate(['conversation']);
   }
 
   /**

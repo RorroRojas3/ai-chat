@@ -19,7 +19,10 @@
   .sidebar-label,
   .sidebar-recent .sidebar-section-label,
   .sidebar-user-info {
-    display: none;
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    pointer-events: none;
   }
 
   .sidebar-header {
@@ -29,15 +32,17 @@
   }
 
   .sidebar-brand-icon {
-    display: none;
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
   }
 
-  .sidebar-new-chat {
+  .sidebar-new-conversation {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
   }
 
-  .sidebar-new-chat-btn {
+  .sidebar-new-conversation-btn {
     padding: 0.5rem;
     border: none;
     width: 44px;
@@ -60,7 +65,10 @@
   }
 
   .sidebar-recent {
-    display: none;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    pointer-events: none;
   }
 
   .sidebar-user {
@@ -80,6 +88,7 @@
   font-size: 20px;
   color: var(--brand-secondary);
   flex-shrink: 0;
+  transition: opacity 200ms ease, width 200ms ease;
 }
 
 .sidebar-brand-text {
@@ -87,6 +96,7 @@
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
+  transition: opacity 200ms ease, width 200ms ease;
 }
 
 .sidebar-collapse-btn {
@@ -100,8 +110,15 @@
   }
 }
 
-/* New Chat button */
-.sidebar-new-chat-btn {
+/* Collapsible text labels — smooth transition */
+.sidebar-label {
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 200ms ease, width 200ms ease;
+}
+
+/* New Conversation button */
+.sidebar-new-conversation-btn {
   font-size: 14px;
   font-weight: 500;
   border-color: var(--border-default);
@@ -181,6 +198,9 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 200ms ease;
 }
 
 /* Conversation items */
@@ -248,10 +268,21 @@
   font-weight: 600;
 }
 
+.sidebar-user-info {
+  white-space: nowrap;
+  transition: opacity 200ms ease, width 200ms ease;
+}
+
 .sidebar-user-name {
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
+}
+
+.sidebar-user-org {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
 }
 
 /* ===== RESPONSIVE ===== */
@@ -266,7 +297,10 @@
     .sidebar-label,
     .sidebar-recent .sidebar-section-label,
     .sidebar-user-info {
-      display: none;
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+      pointer-events: none;
     }
 
     .sidebar-header {
@@ -276,15 +310,17 @@
     }
 
     .sidebar-brand-icon {
-      display: none;
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
     }
 
-    .sidebar-new-chat {
+    .sidebar-new-conversation {
       padding-left: 0.5rem;
       padding-right: 0.5rem;
     }
 
-    .sidebar-new-chat-btn {
+    .sidebar-new-conversation-btn {
       padding: 0.5rem;
       border: none;
       width: 44px;
@@ -307,7 +343,10 @@
     }
 
     .sidebar-recent {
-      display: none;
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      pointer-events: none;
     }
 
     .sidebar-user {
@@ -335,15 +374,23 @@
     .sidebar-label,
     .sidebar-recent .sidebar-section-label,
     .sidebar-user-info {
-      display: initial;
+      opacity: 1;
+      width: auto;
+      overflow: visible;
+      pointer-events: auto;
     }
 
     .sidebar-brand-icon {
-      display: initial;
+      opacity: 1;
+      width: auto;
+      overflow: visible;
     }
 
     .sidebar-recent {
-      display: block;
+      opacity: 1;
+      max-height: none;
+      overflow-y: auto;
+      pointer-events: auto;
     }
 
     &.mobile-open {

@@ -198,6 +198,46 @@ app-home {
   background-color: var(--bg-primary);
 }
 
+/* Modal button styles (matching mockup) */
+.modal-btn-cancel {
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 6px 16px;
+  background-color: transparent;
+
+  &:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+  }
+}
+
+.modal-btn-confirm {
+  background-color: var(--brand-secondary);
+  color: white;
+  border-radius: 8px;
+  padding: 6px 16px;
+  border: none;
+
+  &:hover {
+    background-color: var(--brand-primary);
+    color: white;
+  }
+}
+
+.modal-btn-danger {
+  background-color: var(--error);
+  color: white;
+  border-radius: 8px;
+  padding: 6px 16px;
+  border: none;
+
+  &:hover {
+    background-color: #b91c1c;
+    color: white;
+  }
+}
+
 /* Dropdown Styling */
 .dropdown-toggle {
   text-decoration: none;

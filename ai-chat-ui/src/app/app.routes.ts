@@ -6,16 +6,16 @@ import { ConversationsComponent } from './pages/conversations/conversations.comp
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: '/chat',
+    redirectTo: '/conversation',
     pathMatch: 'full',
   },
   {
-    path: 'chat',
+    path: 'conversation',
     component: HomeComponent,
     canActivate: [MsalGuard],
   },
   {
-    path: 'chat/conversation/:conversationId',
+    path: 'conversation/:conversationId',
     component: HomeComponent,
     canActivate: [MsalGuard],
   },
@@ -26,6 +26,6 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: '/chat',
+    redirectTo: '/conversation',
   },
 ];

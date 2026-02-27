@@ -20,16 +20,16 @@
     </button>
   </div>
 
-  <!-- New Chat -->
-  <div class="sidebar-new-chat px-3 py-2">
+  <!-- New Conversation -->
+  <div class="sidebar-new-conversation px-3 py-2">
     <button
       type="button"
-      class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2 sidebar-new-chat-btn"
+      class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2 sidebar-new-conversation-btn"
       (click)="onClickCreateNewConversation()"
-      title="New Chat"
+      title="New Conversation"
     >
       <i class="bi bi-plus-lg"></i>
-      <span class="sidebar-label">New Chat</span>
+      <span class="sidebar-label">New Conversation</span>
     </button>
   </div>
 
@@ -50,7 +50,7 @@
   @if (!sidebarCollapsed) {
     <div class="px-3 py-2">
       <label for="conversation-search" class="visually-hidden"
-        >Search chats</label
+        >Search conversations</label
       >
       <div class="input-group input-group-sm">
         <span class="input-group-text sidebar-search-icon">
@@ -60,10 +60,10 @@
           id="conversation-search"
           type="text"
           class="form-control sidebar-search-input"
-          placeholder="Search chats..."
+          placeholder="Search conversations..."
           [value]="storeService.menuConversationSearchFilter()"
           (input)="onSearchChange($event)"
-          aria-label="Search chat conversations"
+          aria-label="Search conversations"
         />
         @if (storeService.menuConversationSearchFilter()) {
           <button
@@ -107,7 +107,7 @@
             type="button"
             class="flex-grow-1 bg-transparent border-0 text-start p-0 sidebar-conv-text"
             (click)="onClickConversation(conversation.id)"
-            [attr.aria-label]="'Open chat: ' + conversation.name"
+            [attr.aria-label]="'Open conversation: ' + conversation.name"
           >
             {{ getTruncatedConversationName(conversation) }}
           </button>
@@ -131,7 +131,7 @@
                   <button
                     type="button"
                     class="dropdown-item"
-                    (click)="onRenameConversation(conversation.id, $event)"
+                    (click)="onRenameConversation(conversation.id)"
                   >
                     <i class="bi bi-pencil me-2"></i>Rename
                   </button>
@@ -139,8 +139,8 @@
                 <li>
                   <button
                     type="button"
-                    class="dropdown-item"
-                    (click)="onDeleteConversation(conversation.id, $event)"
+                    class="dropdown-item text-danger"
+                    (click)="onDeleteConversation(conversation.id)"
                   >
                     <i class="bi bi-trash me-2"></i>Delete
                   </button>
@@ -157,7 +157,7 @@
             aria-live="polite"
           >
             <i class="bi bi-search me-2"></i>
-            No chats found for "{{
+            No conversations found for "{{
               storeService.menuConversationSearchFilter()
             }}"
           </div>
@@ -176,6 +176,7 @@
     @if (!sidebarCollapsed) {
       <div class="sidebar-user-info overflow-hidden">
         <div class="sidebar-user-name text-truncate">{{ userName }}</div>
+        <div class="sidebar-user-org">Enterprise AI</div>
       </div>
     }
   </div>
