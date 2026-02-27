@@ -1,74 +1,108 @@
-.message-bubble {
-  max-width: 75%;
-  position: relative;
-  margin: 4px 0;
+/* User message bubble */
+.message-user-bubble {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.6;
+}
 
-  // Use more width on smaller screens
-  @media (max-width: 768px) {
-    max-width: 99%;
-  }
-
-  @media (max-width: 480px) {
-    max-width: 99%;
+@media (max-width: 768px) {
+  .message-row .d-flex.flex-column {
+    max-width: 99% !important;
   }
 }
 
+/* Assistant avatar */
+.assistant-avatar {
+  width: 32px;
+  height: 32px;
+  background-color: var(--brand-secondary);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Assistant label */
+.assistant-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Assistant text content */
+.assistant-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-primary);
+
+  p {
+    margin: 0 0 12px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  strong {
+    font-weight: 600;
+  }
+
+  code:not(pre code) {
+    background-color: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", monospace;
+  }
+}
+
+/* Message content word-wrap */
 .message-content {
-  margin-bottom: 4px;
   word-wrap: break-word;
 }
 
-.message-user {
-  background-color: var(--color-accent);
-  color: white;
+/* Hover-to-show action buttons */
+.message-actions {
+  opacity: 0;
+  transition: opacity 150ms ease;
 }
 
-.message-assistant {
-  color: var(--color-accent);
-
-  // Add padding for copy button at bottom of non-outgoing messages
-  padding-bottom: 2.5rem !important;
-
-  @media (max-width: 576px) {
-    padding-bottom: 2rem !important;
-  }
+.message-row:hover .message-actions {
+  opacity: 1;
 }
 
-// Copy message button styling
-.message-copy-btn {
-  opacity: 0.7;
-  transition: opacity 0.2s ease, background-color 0.2s ease,
-    border-color 0.2s ease;
-  background-color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(28, 60, 98, 0.2);
-  color: var(--color-accent);
-  padding: 0.25rem 0.5rem;
-  z-index: 1;
+/* Action button styling */
+.msg-action-btn {
+  color: var(--text-tertiary);
+  font-size: 14px;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background-color 150ms ease, color 150ms ease;
 
   &:hover {
-    opacity: 1;
-    background-color: white;
-    border-color: var(--color-accent);
-    color: var(--color-navy);
-  }
-
-  &:focus {
-    opacity: 1;
-    box-shadow: 0 0 0 0.2rem rgba(28, 60, 98, 0.25);
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
   }
 
   &.copied {
-    opacity: 1;
-    background-color: #d4edda;
-    border-color: #28a745;
-    color: #28a745;
+    color: var(--success);
   }
+}
 
-  i {
-    font-size: 0.875rem;
+/* Code block wrapper (added dynamically via JS) */
+:host ::ng-deep .code-block-wrapper {
+  background-color: var(--bg-tertiary);
+  border-radius: 10px;
+  margin: 12px 0;
+  overflow: hidden;
 
-    @media (max-width: 576px) {
-      font-size: 0.75rem;
-    }
+  pre {
+    margin: 0;
+    padding: 14px;
+    overflow-x: auto;
+    font-family: "SF Mono", "Fira Code", "Fira Mono", "Roboto Mono", monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-primary);
   }
 }

@@ -1,173 +1,185 @@
-<div
-  class="offcanvas offcanvas-start menu-offcanvas p-2"
-  data-bs-scroll="true"
-  tabindex="-1"
-  id="menu-offcanvas"
-  aria-labelledby="offcanvasWithBothOptionsLabel"
+<aside
+  class="sidebar d-flex flex-column"
+  [class.collapsed]="sidebarCollapsed"
+  [class.mobile-open]="mobileOpen"
 >
-  <div
-    class="offcanvas-header menu-offcanvas__header menu-offcanvas__header--no-border p-2"
-  >
-    <h6
-      class="offcanvas-title menu-offcanvas__title"
-      id="offcanvasWithBothOptionsLabel"
+  <!-- Header -->
+  <div class="sidebar-header d-flex align-items-center px-3 py-3 gap-2">
+    <i class="bi bi-chat-dots sidebar-brand-icon"></i>
+    <span class="sidebar-brand-text fw-semibold">AI Assistant</span>
+    <button
+      class="btn btn-link btn-sm ms-auto p-1 sidebar-collapse-btn"
+      (click)="toggleCollapse()"
+      title="Toggle sidebar"
     >
-      <img
-        src="ai-copihue-icon.svg"
-        alt="AI Copihue Icon"
-        width="32"
-        height="32"
-        class="me-2"
-      />
-    </h6>
+      <i
+        class="bi"
+        [class.bi-chevron-left]="!sidebarCollapsed"
+        [class.bi-chevron-right]="sidebarCollapsed"
+      ></i>
+    </button>
+  </div>
+
+  <!-- New Chat -->
+  <div class="sidebar-new-chat px-3 py-2">
     <button
       type="button"
-      class="btn-close menu-offcanvas__close-btn"
-      data-bs-dismiss="offcanvas"
-      aria-label="Close"
-    ></button>
+      class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2 sidebar-new-chat-btn"
+      (click)="onClickCreateNewConversation()"
+      title="New Chat"
+    >
+      <i class="bi bi-plus-lg"></i>
+      <span class="sidebar-label">New Chat</span>
+    </button>
   </div>
-  <div class="offcanvas-body menu-offcanvas__body p-2">
-    <ul class="list-group menu-list mb-2">
-      <button
-        type="button"
-        class="list-group-item list-group-item-action menu-list__item"
-        (click)="onClickCreateNewConversation()"
-      >
-        <i class="bi bi-plus-circle"></i>&nbsp;New Chat
-      </button>
-    </ul>
-    <ul class="list-group menu-list mb-2">
-      <button
-        type="button"
-        class="list-group-item list-group-item-action menu-list__item"
-        (click)="onClickGoToChats()"
-      >
-        <i class="bi bi-chat-text"></i>&nbsp;Chats
-      </button>
-    </ul>
-    <ul class="list-group menu-list mb-2">
-      <button
-        type="button"
-        class="list-group-item list-group-item-action menu-list__item"
-        (click)="onClickGoToProjects()"
-      >
-        <i class="bi bi-folder"></i>&nbsp;Projects
-      </button>
-    </ul>
 
-    <!-- Search functionality -->
-    <div class="mb-3">
-      <label for="conversation-search" class="visually-hidden">Search chats</label>
-      <div class="input-group">
-        <span class="input-group-text menu-search__icon" aria-hidden="true">
+  <!-- Navigation -->
+  <nav class="sidebar-nav px-2 py-1">
+    <button
+      type="button"
+      class="sidebar-nav-item d-flex align-items-center gap-2 w-100 border-0 bg-transparent rounded-3 px-3 py-2"
+      (click)="onClickGoToChats()"
+      title="Conversations"
+    >
+      <i class="bi bi-clock-history"></i>
+      <span class="sidebar-label">Conversations</span>
+    </button>
+  </nav>
+
+  <!-- Search (only when expanded) -->
+  @if (!sidebarCollapsed) {
+    <div class="px-3 py-2">
+      <label for="conversation-search" class="visually-hidden"
+        >Search chats</label
+      >
+      <div class="input-group input-group-sm">
+        <span class="input-group-text sidebar-search-icon">
           <i class="bi bi-search"></i>
         </span>
         <input
           id="conversation-search"
           type="text"
-          class="form-control menu-search__input"
+          class="form-control sidebar-search-input"
           placeholder="Search chats..."
           [value]="storeService.menuConversationSearchFilter()"
           (input)="onSearchChange($event)"
           aria-label="Search chat conversations"
-          aria-describedby="search-help"
         />
         @if (storeService.menuConversationSearchFilter()) {
-        <button
-          class="btn btn-outline-secondary menu-search__clear"
-          type="button"
-          (click)="clearSearch()"
-          aria-label="Clear search"
-        >
-          <i class="bi bi-x"></i>
-        </button>
+          <button
+            class="btn btn-outline-secondary sidebar-search-clear"
+            type="button"
+            (click)="clearSearch()"
+            aria-label="Clear search"
+          >
+            <i class="bi bi-x"></i>
+          </button>
         }
       </div>
-      <span id="search-help" class="visually-hidden"
-        >Type to search your chat conversations</span
-      >
     </div>
+  }
 
-    <h6 class="offcanvas-title menu-section-title">Recent Chats</h6>
-    <ul class="list-group menu-list" role="list">
-      @if (storeService.menuIsConversationSearching()) {
-      <li
-        class="list-group-item menu-list__item menu-list__item--loading"
-        role="status"
-        aria-live="polite"
-      >
+  <!-- Recent Chats -->
+  <div class="sidebar-recent flex-grow-1 overflow-y-auto px-2">
+    @if (!sidebarCollapsed) {
+      <div class="sidebar-section-label px-2 py-1">Recent</div>
+    }
+
+    @if (storeService.menuIsConversationSearching()) {
+      <div class="sidebar-conv-item px-3 py-2" role="status" aria-live="polite">
         <i class="bi bi-search me-2"></i>
-        Searching...
-      </li>
-      } @else { @for (conversation of storeService.menuConversations(); track
-      trackByConversationId($index, conversation)) {
-      <li
-        class="list-group-item list-group-item-action menu-list__item d-flex justify-content-between align-items-center"
-        [class.menu-list__item--active]="isCurrentConversation(conversation.id)"
-        role="listitem"
-      >
-        <button
-          type="button"
-          class="flex-grow-1 text-white text-decoration-none bg-transparent border-0 text-start p-0"
-          (click)="onClickConversation(conversation.id)"
-          [attr.aria-label]="'Open chat: ' + conversation.name"
-          [attr.aria-current]="isCurrentConversation(conversation.id) ? 'page' : null"
-        >
-          {{ getTruncatedConversationName(conversation) }}
-        </button>
-        @if (isCurrentConversation(conversation.id)) {
-        <div class="dropdown ms-2">
-          <button
-            class="btn btn-link p-1 text-white dropdown-toggle"
-            type="button"
-            [attr.id]="'dropdownMenu-' + conversation.id"
-            [attr.aria-label]="'Actions for ' + conversation.name"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            (click)="$event.stopPropagation()"
-          >
-            <i class="bi bi-three-dots-vertical"></i>
-          </button>
-          <ul
-            class="dropdown-menu"
-            [attr.aria-labelledby]="'dropdownMenu-' + conversation.id"
-          >
-            <li>
-              <button
-                type="button"
-                class="dropdown-item"
-                (click)="onRenameConversation(conversation.id, $event)"
-              >
-                <i class="bi bi-pencil me-2"></i>Rename
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                class="dropdown-item"
-                (click)="onDeleteConversation(conversation.id, $event)"
-              >
-                <i class="bi bi-trash me-2"></i>Delete
-              </button>
-            </li>
-          </ul>
-        </div>
+        @if (!sidebarCollapsed) {
+          <span>Searching...</span>
         }
-      </li>
-      } @empty { @if (storeService.menuConversationSearchFilter()) {
-      <li
-        class="list-group-item menu-list__item menu-list__item--no-results"
-        role="status"
-        aria-live="polite"
-      >
-        <i class="bi bi-search me-2"></i>
-        No chats found for "{{ storeService.menuConversationSearchFilter() }}"
-      </li>
-      } } }
-    </ul>
+      </div>
+    } @else {
+      @for (
+        conversation of storeService.menuConversations();
+        track trackByConversationId($index, conversation)
+      ) {
+        <div
+          class="sidebar-conv-item d-flex align-items-center rounded-3 px-3 py-2 gap-1"
+          [class.sidebar-conv-item--active]="
+            isCurrentConversation(conversation.id)
+          "
+        >
+          <button
+            type="button"
+            class="flex-grow-1 bg-transparent border-0 text-start p-0 sidebar-conv-text"
+            (click)="onClickConversation(conversation.id)"
+            [attr.aria-label]="'Open chat: ' + conversation.name"
+          >
+            {{ getTruncatedConversationName(conversation) }}
+          </button>
+          @if (isCurrentConversation(conversation.id)) {
+            <div class="dropdown ms-1 flex-shrink-0">
+              <button
+                class="btn btn-link btn-sm p-0 sidebar-conv-menu-btn"
+                type="button"
+                [attr.id]="'dropdownMenu-' + conversation.id"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                (click)="$event.stopPropagation()"
+              >
+                <i class="bi bi-three-dots-vertical"></i>
+              </button>
+              <ul
+                class="dropdown-menu"
+                [attr.aria-labelledby]="'dropdownMenu-' + conversation.id"
+              >
+                <li>
+                  <button
+                    type="button"
+                    class="dropdown-item"
+                    (click)="onRenameConversation(conversation.id, $event)"
+                  >
+                    <i class="bi bi-pencil me-2"></i>Rename
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    class="dropdown-item"
+                    (click)="onDeleteConversation(conversation.id, $event)"
+                  >
+                    <i class="bi bi-trash me-2"></i>Delete
+                  </button>
+                </li>
+              </ul>
+            </div>
+          }
+        </div>
+      } @empty {
+        @if (storeService.menuConversationSearchFilter() && !sidebarCollapsed) {
+          <div
+            class="sidebar-conv-item px-3 py-2 sidebar-conv-item--empty"
+            role="status"
+            aria-live="polite"
+          >
+            <i class="bi bi-search me-2"></i>
+            No chats found for "{{
+              storeService.menuConversationSearchFilter()
+            }}"
+          </div>
+        }
+      }
+    }
   </div>
-</div>
+
+  <!-- User Section -->
+  <div class="sidebar-user d-flex align-items-center gap-2 px-3 py-3">
+    <div
+      class="sidebar-user-avatar d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+    >
+      {{ userInitials }}
+    </div>
+    @if (!sidebarCollapsed) {
+      <div class="sidebar-user-info overflow-hidden">
+        <div class="sidebar-user-name text-truncate">{{ userName }}</div>
+      </div>
+    }
+  </div>
+</aside>
 
 <app-rename-modal
   [show]="showRenameModal"

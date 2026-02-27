@@ -68,6 +68,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   isIframe = false;
   loginDisplay = false;
+  mobileMenuOpen = false;
   private readonly _destroying$ = new Subject<void>();
 
   ngOnInit(): void {
