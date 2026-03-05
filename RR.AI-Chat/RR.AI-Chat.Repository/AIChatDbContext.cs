@@ -9,25 +9,20 @@ namespace RR.AI_Chat.Repository
         #region DbSets
         public DbSet<AIService> AIServices { get; set; }
 
+        public DbSet<Conversation> Conversations { get; set; }
+
         public DbSet<Model> Models { get; set; }
 
-        public DbSet<Session> Sessions { get; set; }
+        public DbSet<ConversationDocument> ConversationDocuments { get; set; }
 
-        public DbSet<SessionDocument> SessionDocuments { get; set; }
-
-        public DbSet<SessionDocumentPage> SessionDocumentPages { get; set; }
-
-        public DbSet<Project> Projects { get; set; }
-
-        public DbSet<ProjectDocument> ProjectDocuments { get; set; }
-
-        public DbSet<ProjectDocumentPage> ProjectDocumentPages { get; set; }
+        public DbSet<ConversationDocumentPage> ConversationDocumentPages { get; set; }
 
         public DbSet<User> Users { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new AIServiceConfiguration());
             modelBuilder.ApplyConfiguration(new ModelConfiguration());
 

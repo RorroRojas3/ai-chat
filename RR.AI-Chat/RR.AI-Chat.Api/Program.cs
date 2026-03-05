@@ -180,7 +180,7 @@ builder.Services.AddScoped<IAzureCosmosService>(provider =>
 builder.Services.Configure<List<McpServerSettings>>(builder.Configuration.GetSection("McpServers"));
 
 // Singletons
-builder.Services.AddSingleton<ISessionLockService, SessionLockService>();
+builder.Services.AddSingleton<IConversationLockService, ConversationLockService>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IGraphService, GraphService>();
 builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
@@ -194,14 +194,12 @@ builder.Services.AddKeyedSingleton<IFileService, CommonFileService>("common");
 builder.Services.AddKeyedSingleton<IFileService, WordService>("word");
 
 // Keep other services as Scoped
-builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IConversationService, ConversationService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IDocumentToolService, DocumentToolService>();
-builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IModelService, ModelService>();
 builder.Services.AddScoped<IMcpServerService, McpServerService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IProjectService, ProjectService>();
 
 // Fluent Validators
 builder.Services.AddValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssemblies());
@@ -227,7 +225,6 @@ catch (Exception ex)
 }
 
 // Apply cosmos DB migrations or setup if needed
-
 var cosmosClient = services.GetRequiredService<CosmosClient>();
 var database = await cosmosClient.CreateDatabaseIfNotExistsAsync(cosmosDatabaseId);
 await database.Database.CreateContainerIfNotExistsAsync(cosmosContainerId, "/userId");

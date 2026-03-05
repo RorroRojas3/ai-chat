@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace RR.AI_Chat.Entity
@@ -24,5 +25,20 @@ namespace RR.AI_Chat.Entity
     {
         [JsonPropertyName("dateModified")]
         public DateTimeOffset DateModified { get; set; }
+    }
+
+    public class BaseModifiedByEntity : BaseModifiedEntity
+    {
+        [JsonPropertyName("createdBy")]
+        [ForeignKey(nameof(CreatedBy))]
+        public Guid CreatedById { get; set; }
+
+        [JsonPropertyName("modifiedBy")]
+        [ForeignKey(nameof(ModifiedBy))]
+        public Guid ModifiedById { get; set; }
+
+        public User CreatedBy { get; set; } = null!;
+
+        public User ModifiedBy { get; set; } = null!;
     }
 }

@@ -1,12 +1,22 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, Inject, OnDestroy, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { StoreService } from './store/store.service';
 import { MenuOffcanvasComponent } from './shared/menu-offcanvas/menu-offcanvas.component';
 import { NotificationComponent } from './shared/components/notification/notification.component';
-import { filter, forkJoin, Subject, takeUntil } from 'rxjs';
+import {
+  catchError,
+  EMPTY,
+  filter,
+  forkJoin,
+  Subject,
+  switchMap,
+  takeUntil,
+} from 'rxjs';
 import { ModelService } from './services/model.service';
-import { SessionService } from './services/session.service';
+import { ModelStore } from './store/model.store';
+import { McpStore } from './store/mcp.store';
+import { ConversationService } from './services/conversation.service';
 import {
   MSAL_GUARD_CONFIG,
   MsalBroadcastService,
@@ -23,6 +33,9 @@ import {
 } from '@azure/msal-browser';
 import { McpService } from './services/mcp.service';
 import { DocumentService } from './services/document.service';
+import { UserService } from './services/user.service';
+import { UserStore } from './store/user.store';
+import { NotificationService } from './services/notification.service';
 
 @Component({
   selector: 'app-root',
@@ -41,14 +54,21 @@ export class AppComponent implements OnInit, OnDestroy {
     private authService: MsalService,
     private msalBroadcastService: MsalBroadcastService,
     private storeService: StoreService,
-    private sessionService: SessionService,
+    private conversationService: ConversationService,
     private modelService: ModelService,
     private mcpService: McpService,
-    private documentService: DocumentService
+    private documentService: DocumentService,
+    private userService: UserService,
+    private notificationService: NotificationService,
   ) {}
+
+  private readonly modelStore = inject(ModelStore);
+  private readonly mcpStore = inject(McpStore);
+  private readonly userStore = inject(UserStore);
 
   isIframe = false;
   loginDisplay = false;
+  mobileMenuOpen = false;
   private readonly _destroying$ = new Subject<void>();
 
   ngOnInit(): void {
@@ -62,8 +82,8 @@ export class AppComponent implements OnInit, OnDestroy {
         filter(
           (msg: EventMessage) =>
             msg.eventType === EventType.ACCOUNT_ADDED ||
-            msg.eventType === EventType.ACCOUNT_REMOVED
-        )
+            msg.eventType === EventType.ACCOUNT_REMOVED,
+        ),
       )
       .subscribe((result: EventMessage) => {
         if (this.authService.instance.getAllAccounts().length === 0) {
@@ -76,9 +96,9 @@ export class AppComponent implements OnInit, OnDestroy {
     this.msalBroadcastService.inProgress$
       .pipe(
         filter(
-          (status: InteractionStatus) => status === InteractionStatus.None
+          (status: InteractionStatus) => status === InteractionStatus.None,
         ),
-        takeUntil(this._destroying$)
+        takeUntil(this._destroying$),
       )
       .subscribe(() => {
         this.setLoginDisplay();
@@ -110,18 +130,31 @@ export class AppComponent implements OnInit, OnDestroy {
 
   loadDataIfAuthenticated() {
     if (this.loginDisplay) {
-      forkJoin([
-        this.modelService.getModels(),
-        this.sessionService.searchSessions(''),
-        this.mcpService.getMcpServers(),
-        this.documentService.getFileExtensions(),
-      ]).subscribe(([models, sessions, mcps, fileExtensions]) => {
-        this.storeService.models.set(models);
-        this.storeService.selectedModel.set(models[0]);
-        this.storeService.updateMenuSessions(sessions.items);
-        this.storeService.mcps.set(mcps);
-        this.storeService.fileExtensions.set(fileExtensions);
-      });
+      this.userService
+        .createUser()
+        .pipe(
+          catchError(() => {
+            this.notificationService.error(
+              'Failed to initialize user account.',
+            );
+            return EMPTY;
+          }),
+          switchMap(() =>
+            forkJoin([
+              this.modelService.getModels(),
+              this.conversationService.searchConversations(''),
+              this.mcpService.getMcpServers(),
+              this.documentService.getFileExtensions(),
+            ]),
+          ),
+        )
+        .subscribe(([models, conversations, mcps, fileExtensions]) => {
+          this.userStore.setInitialized();
+          this.modelStore.setModels(models);
+          this.storeService.updateMenuConversations(conversations.items);
+          this.mcpStore.setMcps(mcps);
+          this.storeService.fileExtensions.set(fileExtensions);
+        });
     }
   }
 

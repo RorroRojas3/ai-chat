@@ -4,14 +4,13 @@ import { PromptBoxComponent } from '../../components/home/prompt-box/prompt-box.
 import { StoreService } from '../../store/store.service';
 import { MessageBubbleComponent } from '../../components/home/message-bubble/message-bubble.component';
 import { MessageDto, createMessage } from '../../dtos/MessageDto';
-import { SessionMessageDto } from '../../dtos/SessionDto';
+import { ConversationMessageDto } from '../../dtos/ConversationDto';
 import markdownit from 'markdown-it';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import markdown_it_highlightjs from 'markdown-it-highlightjs';
 import hljs from 'highlight.js';
 import { ActivatedRoute } from '@angular/router';
-import { ChatService } from '../../services/chat.service';
-import { SessionService } from '../../services/session.service';
+import { ConversationService } from '../../services/conversation.service';
 import { NotificationService } from '../../services/notification.service';
 import { catchError, EMPTY, switchMap, tap } from 'rxjs';
 import { ChatRoles } from '../../dtos/const/ChatRoles';
@@ -24,8 +23,7 @@ import { ChatRoles } from '../../dtos/const/ChatRoles';
 })
 export class HomeComponent implements OnInit {
   public readonly storeService = inject(StoreService);
-  private readonly sessionService = inject(SessionService);
-  private readonly chatService = inject(ChatService);
+  private readonly conversationService = inject(ConversationService);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
@@ -46,48 +44,48 @@ export class HomeComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Listen to route parameter changes to load conversation when sessionId changes
+    // Listen to route parameter changes to load conversation when conversationId changes
     this.route.params
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((params) => {
-        const sessionId = params['sessionId'];
-        if (sessionId) {
-          this.loadSessionConversation(sessionId);
+        const conversationId = params['conversationId'];
+        if (conversationId) {
+          this.loadConversation(conversationId);
         }
       });
   }
 
   /**
-   * Loads the conversation for a given session ID.
+   * Loads the conversation for a given conversation ID.
    *
    * This method performs the following steps:
-   * 1. Fetches session information from the API
-   * 2. Updates the store with the session data
-   * 3. Retrieves the conversation for the session
+   * 1. Fetches conversation information from the API
+   * 2. Updates the store with the conversation data
+   * 3. Retrieves the messages for the conversation
    * 4. Processes messages, converting assistant messages from markdown to sanitized HTML
    * 5. Updates the store with the processed messages
    *
-   * If any step fails, displays an error notification and resets to a new session.
+   * If any step fails, displays an error notification and resets to a new conversation.
    * Properly manages subscriptions to prevent memory leaks using takeUntilDestroyed.
    *
-   * @param sessionId - The unique identifier of the session to load
+   * @param conversationId - The unique identifier of the conversation to load
    */
-  loadSessionConversation(sessionId: string): void {
-    this.sessionService
-      .getSession(sessionId)
+  loadConversation(conversationId: string): void {
+    this.conversationService
+      .getConversation(conversationId)
       .pipe(
-        tap((session) => {
-          // Step 2: Set the session in the store
-          this.storeService.session.set(session);
+        tap((conv) => {
+          // Step 2: Set the conversation in the store
+          this.storeService.conversation.set(conv);
         }),
-        switchMap((session) => {
-          // Step 3: Get the session conversation after successful session fetch
-          return this.chatService.getSessionConversation(session.id);
+        switchMap((conv) => {
+          // Step 3: Get the conversation messages after successful conversation fetch
+          return this.conversationService.getConversationMessages(conv.id);
         }),
         catchError(() => {
           // Step 6: Catch errors and display notification
-          this.notificationService.error('Error loading chat session.');
-          this.storeService.clearForNewSession();
+          this.notificationService.error('Error loading chat conversation.');
+          this.storeService.clearForNewConversation();
           return EMPTY;
         }),
         takeUntilDestroyed(this.destroyRef), // Step 4: Prevent memory leaks
@@ -95,7 +93,7 @@ export class HomeComponent implements OnInit {
       .subscribe((response) => {
         // Step 4: Process and update messages
         const mappedMessages = response.messages.map(
-          (message: SessionMessageDto) => {
+          (message: ConversationMessageDto) => {
             if (message.role === ChatRoles.ASSISTANT) {
               const html = this.md.render(message.text);
               const sanitizeHtml = this.sanitizer.bypassSecurityTrustHtml(html);

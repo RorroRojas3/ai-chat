@@ -14,9 +14,9 @@ export class DocumentService {
   private readonly http = inject(HttpClient);
 
   /**
-   * Creates a document by uploading a file to the specified session.
+   * Creates a document by uploading a file to the specified conversation.
    *
-   * @param sessionId - The unique identifier of the session to associate the document with
+   * @param conversationId - The unique identifier of the conversation to associate the document with
    * @param content - The file to be uploaded as a document
    * @returns void - This method does not return a value but logs the response upon successful creation
    *
@@ -24,13 +24,16 @@ export class DocumentService {
    * This method sends a POST request with the file as FormData to the documents API endpoint.
    * The response is logged to the console upon successful completion.
    */
-  createSessionDocument(sessionId: string, content: File): Observable<JobDto> {
+  createConversationDocument(
+    conversationId: string,
+    content: File,
+  ): Observable<JobDto> {
     const formData = new FormData();
     formData.append('file', content);
 
     return this.http.post<JobDto>(
-      `${environment.apiUrl}documents/sessions/${sessionId}`,
-      formData
+      `${environment.apiUrl}documents/conversations/${conversationId}`,
+      formData,
     );
   }
 
@@ -42,20 +45,20 @@ export class DocumentService {
    */
   getUploadStatus(job: JobDto): Observable<JobStatusDto> {
     return this.http.get<JobStatusDto>(
-      `${environment.apiUrl}documents/upload-status/${job.id}`
+      `${environment.apiUrl}documents/upload-status/${job.id}`,
     );
   }
 
   /**
-   * Retrieves the conversation history for a specific session as a downloadable file.
+   * Retrieves the conversation history for a specific conversation as a downloadable file.
    *
-   * @param sessionId - The unique identifier of the session whose conversation history is to be retrieved
+   * @param conversationId - The unique identifier of the conversation whose history is to be retrieved
    * @param format - The format in which the conversation history should be retrieved
    * @returns An Observable that emits an object containing the blob and filename
    *
    * @example
    * ```typescript
-   * this.documentService.getConversationHistory('session-123').subscribe(
+   * this.documentService.getConversationHistory('conversation-123').subscribe(
    *   ({ blob, fileName }) => {
    *     this.documentService.downloadFile(blob, fileName);
    *   }
@@ -63,23 +66,23 @@ export class DocumentService {
    * ```
    */
   getConversationHistory(
-    sessionId: string,
-    format: DocumentFormats
+    conversationId: string,
+    format: DocumentFormats,
   ): Observable<{ blob: Blob; fileName: string }> {
     return this.http
       .get(
-        `${environment.apiUrl}documents/sessions/${sessionId}/conversation-history?documentFormat=${format}`,
+        `${environment.apiUrl}documents/conversations/${conversationId}/histories?documentFormat=${format}`,
         {
           responseType: 'blob',
           observe: 'response',
-        }
+        },
       )
       .pipe(
         map((response) => {
           const contentDisposition = response.headers.get(
-            'Content-Disposition'
+            'Content-Disposition',
           );
-          let fileName = `conversation-${sessionId}.pdf`; // fallback filename
+          let fileName = `conversation-${conversationId}.pdf`; // fallback filename
 
           if (contentDisposition) {
             // Extract filename from Content-Disposition header
@@ -102,7 +105,7 @@ export class DocumentService {
             blob: response.body as Blob,
             fileName: fileName,
           };
-        })
+        }),
       );
   }
 
@@ -147,28 +150,7 @@ export class DocumentService {
    */
   getFileExtensions(): Observable<string[]> {
     return this.http.get<string[]>(
-      `${environment.apiUrl}documents/file-extensions`
-    );
-  }
-
-  /**
-   * Creates a new document for a specific project by uploading a file.
-   *
-   * @param projectId - The unique identifier of the project to which the document will be added
-   * @param content - The file to be uploaded as the project document
-   * @returns An Observable that emits a JobDto object representing the document creation job
-   *
-   * @remarks
-   * This method sends a POST request with multipart/form-data containing the file.
-   * The file is appended to FormData with the key 'file'.
-   */
-  createProjectDocument(projectId: string, content: File): Observable<JobDto> {
-    const formData = new FormData();
-    formData.append('file', content);
-
-    return this.http.post<JobDto>(
-      `${environment.apiUrl}documents/projects/${projectId}`,
-      formData
+      `${environment.apiUrl}documents/file-extensions`,
     );
   }
 }

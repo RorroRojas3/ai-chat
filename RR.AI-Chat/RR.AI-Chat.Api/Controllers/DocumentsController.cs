@@ -21,15 +21,14 @@ namespace RR.AI_Chat.Api.Controllers
         private readonly IStorageConnection _storageConnection = storageConnection;
         private readonly ITokenService _tokenService = tokenService;
 
-        [HttpPost("sessions/{sessionId}")]
-        public async Task<IActionResult> CreateSessionDocumentAsync([FromRoute] Guid sessionId, IFormFile file, CancellationToken cancellationToken)
+        [HttpPost("conversations/{conversationId}")]
+        public async Task<IActionResult> CreateConversationDocumentAsync([FromRoute] Guid conversationId, IFormFile file, CancellationToken cancellationToken)
         {
             if (file == null || file.Length == 0)
             {
                 return BadRequest("File is required and cannot be empty.");
             }
 
-            // Extract file data before enqueueing the job
             var fileData = new FileDto
             {
                 FileName = file.FileName,
@@ -37,7 +36,7 @@ namespace RR.AI_Chat.Api.Controllers
                 Length = file.Length,
                 Content = await ReadFileAsync(file)
             };
-            var jobId = BackgroundJob.Enqueue(() => _service.CreateSessionDocumentAsync(null, fileData, _tokenService.GetOid(), sessionId, cancellationToken));
+            var jobId = BackgroundJob.Enqueue(() => _service.CreateConversationDocumentAsync(null, fileData, _tokenService.GetOid(), conversationId, cancellationToken));
 
             return Accepted(new JobDto { Id = jobId});
         }
@@ -65,13 +64,13 @@ namespace RR.AI_Chat.Api.Controllers
             });
         }
 
-        [HttpGet("sessions/{sessionId}/conversation-history")]
+        [HttpGet("conversations/{conversationId}/histories")]
         public async Task<IActionResult> GenerateConversationHistoryFileAsync(
-            Guid sessionId, 
+            Guid conversationId, 
             [FromQuery] DocumentFormats documentFormat, 
             CancellationToken cancellationToken)
         {
-            var dto = await _service.GenerateConversationHistoryAsync(sessionId, documentFormat, cancellationToken);
+            var dto = await _service.GenerateConversationHistoryAsync(conversationId, documentFormat, cancellationToken);
             if (dto == null)
             {
                 return NotFound();
@@ -88,27 +87,6 @@ namespace RR.AI_Chat.Api.Controllers
                 .ToList();
 
             return Ok(fileExtensions);
-        }
-
-        [HttpPost("projects/{projectId}")]
-        public async Task<IActionResult> CreateProjectDocumentAsync([FromRoute] Guid projectId, IFormFile file, CancellationToken cancellationToken)
-        {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest("File is required and cannot be empty.");
-            }
-
-            // Extract file data before enqueueing the job
-            var fileData = new FileDto
-            {
-                FileName = file.FileName,
-                ContentType = file.ContentType,
-                Length = file.Length,
-                Content = await ReadFileAsync(file)
-            };
-            var jobId = BackgroundJob.Enqueue(() => _service.CreateProjectDocumentAsync(null, fileData, projectId, cancellationToken));
-
-            return Accepted(new JobDto { Id = jobId });
         }
 
         private static async Task<byte[]> ReadFileAsync(IFormFile file)

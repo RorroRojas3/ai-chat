@@ -1,167 +1,146 @@
 .prompt-box {
-  background-color: var(--color-accent);
+  border: 1px solid var(--border-default);
+  background-color: var(--bg-primary);
   position: relative;
-  transition: border 0.2s ease;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  overflow: visible;
+
+  &:focus-within {
+    border-color: var(--brand-accent);
+    box-shadow: 0 0 0 3px rgba(95, 149, 152, 0.12);
+  }
 
   &.drag-over {
-    border: 2px dashed #fff !important;
-    border-radius: 1.5rem !important;
+    border: 2px dashed var(--brand-accent);
+    background-color: rgba(95, 149, 152, 0.04);
   }
 }
 
-.prompt-box-textarea {
-  background-color: transparent;
-  border: none !important;
-  color: white;
+/* Textarea */
+.prompt-textarea {
+  background: transparent;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
   resize: none;
-  outline: none !important;
-  box-shadow: none !important;
-
-  &:focus {
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-  }
+  max-height: 160px;
+  overflow-y: auto;
+  min-height: 24px;
 
   &::placeholder {
-    color: #f5f5f5 !important;
-    opacity: 0.8;
+    color: var(--text-tertiary);
   }
 }
 
-// Drag and drop overlay
+/* Toolbar buttons */
+.toolbar-btn {
+  color: var(--text-secondary);
+  font-size: 16px;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  transition: background-color 150ms ease, color 150ms ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  // Show Bootstrap caret for these dropdowns
+  &.dropdown-toggle::after {
+    display: inline-block;
+    font-size: 10px;
+  }
+}
+
+.toolbar-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Send button */
+.send-btn {
+  width: 36px;
+  height: 36px;
+  background-color: var(--brand-secondary);
+  color: white;
+  font-size: 16px;
+  border: none;
+  transition: background-color 150ms ease, transform 150ms ease;
+
+  &:hover {
+    background-color: var(--brand-primary);
+    transform: scale(1.05);
+    color: white;
+  }
+}
+
+/* Drag and drop overlay */
 .drag-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.1);
+  inset: 0;
+  background-color: rgba(95, 149, 152, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 1.5rem;
   z-index: 10;
   pointer-events: none;
+  overflow: hidden;
 }
 
 .drag-content {
   text-align: center;
-  color: white;
+  color: var(--brand-accent);
 }
 
 .drag-icon {
-  font-size: 3rem;
+  font-size: 2rem;
   margin-bottom: 0.5rem;
   display: block;
 }
 
 .drag-text {
-  font-size: 1.2rem;
+  font-size: 14px;
   margin: 0;
   font-weight: 500;
 }
 
-// File cards styling
-.file-cards-container {
-  width: 100%;
+/* File chips */
+.file-chips {
+  scrollbar-width: thin;
 }
 
-.file-cards-scroll {
-  display: flex;
-  gap: 0.75rem;
-  overflow-x: auto;
-  padding: 0.5rem 0;
-
-  &::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 3px;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.5);
-    }
-  }
+.file-chip {
+  background-color: var(--bg-tertiary);
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: background-color 150ms ease;
 }
 
-.file-card {
-  min-width: 140px;
-  max-width: 160px;
-  background-color: var(--color-light-blue);
-  border: 1px solid rgba(28, 60, 98, 0.2);
-  border-radius: 0.5rem;
-  position: relative;
-  flex-shrink: 0;
+.file-chip-icon {
+  font-size: 16px;
 }
 
-.file-card-body {
-  padding: 1rem 0.75rem;
-  color: var(--color-accent);
+.file-chip-name {
+  color: var(--text-primary);
+  max-width: 140px;
 }
 
-.file-card-remove {
-  position: absolute;
-  top: -0.25rem;
-  right: -0.25rem;
-  z-index: 5;
-
-  .badge {
-    cursor: pointer;
-    width: 1.25rem;
-    height: 1.25rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    transition: transform 0.2s ease;
-
-    &:hover {
-      transform: scale(1.1);
-    }
-  }
+.file-chip-size {
+  color: var(--text-tertiary);
 }
 
-.file-card-icon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-  color: var(--color-danger); // Bootstrap red color for PDF icon
-}
+.file-chip-remove {
+  color: var(--text-tertiary);
+  font-size: 14px;
+  text-decoration: none;
+  transition: color 150ms ease;
 
-.file-card-name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  hyphens: auto;
-  line-height: 1.2;
-}
-
-.file-card-size {
-  font-size: 0.75rem;
-  opacity: 0.8;
-  color: var(--color-accent);
-}
-
-// Override global dropdown styles for prompt-box
-.prompt-box {
-  .dropdown-toggle {
-    font-size: inherit;
-    line-height: inherit;
-    opacity: 1;
-
-    // Show the Bootstrap caret for these dropdowns
-    &::after {
-      display: inline-block;
-    }
+  &:hover {
+    color: var(--text-primary);
   }
 }

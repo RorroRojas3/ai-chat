@@ -7,7 +7,9 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StoreService } from '../../../store/store.service';
-import { ChatService } from '../../../services/chat.service';
+import { ModelStore } from '../../../store/model.store';
+import { McpStore } from '../../../store/mcp.store';
+import { ConversationService } from '../../../services/conversation.service';
 import { FormsModule } from '@angular/forms';
 import {
   firstValueFrom,
@@ -21,7 +23,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { createMessage } from '../../../dtos/MessageDto';
 import hljs from 'highlight.js';
 import markdown_it_highlightjs from 'markdown-it-highlightjs';
-import { SessionService } from '../../../services/session.service';
+
 import { DocumentService } from '../../../services/document.service';
 import { ModelDto } from '../../../dtos/ModelDto';
 import { AiServiceType } from '../../../dtos/const/AiServiceType';
@@ -45,9 +47,10 @@ export class PromptBoxComponent implements OnDestroy {
   readonly JOB_POLLING_INTERVAL_MS = 5000;
 
   public readonly storeService = inject(StoreService);
-  private readonly chatService = inject(ChatService);
+  public readonly modelStore = inject(ModelStore);
+  public readonly mcpStore = inject(McpStore);
+  private readonly conversationService = inject(ConversationService);
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly sessionService = inject(SessionService);
   private readonly documentService = inject(DocumentService);
   private readonly location = inject(Location);
   private readonly destroyRef = inject(DestroyRef);
@@ -75,7 +78,7 @@ export class PromptBoxComponent implements OnDestroy {
     }).use(markdown_it_highlightjs, { hljs });
   }
 
-  async onClickCreateSession(): Promise<void> {
+  async onClickCreateConversation(): Promise<void> {
     if (!this.prompt.trim() || this.storeService.isStreaming()) {
       return;
     }
@@ -93,17 +96,17 @@ export class PromptBoxComponent implements OnDestroy {
       this.storeService.isStreaming.set(true);
       this.storeService.showStreamLoader.set(true);
 
-      if (!this.storeService.session()) {
-        const session = await firstValueFrom(
-          this.sessionService.createSession({
+      if (!this.storeService.conversation()) {
+        const conversation = await firstValueFrom(
+          this.conversationService.createConversation({
             projectId: this.storeService.projectId(),
           }),
         );
-        this.storeService.session.set(session);
-        this.location.replaceState(`chat/session/${session.id}`);
+        this.storeService.conversation.set(conversation);
+        this.location.replaceState(`chat/conversation/${conversation.id}`);
       }
 
-      // Upload attached files to the session
+      // Upload attached files to the conversation
       if (this.attachedFiles.length > 0) {
         const jobs = await this.uploadAttachedFiles();
         // Start polling for job status
@@ -112,7 +115,7 @@ export class PromptBoxComponent implements OnDestroy {
       }
 
       let firstStream = true;
-      this.sseSubscription = this.chatService
+      this.sseSubscription = this.conversationService
         .getServerSentEvent(promptText)
         .subscribe({
           next: (message) => {
@@ -137,7 +140,7 @@ export class PromptBoxComponent implements OnDestroy {
               createMessage('', false, undefined),
             );
             this.showAttachedFiles = true;
-            this.sessionService.loadMenuSessions().subscribe();
+            this.conversationService.loadMenuConversations().subscribe();
           },
           error: (error) => {
             this.resetPromptState();
@@ -145,13 +148,13 @@ export class PromptBoxComponent implements OnDestroy {
         });
     } catch (error) {
       // Handle errors appropriately
-      console.error('Error in session creation:', error);
+      console.error('Error in conversation creation:', error);
       this.resetPromptState();
     }
   }
 
   /**
-   * Stops the current streaming session.
+   * Stops the current streaming conversation.
    *
    * Unsubscribes from the SSE (Server-Sent Events) subscription if active,
    * clears the subscription reference, resets streaming state, clears the
@@ -159,7 +162,7 @@ export class PromptBoxComponent implements OnDestroy {
    *
    * @returns {void}
    */
-  onClickStopSession(): void {
+  onClickStopConversation(): void {
     if (this.sseSubscription) {
       this.sseSubscription.unsubscribe();
       this.sseSubscription = undefined;
@@ -190,7 +193,7 @@ export class PromptBoxComponent implements OnDestroy {
    * @param event - The ID of the newly selected model
    */
   onModelChange(event: ModelDto): void {
-    this.storeService.selectedModel.set(event);
+    this.modelStore.setSelectedModel(event);
   }
 
   /**
@@ -199,31 +202,25 @@ export class PromptBoxComponent implements OnDestroy {
   toggleMcpSelection(mcp: McpDto, event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-
-    this.storeService.selectedMcps.update((current) => {
-      const index = current.findIndex((m) => m.name === mcp.name);
-      return index > -1
-        ? current.filter((m) => m.name !== mcp.name)
-        : [...current, mcp];
-    });
+    this.mcpStore.toggleMcpSelection(mcp);
   }
 
   /**
    * Checks if an MCP is selected
    */
   isMcpSelected(mcp: McpDto): boolean {
-    return this.storeService.selectedMcps().some((m) => m.name === mcp.name);
+    return this.mcpStore.isMcpSelected(mcp);
   }
 
   /**
    * Gets display text for MCP dropdown button
    */
   getMcpButtonText(): string {
-    const selectedCount = this.storeService.selectedMcps().length;
+    const selectedCount = this.mcpStore.selectedMcps().length;
     if (selectedCount === 0) {
       return 'Tools';
     } else if (selectedCount === 1) {
-      return this.storeService.selectedMcps()[0].name;
+      return this.mcpStore.selectedMcps()[0].name;
     } else {
       return `${selectedCount} Tools`;
     }
@@ -299,11 +296,11 @@ export class PromptBoxComponent implements OnDestroy {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  // Upload all attached files to the current session
+  // Upload all attached files to the current conversation
   async uploadAttachedFiles(): Promise<JobDto[]> {
-    const sessionId = this.storeService.session()!.id;
-    if (!sessionId) {
-      throw new Error('No session ID available for file upload');
+    const conversationId = this.storeService.conversation()!.id;
+    if (!conversationId) {
+      throw new Error('No conversation ID available for file upload');
     }
 
     // Update file status to uploading
@@ -314,8 +311,8 @@ export class PromptBoxComponent implements OnDestroy {
     // Upload files sequentially and wait for each to complete
     const uploadPromises = this.attachedFiles.map((attachedFile) =>
       firstValueFrom(
-        this.documentService.createSessionDocument(
-          sessionId,
+        this.documentService.createConversationDocument(
+          conversationId,
           attachedFile.file,
         ),
       ),
@@ -427,7 +424,7 @@ export class PromptBoxComponent implements OnDestroy {
   onTextareaKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
-      this.onClickCreateSession();
+      this.onClickCreateConversation();
     }
   }
 
@@ -459,13 +456,13 @@ export class PromptBoxComponent implements OnDestroy {
    * Downloads conversation history in the specified format
    */
   onDownloadConversationHistory(format: DocumentFormats): void {
-    const sessionId = this.storeService.session()?.id;
-    if (!sessionId) {
+    const conversationId = this.storeService.conversation()?.id;
+    if (!conversationId) {
       return;
     }
 
     this.documentService
-      .getConversationHistory(sessionId, format)
+      .getConversationHistory(conversationId, format)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((response) => {
         this.documentService.downloadFile(response.blob, response.fileName);

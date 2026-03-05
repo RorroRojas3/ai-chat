@@ -18,7 +18,7 @@ namespace RR.AI_Chat.Repository.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.1")
+                .HasAnnotation("ProductVersion", "10.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -63,239 +63,7 @@ namespace RR.AI_Chat.Repository.Migrations
                         });
                 });
 
-            modelBuilder.Entity("RR.AI_Chat.Entity.Model", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasJsonPropertyName("id");
-
-                    b.Property<Guid>("AIServiceId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("DateCreated")
-                        .HasColumnType("datetimeoffset")
-                        .HasJsonPropertyName("dateCreated");
-
-                    b.Property<DateTimeOffset?>("DateDeactivated")
-                        .HasColumnType("datetimeoffset")
-                        .HasJsonPropertyName("dateDeactivated");
-
-                    b.Property<string>("Encoding")
-                        .IsRequired()
-                        .HasMaxLength(25)
-                        .HasColumnType("nvarchar(25)");
-
-                    b.Property<bool>("IsToolEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(25)
-                        .HasColumnType("nvarchar(25)");
-
-                    b.Property<byte[]>("Version")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion")
-                        .HasJsonPropertyName("version");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AIServiceId");
-
-                    b.ToTable("Model", "Core.Ref");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("c36e22ed-262a-47a1-b2ba-06a38355ae0f"),
-                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
-                            DateCreated = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Encoding = "o200k_harmony",
-                            IsToolEnabled = true,
-                            Name = "gpt-5-mini"
-                        },
-                        new
-                        {
-                            Id = new Guid("fd01b615-1e9f-46af-957f-e4eaeff02766"),
-                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
-                            DateCreated = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Encoding = "o200k_harmony",
-                            IsToolEnabled = true,
-                            Name = "gpt-5-nano"
-                        },
-                        new
-                        {
-                            Id = new Guid("0b3948f5-70df-4697-a033-ae70971e1796"),
-                            AIServiceId = new Guid("3f2a91b5-9e5a-4a0a-a57a-ec70b540bbf0"),
-                            DateCreated = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Encoding = "o200k_harmony",
-                            IsToolEnabled = true,
-                            Name = "gpt-5-chat"
-                        });
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.Project", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasJsonPropertyName("id");
-
-                    b.Property<DateTimeOffset>("DateCreated")
-                        .HasColumnType("datetimeoffset")
-                        .HasJsonPropertyName("dateCreated");
-
-                    b.Property<DateTimeOffset?>("DateDeactivated")
-                        .HasColumnType("datetimeoffset")
-                        .HasJsonPropertyName("dateDeactivated");
-
-                    b.Property<DateTimeOffset>("DateModified")
-                        .HasColumnType("datetimeoffset")
-                        .HasJsonPropertyName("dateModified");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1024)
-                        .HasColumnType("nvarchar(1024)");
-
-                    b.Property<string>("Instructions")
-                        .HasMaxLength(2048)
-                        .HasColumnType("nvarchar(2048)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<byte[]>("Version")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion")
-                        .HasJsonPropertyName("version");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Project", "Core");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.ProjectDocument", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasJsonPropertyName("id");
-
-                    b.Property<DateTimeOffset>("DateCreated")
-                        .HasColumnType("datetimeoffset")
-                        .HasJsonPropertyName("dateCreated");
-
-                    b.Property<DateTimeOffset?>("DateDeactivated")
-                        .HasColumnType("datetimeoffset")
-                        .HasJsonPropertyName("dateDeactivated");
-
-                    b.Property<DateTimeOffset>("DateModified")
-                        .HasColumnType("datetimeoffset")
-                        .HasJsonPropertyName("dateModified");
-
-                    b.Property<string>("Extension")
-                        .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("nvarchar(8)");
-
-                    b.Property<string>("MimeType")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("Path")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<long>("Size")
-                        .HasColumnType("bigint");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<byte[]>("Version")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion")
-                        .HasJsonPropertyName("version");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ProjectDocument", "Core");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.ProjectDocumentPage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasJsonPropertyName("id");
-
-                    b.Property<DateTimeOffset>("DateCreated")
-                        .HasColumnType("datetimeoffset")
-                        .HasJsonPropertyName("dateCreated");
-
-                    b.Property<DateTimeOffset?>("DateDeactivated")
-                        .HasColumnType("datetimeoffset")
-                        .HasJsonPropertyName("dateDeactivated");
-
-                    b.Property<DateTimeOffset>("DateModified")
-                        .HasColumnType("datetimeoffset")
-                        .HasJsonPropertyName("dateModified");
-
-                    b.Property<SqlVector<float>>("Embedding")
-                        .HasColumnType("vector(1536)");
-
-                    b.Property<int>("Number")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("ProjectDocumentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("Version")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion")
-                        .HasJsonPropertyName("version");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectDocumentId");
-
-                    b.ToTable("ProjectDocumentPage", "Core");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.Session", b =>
+            modelBuilder.Entity("RR.AI_Chat.Entity.Conversation", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -325,9 +93,6 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<long>("OutputTokens")
                         .HasColumnType("bigint");
 
-                    b.Property<Guid?>("ProjectId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -340,19 +105,20 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
-
                     b.HasIndex("UserId");
 
-                    b.ToTable("Session", "Core");
+                    b.ToTable("Conversation", "Core");
                 });
 
-            modelBuilder.Entity("RR.AI_Chat.Entity.SessionDocument", b =>
+            modelBuilder.Entity("RR.AI_Chat.Entity.ConversationDocument", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasJsonPropertyName("id");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("DateCreated")
                         .HasColumnType("datetimeoffset")
@@ -385,9 +151,6 @@ namespace RR.AI_Chat.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("SessionId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<long>("Size")
                         .HasColumnType("bigint");
 
@@ -403,19 +166,22 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SessionId");
+                    b.HasIndex("ConversationId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SessionDocument", "Core");
+                    b.ToTable("ConversationDocument", "Core");
                 });
 
-            modelBuilder.Entity("RR.AI_Chat.Entity.SessionDocumentPage", b =>
+            modelBuilder.Entity("RR.AI_Chat.Entity.ConversationDocumentPage", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasJsonPropertyName("id");
+
+                    b.Property<Guid>("ConversationDocumentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("DateCreated")
                         .HasColumnType("datetimeoffset")
@@ -435,9 +201,6 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.Property<int>("Number")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("SessionDocumentId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -451,9 +214,100 @@ namespace RR.AI_Chat.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SessionDocumentId");
+                    b.HasIndex("ConversationDocumentId");
 
-                    b.ToTable("SessionDocumentPage", "Core");
+                    b.ToTable("ConversationDocumentPage", "Core");
+                });
+
+            modelBuilder.Entity("RR.AI_Chat.Entity.Model", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasJsonPropertyName("id");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasJsonPropertyName("createdBy");
+
+                    b.Property<DateTimeOffset>("DateCreated")
+                        .HasColumnType("datetimeoffset")
+                        .HasJsonPropertyName("dateCreated");
+
+                    b.Property<DateTimeOffset?>("DateDeactivated")
+                        .HasColumnType("datetimeoffset")
+                        .HasJsonPropertyName("dateDeactivated");
+
+                    b.Property<DateTimeOffset>("DateModified")
+                        .HasColumnType("datetimeoffset")
+                        .HasJsonPropertyName("dateModified");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsToolEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ModifiedById")
+                        .HasColumnType("uniqueidentifier")
+                        .HasJsonPropertyName("modifiedBy");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasJsonPropertyName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("ModifiedById");
+
+                    b.ToTable("Model", "Core.Ref");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("c36e22ed-262a-47a1-b2ba-06a38355ae0f"),
+                            CreatedById = new Guid("5f7ab694-1b6c-4b19-badd-c82b65e794cf"),
+                            DateCreated = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DateModified = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "A mini version of GPT-5, designed for basic tasks and quick responses.",
+                            IsToolEnabled = true,
+                            ModifiedById = new Guid("5f7ab694-1b6c-4b19-badd-c82b65e794cf"),
+                            Name = "gpt-5-mini"
+                        },
+                        new
+                        {
+                            Id = new Guid("fd01b615-1e9f-46af-957f-e4eaeff02766"),
+                            CreatedById = new Guid("5f7ab694-1b6c-4b19-badd-c82b65e794cf"),
+                            DateCreated = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DateModified = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "A nano version of GPT-5, optimized for lightweight tasks and minimal resource usage.",
+                            IsToolEnabled = true,
+                            ModifiedById = new Guid("5f7ab694-1b6c-4b19-badd-c82b65e794cf"),
+                            Name = "gpt-5-nano"
+                        },
+                        new
+                        {
+                            Id = new Guid("0b3948f5-70df-4697-a033-ae70971e1796"),
+                            CreatedById = new Guid("5f7ab694-1b6c-4b19-badd-c82b65e794cf"),
+                            DateCreated = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DateModified = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "A chat version of GPT-5, optimized for conversational tasks and interactive applications.",
+                            IsToolEnabled = true,
+                            ModifiedById = new Guid("5f7ab694-1b6c-4b19-badd-c82b65e794cf"),
+                            Name = "gpt-5-chat"
+                        });
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.User", b =>
@@ -485,9 +339,6 @@ namespace RR.AI_Chat.Repository.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<bool>("IsSuperAdministrator")
-                        .HasColumnType("bit");
-
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -503,124 +354,85 @@ namespace RR.AI_Chat.Repository.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("User", "Core");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("5f7ab694-1b6c-4b19-badd-c82b65e794cf"),
+                            DateCreated = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DateModified = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Email = "Enterprise.AI@example.com",
+                            FirstName = "Enterprise",
+                            LastName = "AI"
+                        });
+                });
+
+            modelBuilder.Entity("RR.AI_Chat.Entity.Conversation", b =>
+                {
+                    b.HasOne("RR.AI_Chat.Entity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("RR.AI_Chat.Entity.ConversationDocument", b =>
+                {
+                    b.HasOne("RR.AI_Chat.Entity.Conversation", "Conversation")
+                        .WithMany("Documents")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("RR.AI_Chat.Entity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("RR.AI_Chat.Entity.ConversationDocumentPage", b =>
+                {
+                    b.HasOne("RR.AI_Chat.Entity.ConversationDocument", "ConversationDocument")
+                        .WithMany("Pages")
+                        .HasForeignKey("ConversationDocumentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("ConversationDocument");
                 });
 
             modelBuilder.Entity("RR.AI_Chat.Entity.Model", b =>
                 {
-                    b.HasOne("RR.AI_Chat.Entity.AIService", "AIService")
+                    b.HasOne("RR.AI_Chat.Entity.User", "CreatedBy")
                         .WithMany()
-                        .HasForeignKey("AIServiceId")
+                        .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.Navigation("AIService");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.Project", b =>
-                {
-                    b.HasOne("RR.AI_Chat.Entity.User", "User")
+                    b.HasOne("RR.AI_Chat.Entity.User", "ModifiedBy")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("ModifiedById")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("ModifiedBy");
                 });
 
-            modelBuilder.Entity("RR.AI_Chat.Entity.ProjectDocument", b =>
-                {
-                    b.HasOne("RR.AI_Chat.Entity.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("RR.AI_Chat.Entity.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.ProjectDocumentPage", b =>
-                {
-                    b.HasOne("RR.AI_Chat.Entity.ProjectDocument", "ProjectDocument")
-                        .WithMany("Pages")
-                        .HasForeignKey("ProjectDocumentId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("ProjectDocument");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.Session", b =>
-                {
-                    b.HasOne("RR.AI_Chat.Entity.Project", "Project")
-                        .WithMany("Sessions")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("RR.AI_Chat.Entity.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.SessionDocument", b =>
-                {
-                    b.HasOne("RR.AI_Chat.Entity.Session", "Session")
-                        .WithMany("Documents")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("RR.AI_Chat.Entity.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Session");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.SessionDocumentPage", b =>
-                {
-                    b.HasOne("RR.AI_Chat.Entity.SessionDocument", "SessionDocument")
-                        .WithMany("Pages")
-                        .HasForeignKey("SessionDocumentId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("SessionDocument");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.Project", b =>
-                {
-                    b.Navigation("Sessions");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.ProjectDocument", b =>
-                {
-                    b.Navigation("Pages");
-                });
-
-            modelBuilder.Entity("RR.AI_Chat.Entity.Session", b =>
+            modelBuilder.Entity("RR.AI_Chat.Entity.Conversation", b =>
                 {
                     b.Navigation("Documents");
                 });
 
-            modelBuilder.Entity("RR.AI_Chat.Entity.SessionDocument", b =>
+            modelBuilder.Entity("RR.AI_Chat.Entity.ConversationDocument", b =>
                 {
                     b.Navigation("Pages");
                 });

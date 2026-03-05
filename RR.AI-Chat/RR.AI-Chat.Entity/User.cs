@@ -16,8 +16,6 @@ namespace RR.AI_Chat.Entity
         [EmailAddress]
         public string Email { get; set; } = null!;
 
-        public bool IsSuperAdministrator { get; set; } = false;
-
         [NotMapped]
         public string FullName => $"{FirstName} {LastName}";
     }
