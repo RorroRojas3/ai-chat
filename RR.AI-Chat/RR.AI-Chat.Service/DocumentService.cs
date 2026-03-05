@@ -74,7 +74,7 @@ namespace RR.AI_Chat.Service
             Dictionary<string, string> metadata = new()
             {
                 { "userId", userId.ToString() },
-                { "chatId", chatId.ToString() },
+                { "conversationId", chatId.ToString() },
                 { "fileName", fileDataDto.FileName },
                 { "contentType", fileDataDto.ContentType },
                 { "length", fileDataDto.Length.ToString() }
